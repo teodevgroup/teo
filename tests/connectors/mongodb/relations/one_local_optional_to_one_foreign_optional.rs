@@ -60,12 +60,12 @@ mod tests {
                     }
                 }
             },
-        }));
+        })).await;
         let find_many_res = req(&app, "findMany", "KOFPlayer", json!({
             "include": {
                 "player": true
             }
-        }));
+        })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 3 }));
         assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
             "id": ignore,
@@ -91,12 +91,12 @@ mod tests {
                     },
                 }
             },
-        }));
+        })).await;
         let find_many_res = req(&app, "findMany", "KOFPlayer", json!({
             "include": {
                 "player": true
             }
-        }));
+        })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 3 }));
         assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
             "id": ignore,
@@ -128,12 +128,12 @@ mod tests {
                     }
                 }
             },
-        }));
+        })).await;
         let find_many_res = req(&app, "findMany", "KOFPlayer", json!({
             "include": {
                 "player": true
             }
-        }));
+        })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 2 }));
         assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
             "id": ignore,
@@ -161,12 +161,12 @@ mod tests {
                     },
                 }
             },
-        }));
+        })).await;
         let find_many_res = req(&app, "findMany", "KOFPlayer", json!({
             "include": {
                 "player": true
             }
-        }));
+        })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 2 }));
         assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
             "id": ignore,
@@ -198,12 +198,12 @@ mod tests {
                     },
                 }
             },
-        }));
+        })).await;
         let find_many_res = req(&app, "findMany", "KOFPlayer", json!({
             "include": {
                 "player": true
             }
-        }));
+        })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 2 }));
         assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
             "id": ignore,
@@ -233,12 +233,12 @@ mod tests {
                     "set": null
                 }
             },
-        }));
+        })).await;
         let find_many_res = req(&app, "findMany", "KOFPlayer", json!({
             "include": {
                 "player": true
             }
-        }));
+        })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 2 }));
         assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
             "id": ignore,
@@ -268,12 +268,12 @@ mod tests {
                     "disconnect": true
                 }
             },
-        }));
+        })).await;
         let find_many_res = req(&app, "findMany", "KOFPlayer", json!({
             "include": {
                 "player": true
             }
-        }));
+        })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 2 }));
         assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
             "id": ignore,
@@ -305,12 +305,12 @@ mod tests {
                     }
                 }
             },
-        }));
+        })).await;
         let find_many_res = req(&app, "findMany", "KOFPlayer", json!({
             "include": {
                 "player": true
             }
-        }));
+        })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 2 }));
         assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
             "id": ignore,
@@ -336,12 +336,12 @@ mod tests {
                     "delete": true
                 }
             },
-        }));
+        })).await;
         let find_many_res = req(&app, "findMany", "KOFPlayer", json!({
             "include": {
                 "player": true
             }
-        }));
+        })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 2 }));
         assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
             "id": ignore,

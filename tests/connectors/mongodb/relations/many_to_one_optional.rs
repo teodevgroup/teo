@@ -60,12 +60,12 @@ mod tests {
                     }
                 }
             },
-        }));
+        })).await;
         let find_many_res = req(&app, "findMany", "Category", json!({
             "include": {
                 "products": true
             }
-        }));
+        })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 3 }));
         assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
             "id": ignore,
@@ -98,7 +98,7 @@ mod tests {
                     ]
                 }
             },
-        }));
+        })).await;
         let find_many_res = req(&app, "findMany", "Category", json!({
             "include": {
                 "products": {
@@ -107,7 +107,7 @@ mod tests {
                     }
                 }
             }
-        }));
+        })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 3 }));
         assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
             "id": ignore,
@@ -140,12 +140,12 @@ mod tests {
                     }
                 }
             },
-        }));
+        })).await;
         let find_many_res = req(&app, "findMany", "Category", json!({
             "include": {
                 "products": true
             }
-        }));
+        })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 3 }));
         assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
             "id": ignore,
@@ -178,7 +178,7 @@ mod tests {
                     ]
                 }
             },
-        }));
+        })).await;
         let find_many_res = req(&app, "findMany", "Category", json!({
             "include": {
                 "products": {
@@ -187,7 +187,7 @@ mod tests {
                     }
                 }
             }
-        }));
+        })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 3 }));
         assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
             "id": ignore,
@@ -223,7 +223,7 @@ mod tests {
                     }
                 }
             },
-        }));
+        })).await;
         let find_many_res = req(&app, "findMany", "Category", json!({
             "include": {
                 "products": {
@@ -232,7 +232,7 @@ mod tests {
                     }
                 }
             }
-        }));
+        })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 2 }));
         assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
             "id": ignore,
@@ -278,7 +278,7 @@ mod tests {
                     ]
                 }
             },
-        }));
+        })).await;
         let find_many_res = req(&app, "findMany", "Category", json!({
             "include": {
                 "products": {
@@ -287,7 +287,7 @@ mod tests {
                     }
                 }
             }
-        }));
+        })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 2 }));
         assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
             "id": ignore,
@@ -332,7 +332,7 @@ mod tests {
                     },
                 }
             },
-        }));
+        })).await;
         let find_many_res = req(&app, "findMany", "Category", json!({
             "include": {
                 "products": {
@@ -341,7 +341,7 @@ mod tests {
                     }
                 }
             }
-        }));
+        })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 2 }));
         assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
             "id": ignore,
@@ -386,7 +386,7 @@ mod tests {
                     ]
                 }
             },
-        }));
+        })).await;
         let find_many_res = req(&app, "findMany", "Category", json!({
             "include": {
                 "products": {
@@ -395,7 +395,7 @@ mod tests {
                     }
                 }
             }
-        }));
+        })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 2 }));
         assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
             "id": ignore,
@@ -442,7 +442,7 @@ mod tests {
                     ]
                 }
             },
-        }));
+        })).await;
         let find_many_res = req(&app, "findMany", "Category", json!({
             "include": {
                 "products": {
@@ -451,7 +451,7 @@ mod tests {
                     }
                 }
             }
-        }));
+        })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 2 }));
         assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
             "id": ignore,
@@ -492,12 +492,12 @@ mod tests {
                     }
                 }
             },
-        }));
+        })).await;
         let find_many_res = req(&app, "findMany", "Category", json!({
             "include": {
                 "products": true
             }
-        }));
+        })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 2 }));
         assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
             "id": ignore,
@@ -532,12 +532,12 @@ mod tests {
                     ]
                 }
             },
-        }));
+        })).await;
         let find_many_res = req(&app, "findMany", "Category", json!({
             "include": {
                 "products": true
             }
-        }));
+        })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 2 }));
         assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
             "id": ignore,
@@ -566,7 +566,7 @@ mod tests {
                     }
                 }
             },
-        }));
+        })).await;
         let find_many_res = req(&app, "findMany", "Category", json!({
             "include": {
                 "products": {
@@ -575,7 +575,7 @@ mod tests {
                     }
                 }
             }
-        }));
+        })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 2 }));
         assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
             "id": ignore,
@@ -625,7 +625,7 @@ mod tests {
                     ]
                 }
             },
-        }));
+        })).await;
         let find_many_res = req(&app, "findMany", "Category", json!({
             "include": {
                 "products": {
@@ -634,7 +634,7 @@ mod tests {
                     }
                 }
             }
-        }));
+        })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 2 }));
         assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
             "id": ignore,
@@ -674,7 +674,7 @@ mod tests {
                     }
                 }
             },
-        }));
+        })).await;
         let find_many_res = req(&app, "findMany", "Category", json!({
             "include": {
                 "products": {
@@ -683,7 +683,7 @@ mod tests {
                     }
                 }
             }
-        }));
+        })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 2 }));
         assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
             "id": ignore,
@@ -733,7 +733,7 @@ mod tests {
                     ]
                 }
             },
-        }));
+        })).await;
         let find_many_res = req(&app, "findMany", "Category", json!({
             "include": {
                 "products": {
@@ -742,7 +742,7 @@ mod tests {
                     }
                 }
             }
-        }));
+        })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 2 }));
         assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
             "id": ignore,
@@ -777,12 +777,12 @@ mod tests {
                     }
                 }
             },
-        }));
+        })).await;
         let find_many_res = req(&app, "findMany", "Category", json!({
             "include": {
                 "products": true
             }
-        }));
+        })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 2 }));
         assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
             "id": ignore,
@@ -817,7 +817,7 @@ mod tests {
                     ]
                 }
             },
-        }));
+        })).await;
         let find_many_res = req(&app, "findMany", "Category", json!({
             "include": {
                 "products": {
@@ -826,7 +826,7 @@ mod tests {
                     }
                 }
             }
-        }));
+        })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 2 }));
         assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
             "id": ignore,
@@ -850,12 +850,12 @@ mod tests {
                     }
                 }
             },
-        }));
+        })).await;
         let find_many_res = req(&app, "findMany", "Category", json!({
             "include": {
                 "products": true
             }
-        }));
+        })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 2 }));
         assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
             "id": ignore,
@@ -890,7 +890,7 @@ mod tests {
                     ]
                 }
             },
-        }));
+        })).await;
         let find_many_res = req(&app, "findMany", "Category", json!({
             "include": {
                 "products": {
@@ -899,7 +899,7 @@ mod tests {
                     }
                 }
             }
-        }));
+        })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 2 }));
         assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
             "id": ignore,

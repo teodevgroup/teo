@@ -11,6 +11,8 @@ mod tests {
     use serde_json::{json, Value};
     use crate::{assert_json, matcher};
     use crate::lib::handle::Handle;
+    use crate::lib::matcher_functions::{date_time_value, decimal_value};
+    use crate::lib::purge_and_seed::purge_and_seed;
 
     static mut HANDLE: OnceCell<Handle> = OnceCell::new();
 

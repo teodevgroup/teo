@@ -13,7 +13,7 @@ mod tests {
     use crate::{assert_json, matcher};
     use crate::lib::handle::Handle;
 
-    static mut handle: OnceCell<Handle> = OnceCell::new();
+    static mut HANDLE: OnceCell<Handle> = OnceCell::new();
 
     async fn make_app() -> impl Service<
         actix_http::Request,
