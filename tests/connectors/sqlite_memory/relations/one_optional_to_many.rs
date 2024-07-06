@@ -39,6 +39,12 @@ mod tests {
         }
     }
 
+    async fn before_each() {
+        if let Some(handle) = unsafe { HANDLE.get() } {
+            purge_and_seed(handle.teo_app()).await.unwrap();
+        }
+    }
+
     #[serial]
     #[actix_web::test]
     async fn create_with_nested_create() {

@@ -37,6 +37,12 @@ mod tests {
         }
     }
 
+    async fn before_each() {
+        if let Some(handle) = unsafe { HANDLE.get() } {
+            purge_and_seed(handle.teo_app()).await.unwrap();
+        }
+    }
+
     #[actix_web::test]
     async fn int32() {
         let app = make_app().await;

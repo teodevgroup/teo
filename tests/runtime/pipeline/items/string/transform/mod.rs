@@ -14,7 +14,7 @@ mod tests {
     use crate::{assert_json, matcher};
     use crate::lib::handle::Handle;
 
-    static mut handle: OnceCell<Handle> = OnceCell::new();
+    static mut HANDLE: OnceCell<Handle> = OnceCell::new();
 
     async fn make_app() -> impl Service<
         actix_http::Request,
@@ -22,7 +22,7 @@ mod tests {
         Error = actix_web::Error,
     > {
         unsafe {
-            let teo_app = handle.get_or_init(|| {
+            let teo_app = HANDLE.get_or_init(|| {
                 let mut h = Handle::new();
                 h.load(|| {
                     App::new_with_argv(
