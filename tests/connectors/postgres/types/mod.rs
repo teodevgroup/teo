@@ -1,3 +1,4 @@
+#[cfg(test)]
 mod tests {
     use std::cell::OnceCell;
     use actix_web::{http::header::ContentType, test};

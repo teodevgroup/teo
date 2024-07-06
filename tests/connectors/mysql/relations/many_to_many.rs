@@ -1,4 +1,8 @@
 
+use test_helpers_async::before_each;
+
+#[cfg(test)]
+#[before_each]
 mod tests {
     use std::cell::OnceCell;
     use actix_web::{http::header::ContentType, test};

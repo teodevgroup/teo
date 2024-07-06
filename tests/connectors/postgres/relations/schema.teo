@@ -1,16 +1,12 @@
 import "./data"
 
 connector {
-  provider .postgres
-  url "postgres://127.0.0.1:5433/test_connectors_postgres_relations"
+  provider: .postgres,
+  url: "postgres://127.0.0.1:5433/test_connectors_postgres_relations",
 }
 
 server {
-  bind ("0.0.0.0", 4040)
-}
-
-test {
-  resetAfterFind .auto
+  bind: ("0.0.0.0", 4040),
 }
 
 // User & Profile represents an 1 to 1 required relationship

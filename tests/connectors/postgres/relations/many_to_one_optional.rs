@@ -1,3 +1,7 @@
+use test_helpers_async::*;
+
+#[cfg(test)]
+#[before_each]
 mod tests {
     use std::cell::OnceCell;
     use actix_web::{http::header::ContentType, test};
@@ -40,6 +44,13 @@ mod tests {
             ).await
         }
     }
+
+    async fn before_each() {
+        if let Some(handle) = unsafe { HANDLE.get() } {
+            purge_and_seed(handle.teo_app()).await.unwrap();
+        }
+    }
+
     #[serial]
     #[actix_web::test]
     async fn create_with_nested_create() {

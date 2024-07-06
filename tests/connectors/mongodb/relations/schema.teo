@@ -1,16 +1,12 @@
 import "./data"
 
 connector {
-  provider .mongo
-  url "mongodb://127.0.0.1:27018/test_connectors_mongodb_relations"
+  provider: .mongo,
+  url: "mongodb://127.0.0.1:27018/test_connectors_mongodb_relations",
 }
 
 server {
-  bind ("0.0.0.0", 4020)
-}
-
-test {
-  resetAfterFind .auto
+  bind: ("0.0.0.0", 4020),
 }
 
 // User & Profile represents an 1 to 1 required relationship

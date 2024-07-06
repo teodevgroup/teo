@@ -1,10 +1,10 @@
 connector {
-  provider .mysql
-  url "mysql://127.0.0.1:3307/test_connectors_mysql_types"
+  provider: .mysql,
+  url: "mysql://127.0.0.1:3307/test_connectors_mysql_types",
 }
 
 server {
-  bind ("0.0.0.0", 4012)
+  bind: ("0.0.0.0", 4012),
 }
 
 enum Sex {
