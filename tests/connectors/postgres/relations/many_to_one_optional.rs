@@ -20,7 +20,7 @@ mod tests {
     use crate::lib::matcher_functions::one_match;
     use crate::lib::req::req;
 
-    static mut HANDLE: OnceCell<crate::lib::handle::Handle> = OnceCell::new();
+    static mut HANDLE: OnceCell<Handle> = OnceCell::new();
 
     async fn make_app() -> impl Service<
         actix_http::Request,
