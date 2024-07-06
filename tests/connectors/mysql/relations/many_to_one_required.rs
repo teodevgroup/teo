@@ -12,6 +12,8 @@ mod tests {
     use serde_json::{json, Value};
     use crate::{assert_json, matcher};
     use crate::lib::handle::Handle;
+    use serial_test::serial;
+    use crate::lib::purge_and_seed::purge_and_seed;
 
     static mut HANDLE: OnceCell<Handle> = OnceCell::new();
 

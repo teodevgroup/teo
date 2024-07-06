@@ -9,10 +9,6 @@ server {
   bind: ("0.0.0.0", 4050),
 }
 
-test {
-  resetAfterFind .auto
-}
-
 // User & Profile represents an 1 to 1 required relationship
 
 model User {

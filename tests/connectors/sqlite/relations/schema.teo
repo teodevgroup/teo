@@ -1,16 +1,12 @@
-import { default } from "./data"
+import "./data"
 
 connector {
-  provider .sqlite
-  url "sqlite:test_connectors_sqlite_relations.sqlite"
+  provider: .sqlite,
+  url: "sqlite:test_connectors_sqlite_relations.sqlite",
 }
 
 server {
-  bind ("0.0.0.0", 4050)
-}
-
-test {
-  resetAfterFind .auto
+  bind: ("0.0.0.0", 4050),
 }
 
 // User & Profile represents an 1 to 1 required relationship
