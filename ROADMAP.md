@@ -884,6 +884,7 @@
 - Update APIs with the redesigned namespace API **[DONE]**
 - Remove global static `app::Ctx` **[DONE]**
 - Unit test utilities **[DONE]**
+- Parser: Fix `set` in update many arguments **[DONE]**
 - Fix existing unit tests **[IN PROGRESS]**
 
 ### 0.3.0-alpha.1
