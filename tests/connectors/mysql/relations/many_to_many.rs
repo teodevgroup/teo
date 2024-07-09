@@ -1,4 +1,3 @@
-
 use test_helpers_async::before_each;
 
 #[cfg(test)]
@@ -17,6 +16,7 @@ mod tests {
     use crate::{assert_json, matcher};
     use crate::lib::handle::Handle;
     use serial_test::serial;
+    use test_helpers_async::before_each;
     use crate::lib::purge_and_seed::purge_and_seed;
     use crate::lib::matcher_functions::one_match;
     use crate::lib::req::req;
@@ -308,7 +308,7 @@ mod tests {
             },
             "update": {
                 "songs": {
-                    "createMany": [
+                    "create": [
                         {
                             "name": "Photograph"
                         },

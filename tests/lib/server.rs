@@ -7,6 +7,7 @@ use teo_runtime::schema::load::load_data_sets::load_data_sets;
 use teo::app::database::connect_databases;
 use teo::cli::command::SeedCommandAction;
 use teo::migrate::migrate;
+use teo::purge::purge;
 use teo::result::Result;
 use teo::seeder::seed::seed;
 use teo::server::make::make_server_app;
@@ -26,6 +27,7 @@ pub(crate) async fn make_actix_app(app: &teo::prelude::App) -> Result<App<impl S
         let mut diagnostics = Diagnostics::new();
         let data_sets = load_data_sets(app.namespace_builder(), None, false, app.schema(), &mut diagnostics)?;
         let transaction_ctx = transaction::Ctx::new(app.conn_ctx().clone());
+        purge(app).await?;
         seed(SeedCommandAction::Seed, data_sets, transaction_ctx, false).await?;
     }
     // setup

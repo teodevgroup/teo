@@ -92,7 +92,7 @@ mod tests {
             "create": {
                 "name": "Toiletries",
                 "products": {
-                    "createMany": [
+                    "create": [
                         {
                             "name": "Shampoo"
                         },
@@ -270,7 +270,7 @@ mod tests {
             },
             "update": {
                 "products": {
-                    "createMany": [
+                    "create": [
                         {
                             "name": "Eye Cream"
                         },

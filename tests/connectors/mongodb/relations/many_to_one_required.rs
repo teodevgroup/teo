@@ -92,7 +92,7 @@ mod tests {
             "create": {
                 "name": "Jack",
                 "posts": {
-                    "createMany": [
+                    "create": [
                         {
                             "name": "PyPy"
                         },
@@ -275,7 +275,7 @@ mod tests {
             },
             "update": {
                 "posts": {
-                    "createMany": [
+                    "create": [
                         {
                             "name": "Swift 4.0"
                         },

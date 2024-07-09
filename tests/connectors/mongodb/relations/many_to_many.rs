@@ -91,7 +91,7 @@ mod tests {
             "create": {
                 "name": "Taylor Swift",
                 "songs": {
-                    "createMany": [
+                    "create": [
                         {
                             "name": "Love Story"
                         },
@@ -307,7 +307,7 @@ mod tests {
             },
             "update": {
                 "songs": {
-                    "createMany": [
+                    "create": [
                         {
                             "name": "Photograph"
                         },
