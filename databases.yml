@@ -16,6 +16,7 @@ services:
     image: mongo:latest
     ports:
       - '27018:27017'
+
 #  mongo1:
 #    image: mongo:latest
 #    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27020"]
