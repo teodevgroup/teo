@@ -881,12 +881,13 @@
 
 ### 0.3.0-alpha.0
 - Redesign namespace APIs with non `&mut` reference **[DONE]**
-- Update APIs with the redesigned namespace API **[IN PROGRESS]**
+- Update APIs with the redesigned namespace API **[DONE]**
 - Remove global static `app::Ctx` **[DONE]**
-- Unit test utilities **[IN PROGRESS]**
-- Cookie APIs
+- Unit test utilities **[DONE]**
+- Fix existing unit tests **[IN PROGRESS]**
 
 ### 0.3.0-alpha.1
+- Cookie APIs
 - `createObject` in entities
 
 ### 0.3.0-alpha.2
