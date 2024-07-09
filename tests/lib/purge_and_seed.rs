@@ -1,7 +1,6 @@
 use teo_parser::diagnostics::diagnostics::Diagnostics;
 use teo_runtime::connection::transaction;
 use teo_runtime::schema::load::load_data_sets::load_data_sets;
-use tokio::runtime::{Handle, Runtime};
 use teo::app::App;
 use teo::cli::command::SeedCommandAction;
 use teo::purge::purge;
