@@ -10,9 +10,10 @@ mod tests {
     use actix_web::dev::{Service, ServiceRequest, ServiceResponse};
     use crate::lib::schema_path::schema_path_args;
     use serde_json::{json, Value};
+    use serial_test::serial;
     use crate::{assert_json, matcher};
     use crate::lib::handle::Handle;
-    use crate::lib::matcher_functions::{date_time_value, decimal_value};
+    use crate::lib::matcher_functions::{date_time_value, decimal_value, date_value};
 
     static mut HANDLE: OnceCell<Handle> = OnceCell::new();
 
@@ -39,6 +40,7 @@ mod tests {
         }
     }
 
+    #[serial]
     #[actix_web::test]
     async fn int32() {
         let app = make_app().await;
@@ -60,6 +62,7 @@ mod tests {
         }))
     }
 
+    #[serial]
     #[actix_web::test]
     async fn int64() {
         let app = make_app().await;
@@ -81,6 +84,7 @@ mod tests {
         }))
     }
 
+    #[serial]
     #[actix_web::test]
     async fn float32() {
         let app = make_app().await;
@@ -103,6 +107,7 @@ mod tests {
     }
 
 
+    #[serial]
     #[actix_web::test]
     async fn float64() {
         let app = make_app().await;
@@ -124,6 +129,7 @@ mod tests {
         }))
     }
 
+    #[serial]
     #[actix_web::test]
     async fn bool() {
         let app = make_app().await;
@@ -145,6 +151,7 @@ mod tests {
         }))
     }
 
+    #[serial]
     #[actix_web::test]
     async fn string() {
         let app = make_app().await;
@@ -166,6 +173,7 @@ mod tests {
         }))
     }
 
+    #[serial]
     #[actix_web::test]
     async fn date() {
         let app = make_app().await;
@@ -182,11 +190,12 @@ mod tests {
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
-                "date": "2005-12-25",
+                "date": date_value("2005-12-25"),
             }
         }))
     }
 
+    #[serial]
     #[actix_web::test]
     async fn date_time() {
         let app = make_app().await;
@@ -208,6 +217,7 @@ mod tests {
         }))
     }
 
+    #[serial]
     #[actix_web::test]
     async fn object_id() {
         let app = make_app().await;
@@ -229,6 +239,7 @@ mod tests {
         }))
     }
 
+    #[serial]
     #[actix_web::test]
     async fn r#enum() {
         let app = make_app().await;
@@ -250,6 +261,7 @@ mod tests {
         }))
     }
 
+    #[serial]
     #[actix_web::test]
     async fn int32_array() {
         let app = make_app().await;
@@ -271,6 +283,7 @@ mod tests {
         }))
     }
 
+    #[serial]
     #[actix_web::test]
     async fn int64_array() {
         let app = make_app().await;
@@ -292,6 +305,7 @@ mod tests {
         }))
     }
 
+    #[serial]
     #[actix_web::test]
     async fn float32_array() {
         let app = make_app().await;
@@ -313,6 +327,7 @@ mod tests {
         }))
     }
 
+    #[serial]
     #[actix_web::test]
     async fn float64_array() {
         let app = make_app().await;
@@ -334,6 +349,7 @@ mod tests {
         }))
     }
 
+    #[serial]
     #[actix_web::test]
     async fn bool_array() {
         let app = make_app().await;
@@ -355,6 +371,7 @@ mod tests {
         }))
     }
 
+    #[serial]
     #[actix_web::test]
     async fn string_array() {
         let app = make_app().await;
@@ -376,6 +393,7 @@ mod tests {
         }))
     }
 
+    #[serial]
     #[actix_web::test]
     async fn date_array() {
         let app = make_app().await;
@@ -392,11 +410,12 @@ mod tests {
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
-                "dateArray": ["2005-12-25", "2023-03-27"],
+                "dateArray": [date_value("2005-12-25"), date_value("2023-03-27")],
             }
         }))
     }
 
+    #[serial]
     #[actix_web::test]
     async fn date_time_array() {
         let app = make_app().await;
@@ -418,6 +437,7 @@ mod tests {
         }))
     }
 
+    #[serial]
     #[actix_web::test]
     async fn object_id_array() {
         let app = make_app().await;
@@ -439,6 +459,7 @@ mod tests {
         }))
     }
 
+    #[serial]
     #[actix_web::test]
     async fn enum_array() {
         let app = make_app().await;

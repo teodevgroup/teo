@@ -10,6 +10,7 @@ mod tests {
     use actix_web::dev::{Service, ServiceRequest, ServiceResponse};
     use crate::lib::schema_path::schema_path_args;
     use serde_json::{json, Value};
+    use serial_test::serial;
     use test_helpers_async::*;
     use crate::{assert_json, matcher};
     use crate::lib::handle::Handle;
@@ -39,6 +40,7 @@ mod tests {
         }
     }
 
+    #[serial]
     #[actix_web::test]
     async fn to_word_case() {
         let app = make_app().await;
@@ -60,6 +62,7 @@ mod tests {
         }))
     }
 
+    #[serial]
     #[actix_web::test]
     async fn to_lower_case() {
         let app = make_app().await;
@@ -81,6 +84,7 @@ mod tests {
         }))
     }
 
+    #[serial]
     #[actix_web::test]
     async fn to_upper_case() {
         let app = make_app().await;
@@ -102,6 +106,7 @@ mod tests {
         }))
     }
 
+    #[serial]
     #[actix_web::test]
     async fn to_sentence_case() {
         let app = make_app().await;
@@ -123,6 +128,7 @@ mod tests {
         }))
     }
 
+    #[serial]
     #[actix_web::test]
     async fn to_title_case() {
         let app = make_app().await;
@@ -144,6 +150,7 @@ mod tests {
         }))
     }
 
+    #[serial]
     #[actix_web::test]
     async fn trim() {
         let app = make_app().await;
@@ -165,6 +172,7 @@ mod tests {
         }))
     }
 
+    #[serial]
     #[actix_web::test]
     async fn pad_end() {
         let app = make_app().await;
@@ -186,6 +194,7 @@ mod tests {
         }))
     }
 
+    #[serial]
     #[actix_web::test]
     async fn pad_start() {
         let app = make_app().await;
@@ -207,6 +216,7 @@ mod tests {
         }))
     }
 
+    #[serial]
     #[actix_web::test]
     async fn regex_replace() {
         let app = make_app().await;

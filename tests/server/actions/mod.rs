@@ -10,6 +10,7 @@ mod tests {
     use actix_web::dev::{Service, ServiceRequest, ServiceResponse};
     use crate::lib::schema_path::schema_path_args;
     use serde_json::{json, Value};
+    use serial_test::serial;
     use crate::{assert_json, matcher};
     use crate::lib::handle::Handle;
 
@@ -38,6 +39,7 @@ mod tests {
         }
     }
 
+    #[serial]
     #[actix_web::test]
     async fn test_get_index() {
         let app = make_app().await;
@@ -48,6 +50,7 @@ mod tests {
         assert!(resp.status().as_u16() == 404);
     }
 
+    #[serial]
     #[actix_web::test]
     async fn test_create_record() {
         let app = make_app().await;
