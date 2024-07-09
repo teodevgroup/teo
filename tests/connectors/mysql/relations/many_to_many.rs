@@ -1,7 +1,7 @@
-use test_helpers_async::before_each;
+use test_helpers_async::after_each;
 
 #[cfg(test)]
-#[before_each]
+#[after_each]
 mod tests {
     use std::cell::OnceCell;
     use actix_web::{http::header::ContentType, test};
@@ -16,7 +16,7 @@ mod tests {
     use crate::{assert_json, matcher};
     use crate::lib::handle::Handle;
     use serial_test::serial;
-    use test_helpers_async::before_each;
+    use test_helpers_async::after_each;
     use crate::lib::purge_and_seed::purge_and_seed;
     use crate::lib::matcher_functions::one_match;
     use crate::lib::req::req;
@@ -46,7 +46,7 @@ mod tests {
         }
     }
 
-    async fn before_each() {
+    async fn after_each() {
         if let Some(handle) = unsafe { HANDLE.get() } {
             purge_and_seed(handle.teo_app()).await.unwrap();
         }

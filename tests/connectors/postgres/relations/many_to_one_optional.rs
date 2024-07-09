@@ -1,7 +1,7 @@
 use test_helpers_async::*;
 
 #[cfg(test)]
-#[before_each]
+#[after_each]
 mod tests {
     use std::cell::OnceCell;
     use actix_web::{http::header::ContentType, test};
@@ -45,7 +45,7 @@ mod tests {
         }
     }
 
-    async fn before_each() {
+    async fn after_each() {
         if let Some(handle) = unsafe { HANDLE.get() } {
             purge_and_seed(handle.teo_app()).await.unwrap();
         }
