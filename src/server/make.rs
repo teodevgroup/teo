@@ -32,7 +32,6 @@ use teo_runtime::handler::r#match::HandlerMatch;
 use crate::cli::command::SeedCommandAction;
 use crate::message::{info_message, request_message, unhandled_request_message};
 use crate::server::error::WrapError;
-use crate::server::request::RequestImpl;
 use crate::server::responder::IntoHttpResponse;
 
 pub fn make_server_app(
@@ -149,7 +148,7 @@ pub fn make_server_app(
                 let conn_ctx = connection::Ctx::from_namespace(main_namespace);
                 let transaction_ctx = transaction::Ctx::new(conn_ctx);
                 let ctx = request::Ctx::new(
-                    request::Request::new(Arc::new(RequestImpl::new(http_request.clone()))),
+                    request::Request::new(http_request.clone()),
                     Arc::new(Value::Null),
                     transaction_ctx,
                     match_result
@@ -181,7 +180,7 @@ pub fn make_server_app(
                     let conn_ctx = connection::Ctx::from_namespace(main_namespace);
                     let transaction_ctx = transaction::Ctx::new(conn_ctx);
                     let ctx = request::Ctx::new(
-                        request::Request::new(Arc::new(RequestImpl::new(http_request.clone()))),
+                        request::Request::new(http_request.clone()),
                         Arc::new(body),
                         transaction_ctx,
                         match_result.clone(),
@@ -240,7 +239,7 @@ pub fn make_server_app(
                     let conn_ctx = connection::Ctx::from_namespace(main_namespace);
                     let transaction_ctx = transaction::Ctx::new(conn_ctx);
                     let ctx = request::Ctx::new(
-                        request::Request::new(Arc::new(RequestImpl::new(http_request.clone()))),
+                        request::Request::new(http_request.clone()),
                         Arc::new(body),
                         transaction_ctx,
                         match_result
@@ -346,7 +345,7 @@ impl TryFrom<&str> for DangerousOperations{
             "unseed"=>Ok(DangerousOperations::Unseed),
             "purge"=>Ok(DangerousOperations::Purge),
             "purge_seed"=>Ok(DangerousOperations::PurgeAndSeed),
-            _=> Err(Error::new(format!("unsupport {{{}}} operation",str)))
+            _=> Err(Error::new(format!("unsupported {{{}}} operation",str)))
         }
     }
 }
