@@ -1,3 +1,4 @@
+use std::borrow::Cow::Owned;
 use std::io::Write;
 use actix_multipart::Multipart;
 use actix_web::{FromRequest, HttpRequest, web};
@@ -39,7 +40,12 @@ pub(super) async fn parse_form_body(http_request: HttpRequest, mut payload: web:
     let mut result_value = json!({});
     while let Some(mut field) = multipart.try_next().await.unwrap() {
         // A multipart/form-data stream has to contain `content_disposition`
-        if let Some(filename) = field.content_disposition().get_filename().map(|f| f.to_owned()) {
+        if field.content_disposition().is_none() {
+            return Err(Error::invalid_request_message("missing content disposition"));
+        }
+        let content_disposition = field.content_disposition().unwrap();
+        let filename = content_disposition.get_filename().map(|s| s.to_owned());
+        if let Some(filename) = filename {
             let filepath = std::env::temp_dir().join(filename.clone()).to_str().unwrap().to_owned();
             let filepath2 = filepath.clone();
             // File::create is blocking operation, use threadpool
@@ -49,7 +55,7 @@ pub(super) async fn parse_form_body(http_request: HttpRequest, mut payload: web:
                 // filesystem operations are blocking, we have to use threadpool
                 f = web::block(move || f.write_all(&chunk).map(|_| f)).await.unwrap().unwrap();
             }
-            let owned_field_name = field.name().to_owned();
+            let owned_field_name = field.name().unwrap().to_owned();
             if owned_field_name.ends_with("[]") {
                 let field_name_without_suffix = owned_field_name.strip_suffix("[]").unwrap();
                 if !result_value.as_object_mut().unwrap().contains_key(field_name_without_suffix) {
@@ -59,7 +65,7 @@ pub(super) async fn parse_form_body(http_request: HttpRequest, mut payload: web:
                     "filepath": filepath2,
                     "contentType": field.content_type().map(|c| c.to_string()),
                     "filename": filename,
-                    "filenameExt": field.content_disposition().get_filename_ext().map(|e| e.to_string()),
+                    "filenameExt": field.content_disposition().unwrap().get_filename_ext().map(|e| e.to_string()),
                 }));
             } else if owned_field_name.ends_with("]") {
                 let regex = Regex::new("(.*)\\[(.*)\\]").unwrap();
@@ -73,14 +79,14 @@ pub(super) async fn parse_form_body(http_request: HttpRequest, mut payload: web:
                     "filepath": filepath2,
                     "contentType": field.content_type().map(|c| c.to_string()),
                     "filename": filename,
-                    "filenameExt": field.content_disposition().get_filename_ext().map(|e| e.to_string()),
+                    "filenameExt": field.content_disposition().unwrap().get_filename_ext().map(|e| e.to_string()),
                 }));
             } else {
-                result_value.as_object_mut().unwrap().insert(field.name().to_owned(), json!({
+                result_value.as_object_mut().unwrap().insert(field.name().unwrap().to_owned(), json!({
                     "filepath": filepath2,
                     "contentType": field.content_type().map(|c| c.to_string()),
                     "filename": filename,
-                    "filenameExt": field.content_disposition().get_filename_ext().map(|e| e.to_string()),
+                    "filenameExt": field.content_disposition().unwrap().get_filename_ext().map(|e| e.to_string()),
                 }));
             }
         } else {
@@ -88,7 +94,7 @@ pub(super) async fn parse_form_body(http_request: HttpRequest, mut payload: web:
             while let Some(chunk) = field.try_next().await.unwrap() {
                 body.extend_from_slice(&chunk);
             }
-            result_value.as_object_mut().unwrap().insert(field.name().to_owned(), serde_json::Value::String(String::from_utf8(body.as_ref().to_vec()).unwrap()));
+            result_value.as_object_mut().unwrap().insert(field.name().unwrap().to_owned(), serde_json::Value::String(String::from_utf8(body.as_ref().to_vec()).unwrap()));
         }
     }
     Ok(result_value)
