@@ -82,16 +82,6 @@ pub fn make_server_app(
                 Err(Error::not_found())?
             };
 
-            // // High-risk operations for testing
-            // #[cfg(feature="dangerous_operation")]
-            // if match_result.path()[0] == "danger" {
-            //     return Ok::<HttpResponse, WrapError>(
-            //         dangerous_operation(match_result.handler_name())
-            //             .await?
-            //             .into_http_response(http_request.clone()),
-            //     );
-            // }
-
             // Normal handling
             let mut group = false;
             let dest_namespace = if let Some(d) = main_namespace.namespace_at_path(&match_result.path()) {
@@ -294,67 +284,7 @@ fn method_from(m: &HttpMethod) -> Result<Method> {
     })
 }
 
-// async fn dangerous_operation(action :&str)-> Result<Response>{
-//         let dangerous_operation = DangerousOperations::try_from(action)?;
-//         match dangerous_operation {
-//             DangerousOperations::Seed | DangerousOperations::Unseed | DangerousOperations::Reseed => {
-//                 let mut diagnostics = Diagnostics::new();
-//                 let data_sets = load_data_sets(app.main_namespace(), None, false, app.schema(), &mut diagnostics)?;
-//                 let transaction_ctx = transaction::Ctx::new(Ctx::conn_ctx().clone());
-//                 seed(
-//                     seed_from_dangerous_operation(dangerous_operation)?,
-//                     data_sets,
-//                     transaction_ctx,
-//                     false,
-//                 )
-//                 .await?
-//             }
-//             DangerousOperations::PurgeAndSeed => {
-//                 purge::purge().await?;
-//                 connect_databases(app.main_namespace(),true).await?;
-//                 let mut diagnostics = Diagnostics::new();
-//                 let data_sets = load_data_sets(app.main_namespace(), None, false, app.schema(), &mut diagnostics)?;
-//                 let transaction_ctx = transaction::Ctx::new(Ctx::conn_ctx().clone());
-//                 seed(SeedCommandAction::Seed, data_sets, transaction_ctx, false).await?
-//             }
-//             DangerousOperations::Purge => purge::purge().await?,
-//         }
-//         Ok(Response::data(Value::Bool(true)))
-// }
-
 enum HandlerResolved<'a> {
     Custom(&'a Handler),
     Builtin(&'a Model, Action),
-}
-
-#[derive(Debug)]
-enum DangerousOperations {
-    Seed,
-    Reseed,
-    Unseed,
-    Purge,
-    PurgeAndSeed,
-}
-
-impl TryFrom<&str> for DangerousOperations{
-    type Error = Error;
-    fn try_from(str:&str)->Result<Self>{
-        match str.to_lowercase().as_str() {
-            "seed"=>Ok(DangerousOperations::Seed),
-            "reseed"=>Ok(DangerousOperations::Reseed),
-            "unseed"=>Ok(DangerousOperations::Unseed),
-            "purge"=>Ok(DangerousOperations::Purge),
-            "purge_seed"=>Ok(DangerousOperations::PurgeAndSeed),
-            _=> Err(Error::new(format!("unsupported {{{}}} operation",str)))
-        }
-    }
-}
-
-fn seed_from_dangerous_operation (danger_operation :DangerousOperations)->Result<SeedCommandAction>{
-    match danger_operation {
-        DangerousOperations::Seed=>Ok(SeedCommandAction::Seed),
-        DangerousOperations::Reseed=>Ok(SeedCommandAction::Reseed),
-        DangerousOperations::Unseed=>Ok(SeedCommandAction::Unseed),
-        _ => Err(Error::new("cant create seedCommandAction from DangerousOperation")),
-}
 }

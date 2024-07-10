@@ -9,9 +9,6 @@ homepage = "https://teodev.io"
 documentation = "https://docs.teodev.io"
 repository = "https://github.com/teodevgroup/teo"
 
-[features]
-dangerous_operation = []
-
 [dependencies]
 teo-result = { version = "0.3.0-alpha.0", path = "../teo-result" }
 teo-parser = { version = "0.3.0-alpha.0", path = "../teo-parser" }
