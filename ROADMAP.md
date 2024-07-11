@@ -888,6 +888,7 @@
 - Fix existing unit tests **[DONE]**
 - Upgrade Python bindings with new Teo Runtime API and Pyo3 0.21 API **[DONE]**
 - Add request unit tests **[IN PROGRESS]**
+- Update file response with status code and custom headers **[DONE]**
 - Cookie APIs **[IN PROGRESS]**
 
 ### 0.3.0-alpha.1
