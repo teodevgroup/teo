@@ -887,9 +887,10 @@
 - Parser: Fix `set` in update many arguments **[DONE]**
 - Fix existing unit tests **[DONE]**
 - Upgrade Python bindings with new Teo Runtime API and Pyo3 0.21 API **[DONE]**
-- Add request unit tests **[IN PROGRESS]**
 - Update file response with status code and custom headers **[DONE]**
-- Cookie APIs **[IN PROGRESS]**
+- Rust: Add cookies to response **[IN PROGRESS]**
+- Node.js and Python: Cookie APIs **[IN PROGRESS]**
+- Add request unit tests **[IN PROGRESS]**
 
 ### 0.3.0-alpha.1
 - `createObject`, `findManyObjects`, `findFirstObject` and `findUniqueObject` in entities
