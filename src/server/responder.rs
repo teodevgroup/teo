@@ -19,6 +19,9 @@ impl IntoHttpResponse for Response {
             for key in self.headers().keys() {
                 response.headers_mut().insert(HeaderName::from_str(&key).unwrap(), self.headers().get(&key).unwrap().as_str().parse().unwrap());
             }
+            for c in self.cookies() {
+                response.add_cookie(&c).unwrap();
+            }
             response
         } else {
             let mut builder = HttpResponse::Ok();
@@ -35,6 +38,9 @@ impl IntoHttpResponse for Response {
                     return builder.body(string_value);
                 },
                 _ => {},
+            }
+            for c in self.cookies() {
+                builder.cookie(c);
             }
             builder.finish()
         }

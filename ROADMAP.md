@@ -888,7 +888,7 @@
 - Fix existing unit tests **[DONE]**
 - Upgrade Python bindings with new Teo Runtime API and Pyo3 0.21 API **[DONE]**
 - Update file response with status code and custom headers **[DONE]**
-- Rust: Add cookies to response **[IN PROGRESS]**
+- Rust: Add cookies to response **[DONE]**
 - Node.js and Python: Cookie APIs **[IN PROGRESS]**
 - Add request unit tests **[IN PROGRESS]**
 - Update entities generation to match newly upgraded API
