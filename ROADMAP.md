@@ -885,20 +885,23 @@
 - Remove global static `app::Ctx` **[DONE]**
 - Unit test utilities **[DONE]**
 - Parser: Fix `set` in update many arguments **[DONE]**
-- Fix existing unit tests **[IN PROGRESS]**
+- Fix existing unit tests **[DONE]**
+- Upgrade Python bindings with new Teo Runtime API and Pyo3 0.21 API **[DONE]**
+- Add request unit tests **[IN PROGRESS]**
+- Cookie APIs **[IN PROGRESS]**
 
 ### 0.3.0-alpha.1
-- Cookie APIs
-- `createObject` in entities
+- `createObject`, `findManyObjects`, `findFirstObject` and `findUniqueObject` in entities
+- Unit test for pipeline items
 
 ### 0.3.0-alpha.2
 - Handlers call handlers
 
 ### 0.3.0-alpha.3
+- Combined request in HTTP clients
 - Remove paging information from `findMany`
 
 ### 0.3.0
-- Combined request in HTTP clients
 - `@onSet!()` and `@onSet?()`
 - `$get!()` and `$get?()`
 - Debug logging SQL
@@ -908,28 +911,30 @@
 - Admin dashboard: Filters
 - Admin dashboard: Sort
 - Admin dashboard: Redesigned date time controls
-- Node.js: Support more linux systems
 
 ### 0.3.11
 - Admin dashboard: Load records on scroll
 
 ### 0.3.12
-- Embedded forms
+- Node.js: Support more linux systems
 
 ### 0.3.13
+- Embedded forms
+
+### 0.3.14
 - Uploaders
 - Amazon S3 uploader
 - Aliyun OSS uploader
 - Local file directory uploader
 - Create and update with form data
 
-### 0.3.14
+### 0.3.15
 - Add `@example` to comment
 
-### 0.3.15
+### 0.3.16
 - Admin dashboard: dashboards
 
-### 0.3.16
+### 0.3.17
 - Windows: When server startup, fix port is not taken bug
 - Action transformers
 - Soft delete
@@ -939,14 +944,9 @@
 - Revamp all client APIs
 
 ### 0.4.0
-- Json type
+- JSON type
 
-### 0.5.0
-- Support first version of Teo Studio
-- Default argument for argument list and config declaration
-
-### 0.6.0
-- PostgreSQL: Enum types
+### 0.4.1
 - MongoDB migration
 - MongoDB `$queryRaw`
 - MongoDB: root skip take and distinct bug
@@ -957,8 +957,13 @@
 - MongoDB: aggregate and group by for string and dates
 - Correct count with cursor
 
+### 0.5.0
+- PostgreSQL: Enum types
+- Default argument for argument list and config declaration
+
 ### 0.7.0
-- Full database type mapping
+- Extended database type mapping
+- Support first version of Teo Studio
 
 ### 0.8.0
 - Data subscriptions
