@@ -1,4 +1,4 @@
-use teo_result::{Error, Result};
+use teo_result::Result;
 use crate::app::App;
 
 pub async fn migrate(app: &App, dry_run: bool, reset: bool, silent: bool) -> Result<()> {

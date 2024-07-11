@@ -889,55 +889,64 @@
 - Upgrade Python bindings with new Teo Runtime API and Pyo3 0.21 API **[DONE]**
 - Update file response with status code and custom headers **[DONE]**
 - Rust: Add cookies to response **[DONE]**
-- Node.js and Python: Cookie APIs **[IN PROGRESS]**
+- Node.js and Python: Cookie APIs **[DONE]**
 - Add request unit tests **[IN PROGRESS]**
+- Node.js: setup unit tests
+- Python: setup unit tests
 - Update entities generation to match newly upgraded API
+- Update official documentation
 - `createObject`, `findManyObjects`, `findFirstObject` and `findUniqueObject` in entities
 
 ### 0.3.0-alpha.1
 - Unit test for pipeline items
+- Node.js: complete namespace API sets
+- Python: complete namespace API sets
+- Add unit tests for Node.js and Python API
 
 ### 0.3.0-alpha.2
-- Handlers call handlers
-
-### 0.3.0-alpha.3
 - Combined request in HTTP clients
 - Remove paging information from `findMany`
 
 ### 0.3.0
+- Bug fixes
+
+### 0.3.1
+- Handlers call handlers
+
+### 0.3.2
 - `@onSet!()` and `@onSet?()`
 - `$get!()` and `$get?()`
 - Debug logging SQL
 - Migration dry run
 
-### 0.3.10
+### 0.3.3
 - Admin dashboard: Filters
 - Admin dashboard: Sort
 - Admin dashboard: Redesigned date time controls
 
-### 0.3.11
+### 0.3.4
 - Admin dashboard: Load records on scroll
 
-### 0.3.12
+### 0.3.5
 - Node.js: Support more linux systems
 
-### 0.3.13
+### 0.3.6
 - Embedded forms
 
-### 0.3.14
+### 0.3.7
 - Uploaders
 - Amazon S3 uploader
 - Aliyun OSS uploader
 - Local file directory uploader
 - Create and update with form data
 
-### 0.3.15
+### 0.3.8
 - Add `@example` to comment
 
-### 0.3.16
+### 0.3.9
 - Admin dashboard: dashboards
 
-### 0.3.17
+### 0.3.15
 - Windows: When server startup, fix port is not taken bug
 - Action transformers
 - Soft delete
