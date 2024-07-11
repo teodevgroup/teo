@@ -891,9 +891,10 @@
 - Rust: Add cookies to response **[IN PROGRESS]**
 - Node.js and Python: Cookie APIs **[IN PROGRESS]**
 - Add request unit tests **[IN PROGRESS]**
+- Update entities generation to match newly upgraded API
+- `createObject`, `findManyObjects`, `findFirstObject` and `findUniqueObject` in entities
 
 ### 0.3.0-alpha.1
-- `createObject`, `findManyObjects`, `findFirstObject` and `findUniqueObject` in entities
 - Unit test for pipeline items
 
 ### 0.3.0-alpha.2
