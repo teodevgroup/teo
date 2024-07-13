@@ -1,0 +1,17 @@
+server {
+  bind: ("0.0.0.0", 4015)
+}
+
+entity {
+  provider: .rust,
+  dest: "./entities"
+}
+
+@map(.post, "/")
+declare handler inspect(Any): Any
+
+@map(.get, "/echo/:data", interface: "EchoPathArguments")
+declare nonapi handler echo(): Any
+
+@map(.get, "/echo/*data/echo", interface: "EchoMorePathArguments")
+declare nonapi handler echoMore(): Any
