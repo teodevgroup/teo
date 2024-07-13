@@ -109,4 +109,28 @@ mod tests {
         let res: Value = test::call_and_read_body_json(&app, req).await;
         assert_eq!(res["method"], "POST");
     }
+
+    #[serial]
+    #[actix_web::test]
+    async fn path_argument() {
+        let app = make_app().await;
+        let req = test::TestRequest::default()
+            .method(Method::GET)
+            .uri("/echo/foo")
+            .to_request();
+        let res = test::call_and_read_body(&app, req).await;
+        assert_eq!(res.as_ref(), "foo".as_bytes());
+    }
+
+    #[serial]
+    #[actix_web::test]
+    async fn path_combined_argument() {
+        let app = make_app().await;
+        let req = test::TestRequest::default()
+            .method(Method::GET)
+            .uri("/echo/foo/bar/echo")
+            .to_request();
+        let res = test::call_and_read_body(&app, req).await;
+        assert_eq!(res.as_ref(), "foo/bar".as_bytes());
+    }
 }
