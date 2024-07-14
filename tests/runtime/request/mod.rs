@@ -18,6 +18,7 @@ mod tests {
     use crate::lib::handle::Handle;
     use crate::runtime::request::app::load_app;
     use actix_multipart::test::create_form_data_payload_and_headers;
+    use actix_web::cookie::Cookie;
     use actix_web::web::Bytes;
 
     static mut HANDLE: OnceCell<Handle> = OnceCell::new();
@@ -172,5 +173,23 @@ mod tests {
 //             "name": "foo",
 //             "age": 1,
 //         }))
+    }
+
+    #[serial]
+    #[actix_web::test]
+    async fn cookie() {
+        let app = make_app().await;
+        let req = test::TestRequest::default()
+            .method(Method::POST)
+            .uri("/echo/cookie")
+            .cookie(Cookie::new("a", "b"))
+            .set_json(json!({}))
+            .to_request();
+        let res: Value = test::call_and_read_body_json(&app, req).await;
+        assert_json!(res, matcher!({
+            "cookies": [
+                { "name": "a", "value": "b" }
+            ]
+        }))
     }
 }

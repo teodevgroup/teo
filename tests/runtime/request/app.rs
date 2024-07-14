@@ -1,6 +1,6 @@
 use teo_runtime::request::Request;
 use teo_runtime::response::Response;
-use teo_runtime::{request, teon};
+use teo_runtime::{request, teon, Value};
 use teo::app::App;
 use teo::result::Result;
 use crate::lib::schema_path::schema_path_args;
@@ -37,6 +37,20 @@ pub fn load_app() -> Result<App> {
         Ok(Response::teon(teon!({
             "name": ctx.body().get("name").unwrap(),
             "avatar": filepath
+        })))
+    });
+    app.main_namespace().define_handler("echoCookie", |ctx: request::Ctx| async move {
+        let cookies = ctx.request().cookies()?;
+        let mut result: Vec<Value> = vec![];
+        for cookie in cookies.iter() {
+            let value = teon!({
+                "name": cookie.name(),
+                "value": cookie.value(),
+            });
+            result.push(value);
+        }
+        Ok(Response::teon(teon!({
+            "cookies": result
         })))
     });
     Ok(app)

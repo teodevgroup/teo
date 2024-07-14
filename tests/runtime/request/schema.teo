@@ -36,3 +36,6 @@ interface FormBodyResult {
 
 @map(.patch, "/echo/formBody")
 declare form handler echoFormBody(FormBody): FormBodyResult
+
+@map(path: "/echo/cookie")
+declare handler echoCookie(Any): Any
