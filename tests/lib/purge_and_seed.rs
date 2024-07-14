@@ -10,7 +10,7 @@ use teo::seeder::seed::seed;
 pub(crate) async fn purge_and_seed(app: &App) -> Result<()> {
     purge(app).await?;
     let mut diagnostics = Diagnostics::new();
-    let data_sets = load_data_sets(app.namespace_builder(), None, false, app.schema(), &mut diagnostics)?;
+    let data_sets = load_data_sets(app.main_namespace(), None, false, app.schema(), &mut diagnostics)?;
     let transaction_ctx = transaction::Ctx::new(app.conn_ctx().clone());
     seed(SeedCommandAction::Seed, data_sets, transaction_ctx, false).await?;
     Ok(())

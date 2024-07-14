@@ -30,8 +30,8 @@ pub struct App {
     pub(crate) argv: Option<Vec<String>>,
     pub(crate) runtime_version: RuntimeVersion,
     pub(crate) entrance: Entrance,
-    pub(crate) namespace_builder: namespace::Builder,
-    pub(crate) main_namespace: Arc<Mutex<&'static Namespace>>,
+    pub(crate) main_namespace: namespace::Builder,
+    pub(crate) compiled_main_namespace: Arc<Mutex<&'static Namespace>>,
     pub(crate) cli: CLI,
     #[educe(Debug(ignore))]
     pub(crate) schema: Schema,
@@ -77,8 +77,8 @@ impl App {
             entrance,
             cli,
             schema,
-            namespace_builder,
-            main_namespace: Arc::new(Mutex::new(unsafe { &*null() })),
+            main_namespace: namespace_builder,
+            compiled_main_namespace: Arc::new(Mutex::new(unsafe { &*null() })),
             setup: None,
             programs: btreemap!{},
             conn_ctx: Arc::new(Mutex::new(None)),
@@ -99,12 +99,12 @@ impl App {
         })));
     }
 
-    pub fn main_namespace(&self) -> &'static Namespace {
-        *self.main_namespace.lock().unwrap()
+    pub fn compiled_main_namespace(&self) -> &'static Namespace {
+        *self.compiled_main_namespace.lock().unwrap()
     }
 
-    pub fn namespace_builder(&self) -> &namespace::Builder {
-        &self.namespace_builder
+    pub fn main_namespace(&self) -> &namespace::Builder {
+        &self.main_namespace
     }
 
     pub async fn run(&self) -> Result<()> {
@@ -113,9 +113,9 @@ impl App {
     }
 
     pub async fn prepare_for_run(&self) -> Result<()> {
-        load_schema(self.namespace_builder(), self.schema(), self.cli().command.ignores_loading()).await?;
-        let namespace = Box::into_raw(Box::new(self.namespace_builder().build()));
-        *self.main_namespace.lock().unwrap() = unsafe { &*namespace };
+        load_schema(self.main_namespace(), self.schema(), self.cli().command.ignores_loading()).await?;
+        let namespace = Box::into_raw(Box::new(self.main_namespace().build()));
+        *self.compiled_main_namespace.lock().unwrap() = unsafe { &*namespace };
         Ok(())
     }
 

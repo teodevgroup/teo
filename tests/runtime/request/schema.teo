@@ -15,3 +15,24 @@ declare nonapi handler echo(): Any
 
 @map(.get, "/echo/*data/echo", interface: "EchoMorePathArguments")
 declare nonapi handler echoMore(): Any
+
+interface JsonBody {
+    name: String
+    age: Int
+}
+
+@map(.patch, "/echo/jsonBody")
+declare handler echoJsonBody(JsonBody): JsonBody
+
+interface FormBody {
+    name: String
+    avatar: File
+}
+
+interface FormBodyResult {
+    name: String
+    avatar: String
+}
+
+@map(.patch, "/echo/formBody")
+declare form handler echoFormBody(FormBody): FormBodyResult

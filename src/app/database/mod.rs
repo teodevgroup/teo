@@ -17,7 +17,7 @@ pub async fn connect_databases(app: &App, namespace: &Namespace, silent: bool) -
     for namespace in namespace.namespaces().values() {
         may_connect_database(namespace, silent).await?;
     }
-    let ctx = ConnCtx::from_namespace(app.main_namespace());
+    let ctx = ConnCtx::from_namespace(app.compiled_main_namespace());
     app.conn_ctx.lock().unwrap().replace(ctx);
     Ok(())
 }

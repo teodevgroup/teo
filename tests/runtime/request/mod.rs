@@ -17,6 +17,8 @@ mod tests {
     use crate::{assert_json, matcher};
     use crate::lib::handle::Handle;
     use crate::runtime::request::app::load_app;
+    use actix_multipart::test::create_form_data_payload_and_headers;
+    use actix_web::web::Bytes;
 
     static mut HANDLE: OnceCell<Handle> = OnceCell::new();
 
@@ -64,7 +66,6 @@ mod tests {
             .set_json(json!({}))
             .to_request();
         let res: Value = test::call_and_read_body_json(&app, req).await;
-        // {"path":"/","queryString":"","contentTypeFromHeader":"application/json","contentType":"application/json","method":"POST"}
         assert_eq!(res["queryString"], "foo=bar");
     }
 
@@ -132,5 +133,44 @@ mod tests {
             .to_request();
         let res = test::call_and_read_body(&app, req).await;
         assert_eq!(res.as_ref(), "foo/bar".as_bytes());
+    }
+
+    #[serial]
+    #[actix_web::test]
+    async fn json_body() {
+        let app = make_app().await;
+        let req = test::TestRequest::default()
+            .method(Method::PATCH)
+            .uri("/echo/jsonBody")
+            .set_json(json!({
+                "name": "foo",
+                "age": 1,
+            }))
+            .to_request();
+        let res: Value = test::call_and_read_body_json(&app, req).await;
+        assert_json!(res, matcher!({
+            "name": "foo",
+            "age": 1,
+        }))
+    }
+
+    #[serial]
+    #[actix_web::test]
+    async fn form_body() {
+        // TODO: complete this
+//         let app = make_app().await;
+//         let avatar = create_form_data_payload_and_headers("avatar", Some("a.jpg".to_owned()), None, Bytes::from_static(b"Lorem ipsum."));
+//         let name = create_form_data_payload_and_headers("name", None, None, Bytes::from_static(b"foo"));
+//         let req = test::TestRequest::default()
+//             .method(Method::PATCH)
+//             .uri("/echo/formBody")
+//             .
+// //            .set_payload(avatar.0 + name.0)
+//             .to_request();
+//         let res: Value = test::call_and_read_body_json(&app, req).await;
+//         assert_json!(res, matcher!({
+//             "name": "foo",
+//             "age": 1,
+//         }))
     }
 }

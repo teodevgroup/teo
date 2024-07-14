@@ -20,12 +20,12 @@ pub(crate) async fn make_actix_app(app: &teo::prelude::App) -> Result<App<impl S
     Error = actix_web::Error,
 > + 'static>> {
     app.prepare_for_run().await?;
-    connect_databases(app, app.main_namespace(), true).await?;
+    connect_databases(app, app.compiled_main_namespace(), true).await?;
     let conn_ctx = app.conn_ctx();
     migrate(app, false, false, true).await?;
-    if app.main_namespace().database().is_some() {
+    if app.compiled_main_namespace().database().is_some() {
         let mut diagnostics = Diagnostics::new();
-        let data_sets = load_data_sets(app.namespace_builder(), None, false, app.schema(), &mut diagnostics)?;
+        let data_sets = load_data_sets(app.main_namespace(), None, false, app.schema(), &mut diagnostics)?;
         let transaction_ctx = transaction::Ctx::new(app.conn_ctx().clone());
         purge(app).await?;
         seed(SeedCommandAction::Seed, data_sets, transaction_ctx, false).await?;
