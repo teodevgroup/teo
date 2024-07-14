@@ -1,0 +1,12 @@
+server {
+  bind: ("0.0.0.0", 4015)
+}
+
+@map(.get, "/textResponse")
+declare nonapi handler textResponse(): Any
+
+@map(.get, "/jsonResponse")
+declare nonapi handler jsonResponse(): Any
+
+@map(.get, "/fileResponse")
+declare nonapi handler fileResponse(): Any
