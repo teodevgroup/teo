@@ -29,6 +29,9 @@ impl IntoHttpResponse for Response {
             for key in self.headers().keys() {
                 builder.insert_header((key.clone(), self.headers().get(&key).unwrap().as_str()));
             }
+            for c in self.cookies() {
+                builder.cookie(c);
+            }
             match self.body().inner.as_ref() {
                 BodyInner::String(content) => return builder.body(content.to_string()),
                 BodyInner::Teon(value) => {
@@ -38,9 +41,6 @@ impl IntoHttpResponse for Response {
                     return builder.body(string_value);
                 },
                 _ => {},
-            }
-            for c in self.cookies() {
-                builder.cookie(c);
             }
             builder.finish()
         }

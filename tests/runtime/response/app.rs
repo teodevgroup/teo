@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
+use actix_web::cookie::Cookie;
 use teo_runtime::request::Request;
 use teo_runtime::response::Response;
 use teo_runtime::{request, teon, Value};
@@ -13,17 +14,23 @@ pub fn load_app() -> Result<App> {
         schema_path_args(file!(), "schema.teo")
     )?;
     app.main_namespace().define_handler("textResponse", |req: Request| async move {
-        Ok(Response::string("foo", "text/plain"))
+        let response = Response::string("foo", "text/plain");
+        response.add_cookie(Cookie::new("foo", "bar"));
+        Ok(response)
     });
     app.main_namespace().define_handler("jsonResponse", |req: Request| async move {
-        Ok(Response::teon(teon!({
+        let response = Response::teon(teon!({
             "foo": "bar"
-        })))
+        }));
+        response.add_cookie(Cookie::new("foo", "bar"));
+        Ok(response)
     });
     app.main_namespace().define_handler("fileResponse", |req: Request| async move {
         let path = Path::new(file!());
         let source = path.parent().unwrap().join("response.txt");
-        Ok(Response::file(source))
+        let response = Response::file(source);
+        response.add_cookie(Cookie::new("foo", "bar"));
+        Ok(response)
     });
     Ok(app)
 }

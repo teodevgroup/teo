@@ -50,7 +50,6 @@ mod tests {
         let req = test::TestRequest::default()
             .method(Method::GET)
             .uri("/textResponse")
-            .set_json(json!({}))
             .to_request();
         let res = test::call_and_read_body(&app, req).await;
         assert_eq!(res, "foo");
@@ -63,7 +62,6 @@ mod tests {
         let req = test::TestRequest::default()
             .method(Method::GET)
             .uri("/jsonResponse")
-            .set_json(json!({}))
             .to_request();
         let res: Value = test::call_and_read_body_json(&app, req).await;
         assert_json!(res, matcher!({
@@ -78,9 +76,44 @@ mod tests {
         let req = test::TestRequest::default()
             .method(Method::GET)
             .uri("/fileResponse")
-            .set_json(json!({}))
             .to_request();
         let res = test::call_and_read_body(&app, req).await;
         assert_eq!(res, "foo");
+    }
+
+    #[serial]
+    #[actix_web::test]
+    async fn cookie_in_text_response() {
+        let app = make_app().await;
+        let req = test::TestRequest::default()
+            .method(Method::GET)
+            .uri("/textResponse")
+            .to_request();
+        let res = test::call_service(&app, req).await;
+        assert_eq!(res.headers().get("set-cookie").unwrap().to_str().unwrap(), "foo=bar");
+    }
+
+    #[serial]
+    #[actix_web::test]
+    async fn cookie_in_json_response() {
+        let app = make_app().await;
+        let req = test::TestRequest::default()
+            .method(Method::GET)
+            .uri("/jsonResponse")
+            .to_request();
+        let res = test::call_service(&app, req).await;
+        assert_eq!(res.headers().get("set-cookie").unwrap().to_str().unwrap(), "foo=bar");
+    }
+
+    #[serial]
+    #[actix_web::test]
+    async fn cookie_in_file_response() {
+        let app = make_app().await;
+        let req = test::TestRequest::default()
+            .method(Method::GET)
+            .uri("/fileResponse")
+            .to_request();
+        let res = test::call_service(&app, req).await;
+        assert_eq!(res.headers().get("set-cookie").unwrap().to_str().unwrap(), "foo=bar");
     }
 }
