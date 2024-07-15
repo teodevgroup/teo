@@ -891,13 +891,13 @@
 - Rust: Add cookies to response **[DONE]**
 - Node.js and Python: Cookie APIs **[DONE]**
 - Add request unit tests **[DONE]**
-- Rust: Update entities generation to match newly upgraded API **[IN PROGRESS]**
+- Rust: Update entities generation to match newly upgraded API **[DONE]**
 
 ### 0.3.0-alpha.1
-- Node.js: Update entities generation to match newly upgraded API
-- Python: Update entities generation to match newly upgraded API
 - Node.js: setup unit tests
 - Python: setup unit tests
+- Node.js: Update entities generation to match newly upgraded API
+- Python: Update entities generation to match newly upgraded API
 - Update official documentation
 - `createObject`, `findManyObjects`, `findFirstObject` and `findUniqueObject` in entities
 - Node.js: complete namespace API sets
