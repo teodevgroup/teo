@@ -890,20 +890,21 @@
 - Update file response with status code and custom headers **[DONE]**
 - Rust: Add cookies to response **[DONE]**
 - Node.js and Python: Cookie APIs **[DONE]**
-- Add request unit tests **[IN PROGRESS]**
-- Node.js: setup unit tests
-- Python: setup unit tests
-- Update entities generation to match newly upgraded API
-- Update official documentation
-- `createObject`, `findManyObjects`, `findFirstObject` and `findUniqueObject` in entities
+- Add request unit tests **[DONE]**
+- Rust: Update entities generation to match newly upgraded API **[IN PROGRESS]**
 
 ### 0.3.0-alpha.1
-- Unit test for pipeline items
+- Node.js: Update entities generation to match newly upgraded API
+- Python: Update entities generation to match newly upgraded API
+- Node.js: setup unit tests
+- Python: setup unit tests
+- Update official documentation
+- `createObject`, `findManyObjects`, `findFirstObject` and `findUniqueObject` in entities
 - Node.js: complete namespace API sets
 - Python: complete namespace API sets
-- Add unit tests for Node.js and Python API
 
 ### 0.3.0-alpha.2
+- Unit test for pipeline items
 - Combined request in HTTP clients
 - Remove paging information from `findMany`
 
