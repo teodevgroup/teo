@@ -29,20 +29,20 @@ use crate::prelude::{Entrance, RuntimeVersion};
 #[derive(Educe)]
 #[educe(Debug)]
 pub struct App {
-    pub(crate) argv: Option<Vec<String>>,
-    pub(crate) runtime_version: RuntimeVersion,
-    pub(crate) entrance: Entrance,
-    pub(crate) main_namespace: namespace::Builder,
-    pub(crate) compiled_main_namespace: Arc<Mutex<&'static Namespace>>,
-    pub(crate) cli: CLI,
+    argv: Option<Vec<String>>,
+    runtime_version: RuntimeVersion,
+    entrance: Entrance,
+    main_namespace: namespace::Builder,
+    compiled_main_namespace: Arc<Mutex<&'static Namespace>>,
+    cli: CLI,
     #[educe(Debug(ignore))]
-    pub(crate) schema: Schema,
+    schema: Schema,
     #[educe(Debug(ignore))]
-    pub setup: Arc<Mutex<Option<Arc<dyn AsyncCallback>>>>,
+    setup: Arc<Mutex<Option<Arc<dyn AsyncCallback>>>>,
     #[educe(Debug(ignore))]
-    pub(crate) programs: Arc<Mutex<BTreeMap<String, Program>>>,
+    programs: Arc<Mutex<BTreeMap<String, Program>>>,
     #[educe(Debug(ignore))]
-    pub(crate) conn_ctx: Arc<Mutex<Option<connection::Ctx>>>,
+    conn_ctx: Arc<Mutex<Option<connection::Ctx>>>,
     /// This is designed for Node.js and Python
     /// A place to store dynamic runtime classes
     #[educe(Debug(ignore))]
@@ -103,7 +103,7 @@ impl App {
         }));
     }
 
-    pub(crate) fn get_setup(&self) -> Option<Arc<dyn AsyncCallback>> {
+    pub fn get_setup(&self) -> Option<Arc<dyn AsyncCallback>> {
         self.setup.lock().unwrap().clone()
     }
 
@@ -140,6 +140,10 @@ impl App {
 
     pub fn conn_ctx(&self) -> connection::Ctx {
         self.conn_ctx.lock().unwrap().clone().unwrap()
+    }
+
+    pub fn replace_conn_ctx(&self, ctx: connection::Ctx) {
+        *self.conn_ctx.lock().unwrap() = Some(ctx);
     }
 
     pub fn runtime_version(&self) -> RuntimeVersion {

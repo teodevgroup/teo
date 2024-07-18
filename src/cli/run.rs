@@ -11,7 +11,7 @@ use crate::purge::purge;
 use crate::seeder::seed::seed;
 
 pub async fn run(app: &App) -> Result<()> {
-    let cli = &app.cli;
+    let cli = app.cli();
     match &cli.command {
         CLICommand::Serve(serve_command) => {
             connect_databases(app, app.compiled_main_namespace(), cli.silent).await?;
