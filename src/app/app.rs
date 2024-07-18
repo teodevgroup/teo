@@ -158,19 +158,19 @@ impl App {
         &self.programs
     }
 
-    pub(crate) fn dynamic_classes_pointer(&self) -> * mut () {
+    pub fn dynamic_classes_pointer(&self) -> * mut () {
         self.dynamic_classes_pointer.get()
     }
 
-    pub(crate) fn set_dynamic_classes_pointer(&self, pointer: * mut ()) {
+    pub fn set_dynamic_classes_pointer(&self, pointer: * mut ()) {
         self.dynamic_classes_pointer.set(pointer);
     }
 
-    pub(crate) fn dynamic_classes_clean_up(&self) -> Option<Arc<dyn Cleanup>> {
+    pub fn dynamic_classes_clean_up(&self) -> Option<Arc<dyn Cleanup>> {
         self.dynamic_classes_clean_up.lock().unwrap().clone()
     }
 
-    pub(crate) fn set_dynamic_classes_clean_up(&self, clean_up: Arc<dyn Cleanup>) {
+    pub fn set_dynamic_classes_clean_up(&self, clean_up: Arc<dyn Cleanup>) {
         *self.dynamic_classes_clean_up.lock().unwrap() = Some(clean_up);
     }
 }
