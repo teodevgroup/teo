@@ -8,8 +8,8 @@ use teo_runtime::namespace::Namespace;
 use teo_sql_connector::connector::SQLConnection;
 use teo_sql_connector::schema::dialect::SQLDialect;
 use teo_mongodb_connector::connector::MongoDBConnection;
+use teo_runtime::app::App;
 use teo_runtime::connection::Ctx as ConnCtx;
-use crate::app::App;
 use crate::message::info_message;
 
 pub async fn connect_databases(app: &App, namespace: &Namespace, silent: bool) -> Result<()> {

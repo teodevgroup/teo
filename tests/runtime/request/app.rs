@@ -1,7 +1,7 @@
 use teo_runtime::request::Request;
 use teo_runtime::response::Response;
 use teo_runtime::{request, teon, Value};
-use teo::app::App;
+use teo_runtime::app::App;
 use teo::result::Result;
 use crate::lib::schema_path::schema_path_args;
 

@@ -1,17 +1,19 @@
 pub mod cli;
-pub mod app;
 pub mod server;
 pub mod migrate;
 pub mod purge;
 pub mod seeder;
 pub mod result;
 mod message;
+pub mod database;
+
+pub use cli::app_run::AppExt;
 
 pub mod prelude {
-    pub use crate::app::App;
-    pub use crate::app;
-    pub use crate::cli::entrance::Entrance;
-    pub use crate::cli::runtime_version::RuntimeVersion;
+    pub use teo_runtime::app;
+    pub use teo_runtime::app::App;
+    pub use teo_runtime::app::entrance::Entrance;
+    pub use teo_runtime::app::runtime_version::RuntimeVersion;
     pub use crate::server::static_files::serve_static_files;
     pub use teo_runtime::namespace::Namespace;
     pub extern crate teo_result;

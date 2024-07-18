@@ -1,11 +1,11 @@
 use teo_parser::diagnostics::diagnostics::Diagnostics;
 use teo_result::{Error, Result};
-use crate::app::database::connect_databases;
-use crate::cli::command::{CLI, CLICommand, GenerateCommand, SeedCommandAction};
+use teo_runtime::app::App;
+use teo_runtime::app::cli::{CLICommand, GenerateCommand, SeedCommandAction};
 use crate::server::make::serve;
 use teo_runtime::connection::transaction;
 use teo_runtime::schema::load::load_data_sets::load_data_sets;
-use crate::app::App;
+use crate::database::connect_databases;
 use crate::migrate::migrate;
 use crate::purge::purge;
 use crate::seeder::seed::seed;
