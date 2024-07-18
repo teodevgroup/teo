@@ -26,9 +26,14 @@ use crate::app::program::Program;
 use crate::cli::command::CLI;
 use crate::prelude::{Entrance, RuntimeVersion};
 
+#[derive(Clone, Debug)]
+pub struct App {
+    inner: Arc<Inner>,
+}
+
 #[derive(Educe)]
 #[educe(Debug)]
-pub struct App {
+pub struct Inner {
     argv: Option<Vec<String>>,
     runtime_version: RuntimeVersion,
     entrance: Entrance,
@@ -81,45 +86,47 @@ impl App {
         let namespace_builder = namespace::Builder::main();
         load_std(&namespace_builder);
         Ok(Self {
-            argv,
-            runtime_version,
-            entrance,
-            cli,
-            schema,
-            main_namespace: namespace_builder,
-            compiled_main_namespace: Arc::new(Mutex::new(unsafe { &*null() })),
-            setup: Arc::new(Mutex::new(None)),
-            programs: Arc::new(Mutex::new(btreemap!{})),
-            conn_ctx: Arc::new(Mutex::new(None)),
-            dynamic_classes_pointer: Cell::new(null_mut()),
-            dynamic_classes_clean_up: Arc::new(Mutex::new(None)),
+            inner: Arc::new(Inner {
+                argv,
+                runtime_version,
+                entrance,
+                cli,
+                schema,
+                main_namespace: namespace_builder,
+                compiled_main_namespace: Arc::new(Mutex::new(unsafe { &*null() })),
+                setup: Arc::new(Mutex::new(None)),
+                programs: Arc::new(Mutex::new(btreemap!{})),
+                conn_ctx: Arc::new(Mutex::new(None)),
+                dynamic_classes_pointer: Cell::new(null_mut()),
+                dynamic_classes_clean_up: Arc::new(Mutex::new(None)),
+            })
         })
     }
 
     pub fn setup<A, F>(&self, f: F) where F: AsyncCallbackArgument<A> + 'static {
         let wrap_call = Box::leak(Box::new(f));
-        *self.setup.lock().unwrap() = Some(Arc::new(|ctx: transaction::Ctx| async {
+        *self.inner.setup.lock().unwrap() = Some(Arc::new(|ctx: transaction::Ctx| async {
             wrap_call.call(ctx).await
         }));
     }
 
     pub fn get_setup(&self) -> Option<Arc<dyn AsyncCallback>> {
-        self.setup.lock().unwrap().clone()
+        self.inner.setup.lock().unwrap().clone()
     }
 
     pub fn program<A, T, F>(&self, name: &str, desc: Option<T>, f: F) where T: Into<String>, F: AsyncCallbackArgument<A> + 'static {
         let wrap_call = Box::leak(Box::new(f));
-        self.programs.lock().unwrap().insert(name.to_owned(), Program::new(desc.map(|desc| desc.into()), Arc::new(|ctx: transaction::Ctx| async {
+        self.inner.programs.lock().unwrap().insert(name.to_owned(), Program::new(desc.map(|desc| desc.into()), Arc::new(|ctx: transaction::Ctx| async {
             wrap_call.call(ctx).await
         })));
     }
 
     pub fn compiled_main_namespace(&self) -> &'static Namespace {
-        *self.compiled_main_namespace.lock().unwrap()
+        *self.inner.compiled_main_namespace.lock().unwrap()
     }
 
     pub fn main_namespace(&self) -> &namespace::Builder {
-        &self.main_namespace
+        &self.inner.main_namespace
     }
 
     pub async fn run(&self) -> Result<()> {
@@ -130,7 +137,7 @@ impl App {
     pub async fn prepare_for_run(&self) -> Result<()> {
         load_schema(self.main_namespace(), self.schema(), self.cli().command.ignores_loading()).await?;
         let namespace = Box::into_raw(Box::new(self.main_namespace().build()));
-        *self.compiled_main_namespace.lock().unwrap() = unsafe { &*namespace };
+        *self.inner.compiled_main_namespace.lock().unwrap() = unsafe { &*namespace };
         Ok(())
     }
 
@@ -139,47 +146,47 @@ impl App {
     }
 
     pub fn conn_ctx(&self) -> connection::Ctx {
-        self.conn_ctx.lock().unwrap().clone().unwrap()
+        self.inner.conn_ctx.lock().unwrap().clone().unwrap()
     }
 
     pub fn replace_conn_ctx(&self, ctx: connection::Ctx) {
-        *self.conn_ctx.lock().unwrap() = Some(ctx);
+        *self.inner.conn_ctx.lock().unwrap() = Some(ctx);
     }
 
     pub fn runtime_version(&self) -> RuntimeVersion {
-        self.runtime_version.clone()
+        self.inner.runtime_version.clone()
     }
 
     pub fn entrance(&self) -> Entrance {
-        self.entrance.clone()
+        self.inner.entrance.clone()
     }
 
     pub fn schema(&self) -> &Schema {
-        &self.schema
+        &self.inner.schema
     }
 
     pub fn cli(&self) -> &CLI {
-        &self.cli
+        &self.inner.cli
     }
 
     pub(crate) fn programs(&self) -> BTreeMap<String, Program> {
-        self.programs.lock().unwrap().clone()
+        self.inner.programs.lock().unwrap().clone()
     }
 
     pub fn dynamic_classes_pointer(&self) -> * mut () {
-        self.dynamic_classes_pointer.get()
+        self.inner.dynamic_classes_pointer.get()
     }
 
     pub fn set_dynamic_classes_pointer(&self, pointer: * mut ()) {
-        self.dynamic_classes_pointer.set(pointer);
+        self.inner.dynamic_classes_pointer.set(pointer);
     }
 
     pub fn dynamic_classes_clean_up(&self) -> Option<Arc<dyn Cleanup>> {
-        self.dynamic_classes_clean_up.lock().unwrap().clone()
+        self.inner.dynamic_classes_clean_up.lock().unwrap().clone()
     }
 
     pub fn set_dynamic_classes_clean_up(&self, clean_up: Arc<dyn Cleanup>) {
-        *self.dynamic_classes_clean_up.lock().unwrap() = Some(clean_up);
+        *self.inner.dynamic_classes_clean_up.lock().unwrap() = Some(clean_up);
     }
 }
 
