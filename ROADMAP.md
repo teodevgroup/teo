@@ -894,7 +894,7 @@
 - Rust: Update entities generation to match newly upgraded API **[DONE]**
 
 ### 0.3.0-alpha.1
-- Node.js: Update entities generation to match newly upgraded API
+- Node.js: Update entities generation to match newly upgraded API **[IN PROGRESS]**
 - Python: Update entities generation to match newly upgraded API
 - Node.js: setup unit tests
 - Python: setup unit tests
