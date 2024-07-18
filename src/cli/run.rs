@@ -30,7 +30,7 @@ pub async fn run(app: &App) -> Result<()> {
                 }
             }
             // setup
-            if let Some(setup) = app.setup.lock().unwrap().clone() {
+            if let Some(setup) = app.get_setup() {
                 let transaction_ctx = transaction::Ctx::new(app.conn_ctx().clone());
                 setup.call(transaction_ctx).await?;
             }

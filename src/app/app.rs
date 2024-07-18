@@ -103,6 +103,10 @@ impl App {
         }));
     }
 
+    pub(crate) fn get_setup(&self) -> Option<Arc<dyn AsyncCallback>> {
+        self.setup.lock().unwrap().clone()
+    }
+
     pub fn program<A, T, F>(&self, name: &str, desc: Option<T>, f: F) where T: Into<String>, F: AsyncCallbackArgument<A> + 'static {
         let wrap_call = Box::leak(Box::new(f));
         self.programs.lock().unwrap().insert(name.to_owned(), Program::new(desc.map(|desc| desc.into()), Arc::new(|ctx: transaction::Ctx| async {
