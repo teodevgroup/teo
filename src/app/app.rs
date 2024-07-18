@@ -38,9 +38,9 @@ pub struct App {
     #[educe(Debug(ignore))]
     pub(crate) schema: Schema,
     #[educe(Debug(ignore))]
-    pub setup: Option<Arc<dyn AsyncCallback>>,
+    pub setup: Arc<Mutex<Option<Arc<dyn AsyncCallback>>>>,
     #[educe(Debug(ignore))]
-    pub(crate) programs: BTreeMap<String, Program>,
+    pub(crate) programs: Arc<Mutex<BTreeMap<String, Program>>>,
     #[educe(Debug(ignore))]
     pub(crate) conn_ctx: Arc<Mutex<Option<connection::Ctx>>>,
     /// This is designed for Node.js and Python
@@ -88,24 +88,24 @@ impl App {
             schema,
             main_namespace: namespace_builder,
             compiled_main_namespace: Arc::new(Mutex::new(unsafe { &*null() })),
-            setup: None,
-            programs: btreemap!{},
+            setup: Arc::new(Mutex::new(None)),
+            programs: Arc::new(Mutex::new(btreemap!{})),
             conn_ctx: Arc::new(Mutex::new(None)),
             dynamic_classes_pointer: Cell::new(null_mut()),
             dynamic_classes_clean_up: Arc::new(Mutex::new(None)),
         })
     }
 
-    pub fn setup<A, F>(&mut self, f: F) where F: AsyncCallbackArgument<A> + 'static {
+    pub fn setup<A, F>(&self, f: F) where F: AsyncCallbackArgument<A> + 'static {
         let wrap_call = Box::leak(Box::new(f));
-        self.setup = Some(Arc::new(|ctx: transaction::Ctx| async {
+        *self.setup.lock().unwrap() = Some(Arc::new(|ctx: transaction::Ctx| async {
             wrap_call.call(ctx).await
         }));
     }
 
-    pub fn program<A, T, F>(&mut self, name: &str, desc: Option<T>, f: F) where T: Into<String>, F: AsyncCallbackArgument<A> + 'static {
+    pub fn program<A, T, F>(&self, name: &str, desc: Option<T>, f: F) where T: Into<String>, F: AsyncCallbackArgument<A> + 'static {
         let wrap_call = Box::leak(Box::new(f));
-        self.programs.insert(name.to_owned(), Program::new(desc.map(|desc| desc.into()), Arc::new(|ctx: transaction::Ctx| async {
+        self.programs.lock().unwrap().insert(name.to_owned(), Program::new(desc.map(|desc| desc.into()), Arc::new(|ctx: transaction::Ctx| async {
             wrap_call.call(ctx).await
         })));
     }
@@ -154,8 +154,8 @@ impl App {
         &self.cli
     }
 
-    pub(crate) fn programs(&self) -> &BTreeMap<String, Program> {
-        &self.programs
+    pub(crate) fn programs(&self) -> BTreeMap<String, Program> {
+        self.programs.lock().unwrap().clone()
     }
 
     pub fn dynamic_classes_pointer(&self) -> * mut () {

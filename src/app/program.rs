@@ -4,6 +4,7 @@ use crate::app::callbacks::callback::AsyncCallback;
 
 #[derive(Educe)]
 #[educe(Debug)]
+#[derive(Clone)]
 pub struct Program {
     #[educe(Debug(ignore))]
     pub(crate) func: Arc<dyn AsyncCallback>,

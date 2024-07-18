@@ -30,7 +30,7 @@ pub async fn run(app: &App) -> Result<()> {
                 }
             }
             // setup
-            if let Some(setup) = app.setup.clone() {
+            if let Some(setup) = app.setup.lock().unwrap().clone() {
                 let transaction_ctx = transaction::Ctx::new(app.conn_ctx().clone());
                 setup.call(transaction_ctx).await?;
             }
@@ -128,7 +128,8 @@ pub async fn run(app: &App) -> Result<()> {
             } else {
                 if let Some(name) = &run_command.name {
                     connect_databases(app, app.compiled_main_namespace(), cli.silent).await?;
-                    let program = app.programs().get(name).ok_or_else(|| Error::new(format!("Program '{}' is not defined", name)))?;
+                    let programs = app.programs();
+                    let program = programs.get(name).ok_or_else(|| Error::new(format!("Program '{}' is not defined", name)))?;
                     let transaction_ctx = transaction::Ctx::new(app.conn_ctx().clone());
                     program.func.call(transaction_ctx).await?;
                     std::process::exit(0);

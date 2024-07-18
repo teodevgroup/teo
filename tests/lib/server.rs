@@ -31,7 +31,7 @@ pub(crate) async fn make_actix_app(app: &teo::prelude::App) -> Result<App<impl S
         seed(SeedCommandAction::Seed, data_sets, transaction_ctx, false).await?;
     }
     // setup
-    if let Some(setup) = app.setup.clone() {
+    if let Some(setup) = app.setup.lock().unwrap().clone() {
         let transaction_ctx = transaction::Ctx::new(app.conn_ctx().clone());
         setup.call(transaction_ctx).await?;
     }
