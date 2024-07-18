@@ -894,14 +894,12 @@
 - Rust: Update entities generation to match newly upgraded API **[DONE]**
 
 ### 0.3.0-alpha.1
-- Node.js: setup unit tests
-- Python: setup unit tests
 - Node.js: Update entities generation to match newly upgraded API
 - Python: Update entities generation to match newly upgraded API
+- Node.js: setup unit tests
+- Python: setup unit tests
 - Update official documentation
 - `createObject`, `findManyObjects`, `findFirstObject` and `findUniqueObject` in entities
-- Node.js: complete namespace API sets
-- Python: complete namespace API sets
 
 ### 0.3.0-alpha.2
 - Unit test for pipeline items
@@ -913,6 +911,8 @@
 
 ### 0.3.1
 - Handlers call handlers
+- Node.js: complete namespace API sets
+- Python: complete namespace API sets
 
 ### 0.3.2
 - `@onSet!()` and `@onSet?()`

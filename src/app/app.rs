@@ -1,7 +1,8 @@
+use std::cell::Cell;
 use std::collections::BTreeMap;
 use std::process::exit;
 use std::env::current_dir;
-use std::ptr::null;
+use std::ptr::{null, null_mut};
 use std::sync::{Arc, Mutex};
 use teo_result::{Error, Result};
 use teo_runtime::namespace::Namespace;
@@ -20,6 +21,7 @@ use teo_parser::ast::schema::Schema;
 use teo_runtime::connection::transaction;
 use teo_runtime::connection;
 use crate::app::callbacks::callback::{AsyncCallback, AsyncCallbackArgument};
+use crate::app::cleanup::Cleanup;
 use crate::app::program::Program;
 use crate::cli::command::CLI;
 use crate::prelude::{Entrance, RuntimeVersion};
@@ -41,6 +43,13 @@ pub struct App {
     pub(crate) programs: BTreeMap<String, Program>,
     #[educe(Debug(ignore))]
     pub(crate) conn_ctx: Arc<Mutex<Option<connection::Ctx>>>,
+    /// This is designed for Node.js and Python
+    /// A place to store dynamic runtime classes
+    #[educe(Debug(ignore))]
+    dynamic_classes_pointer: Cell<* mut ()>,
+    /// This is designed for Node.js and Python
+    #[educe(Debug(ignore))]
+    dynamic_classes_clean_up: Arc<Mutex<Option<Arc<dyn Cleanup>>>>,
 }
 
 impl App {
@@ -82,6 +91,8 @@ impl App {
             setup: None,
             programs: btreemap!{},
             conn_ctx: Arc::new(Mutex::new(None)),
+            dynamic_classes_pointer: Cell::new(null_mut()),
+            dynamic_classes_clean_up: Arc::new(Mutex::new(None)),
         })
     }
 
@@ -146,16 +157,37 @@ impl App {
     pub(crate) fn programs(&self) -> &BTreeMap<String, Program> {
         &self.programs
     }
+
+    pub(crate) fn dynamic_classes_pointer(&self) -> * mut () {
+        self.dynamic_classes_pointer.get()
+    }
+
+    pub(crate) fn set_dynamic_classes_pointer(&self, pointer: * mut ()) {
+        self.dynamic_classes_pointer.set(pointer);
+    }
+
+    pub(crate) fn dynamic_classes_clean_up(&self) -> Option<Arc<dyn Cleanup>> {
+        self.dynamic_classes_clean_up.lock().unwrap().clone()
+    }
+
+    pub(crate) fn set_dynamic_classes_clean_up(&self, clean_up: Arc<dyn Cleanup>) {
+        *self.dynamic_classes_clean_up.lock().unwrap() = Some(clean_up);
+    }
 }
 
 // impl Drop for App {
 //     fn drop(&mut self) {
-//         let p = unsafe { self.main_namespace() as *const Namespace as *mut Namespace };
+//         // drop dynamic classes
+//         if let Some(clean_up) = self.dynamic_classes_clean_up() {
+//             clean_up.call(self);
+//         }
+//         // drop namespace
+//         let p = unsafe { self.compiled_main_namespace() as *const Namespace as *mut Namespace };
 //         if !p.is_null() {
 //             let _ = unsafe { Box::from_raw(p) };
 //         }
 //     }
 // }
 
-unsafe impl Send for App {}
-unsafe impl Sync for App {}
+unsafe impl Send for App { }
+unsafe impl Sync for App { }
