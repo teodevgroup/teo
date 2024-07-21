@@ -1,7 +1,7 @@
 use teo_parser::diagnostics::diagnostics::Diagnostics;
 use teo_result::{Error, Result};
-use teo_runtime::app::App;
-use teo_runtime::app::cli::{CLICommand, GenerateCommand, SeedCommandAction};
+use crate::app::App;
+use crate::cli::command::{CLICommand, GenerateCommand, SeedCommandAction};
 use crate::server::make::serve;
 use teo_runtime::connection::transaction;
 use teo_runtime::schema::load::load_data_sets::load_data_sets;

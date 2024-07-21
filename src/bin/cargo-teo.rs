@@ -1,8 +1,7 @@
 use tokio::main;
 use teo_result::Result;
-use teo_runtime::app::App;
+use teo::app::App;
 use teo_runtime::app::entrance::Entrance;
-use teo::AppExt;
 
 #[main]
 async fn main() -> Result<()> {

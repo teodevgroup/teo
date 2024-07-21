@@ -1,5 +1,5 @@
 use teo_result::Result;
-use teo_runtime::app::App;
+use crate::app::App;
 
 pub async fn migrate(app: &App, dry_run: bool, reset: bool, silent: bool) -> Result<()> {
     let ctx = app.conn_ctx();

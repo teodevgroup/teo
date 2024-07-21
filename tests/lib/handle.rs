@@ -2,7 +2,7 @@ use std::ptr::null;
 use actix_http::body::MessageBody;
 use actix_web::dev::{Service, ServiceResponse};
 use actix_web::test;
-use teo_runtime::app::App;
+use teo::app::App;
 use crate::lib::server::make_actix_app;
 
 pub(crate) struct Handle {

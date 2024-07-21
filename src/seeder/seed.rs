@@ -9,13 +9,13 @@ use crate::seeder::models::data_set_record::DataSetRecord;
 use crate::seeder::models::data_set_relation::DataSetRelation;
 use teo_runtime::teon;
 use teo_result::Result;
-use teo_runtime::app::cli::SeedCommandAction;
 use teo_runtime::connection::transaction;
 use teo_runtime::data_set::{DataSet, Group, Record};
 use teo_runtime::model::field::is_optional::IsOptional;
 use teo_runtime::model::{Model, Object, Relation};
 use teo_runtime::model::field::typed::Typed;
 use teo_runtime::traits::named::Named;
+use crate::cli::command::SeedCommandAction;
 
 pub async fn seed(action: SeedCommandAction, datasets: Vec<DataSet>, ctx: transaction::Ctx, exit: bool) -> Result<()> {
     // seed for user

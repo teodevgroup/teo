@@ -1,8 +1,8 @@
 use teo_parser::diagnostics::diagnostics::Diagnostics;
-use teo_runtime::app::App;
-use teo_runtime::app::cli::SeedCommandAction;
+use teo::app::App;
 use teo_runtime::connection::transaction;
 use teo_runtime::schema::load::load_data_sets::load_data_sets;
+use teo::cli::command::SeedCommandAction;
 use teo::purge::purge;
 use teo::result::Result;
 use teo::seeder::seed::seed;

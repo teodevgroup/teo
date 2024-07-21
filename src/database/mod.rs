@@ -8,7 +8,7 @@ use teo_runtime::namespace::Namespace;
 use teo_sql_connector::connector::SQLConnection;
 use teo_sql_connector::schema::dialect::SQLDialect;
 use teo_mongodb_connector::connector::MongoDBConnection;
-use teo_runtime::app::App;
+use crate::app::App;
 use teo_runtime::connection::Ctx as ConnCtx;
 use crate::message::info_message;
 
