@@ -77,7 +77,8 @@ impl App {
         if diagnostics.has_errors() {
             exit(1);
         }
-        let namespace_builder = namespace::Builder::main();
+        let app_data = AppData::new(entrance, runtime_version);
+        let namespace_builder = namespace::Builder::main(app_data.clone());
         load_std(&namespace_builder);
         Ok(Self {
             inner: Arc::new(Inner {
@@ -89,7 +90,7 @@ impl App {
                 setup: Arc::new(Mutex::new(None)),
                 programs: Arc::new(Mutex::new(btreemap!{})),
                 conn_ctx: Arc::new(Mutex::new(None)),
-                app_data: AppData::new(entrance, runtime_version),
+                app_data,
             })
         })
     }
