@@ -8,9 +8,9 @@ use teo_result::{Error, Result};
 use teo_runtime::namespace::Namespace;
 use teo_runtime::namespace;
 use teo_runtime::utils::find_main_schema_file;
-use teo_parser::{parse as schema_parse};
+use teo_parser::parse as schema_parse;
 use teo_parser::diagnostics::printer::print_diagnostics;
-use teo_runtime::stdlib::load::{load as load_std};
+use teo_runtime::stdlib::load::load as load_std;
 use teo_runtime::schema::load::load_schema::load_schema;
 use dotenvy::dotenv;
 use educe::Educe;
@@ -153,8 +153,8 @@ impl App {
         *self.inner.compiled_main_namespace.lock().unwrap() = main_namespace;
     }
 
-    pub fn app_data(&self) -> AppData {
-        self.inner.app_data.clone()
+    pub fn app_data(&self) -> &AppData {
+        &self.inner.app_data
     }
 
     pub async fn run(&self) -> Result<()> {
