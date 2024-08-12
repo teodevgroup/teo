@@ -894,15 +894,16 @@
 - Rust: Update entities generation to match newly upgraded API **[DONE]**
 
 ### 0.3.0-alpha.1
-- Node.js: Update entities generation to match newly upgraded API **[IN PROGRESS]**
-- Python: Update entities generation to match newly upgraded API
+- Node.js: Separate memory management for generated classes **[DONE]**
+- Python: Separate memory management for generated classes **[DONE]**
 - Node.js: setup unit tests
 - Python: setup unit tests
+- Node.js: unit tests
+- Python: unit tests
 - Update official documentation
 - `createObject`, `findManyObjects`, `findFirstObject` and `findUniqueObject` in entities
 
 ### 0.3.0-alpha.2
-- Unit test for pipeline items
 - Combined request in HTTP clients
 - Remove paging information from `findMany`
 
@@ -946,6 +947,9 @@
 
 ### 0.3.9
 - Admin dashboard: dashboards
+
+### 0.3.10
+- Unit test for pipeline items
 
 ### 0.3.15
 - Windows: When server startup, fix port is not taken bug
