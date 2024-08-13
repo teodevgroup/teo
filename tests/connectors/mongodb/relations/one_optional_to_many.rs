@@ -5,20 +5,20 @@ use test_helpers_async::after_each;
 mod tests {
     use std::cell::OnceCell;
     use actix_web::{http::header::ContentType, test};
-    use crate::lib::server::make_actix_app;
+    use teo::test::server::make_actix_app;
     use teo::prelude::App;
     use std::file;
     use actix_http::body::MessageBody;
     use actix_http::Method;
     use actix_web::dev::{Service, ServiceRequest, ServiceResponse};
-    use crate::lib::schema_path::schema_path_args;
+    use teo::test::schema_path::schema_path_args;
     use serde_json::{json, Value};
     use crate::{assert_json, matcher};
-    use crate::lib::handle::Handle;
+    use teo::test::handle::Handle;
     use serial_test::serial;
     use crate::lib::matcher_functions::one_match;
-    use crate::lib::purge_and_seed::purge_and_seed;
-    use crate::lib::req::req;
+    use teo::test::purge_and_seed::purge_and_seed;
+    use teo::test::req::req;
 
     static mut HANDLE: OnceCell<Handle> = OnceCell::new();
 

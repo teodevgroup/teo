@@ -4,15 +4,15 @@ use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use teo_parser::diagnostics::diagnostics::Diagnostics;
 use teo_runtime::connection::transaction;
 use teo_runtime::schema::load::load_data_sets::load_data_sets;
-use teo::cli::command::SeedCommandAction;
-use teo::database::connect_databases;
-use teo::migrate::migrate;
-use teo::purge::purge;
-use teo::result::Result;
-use teo::seeder::seed::seed;
-use teo::server::make::make_server_app;
+use crate::cli::command::SeedCommandAction;
+use crate::database::connect_databases;
+use crate::migrate::migrate;
+use crate::purge::purge;
+use crate::result::Result;
+use crate::seeder::seed::seed;
+use crate::server::make::make_server_app;
 
-pub(crate) async fn make_actix_app(app: &teo::prelude::App) -> Result<App<impl ServiceFactory<
+pub async fn make_actix_app(app: &crate::prelude::App) -> Result<App<impl ServiceFactory<
     ServiceRequest,
     Response = ServiceResponse<impl MessageBody>,
     Config = (),

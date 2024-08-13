@@ -4,7 +4,7 @@ use actix_web::dev::{Service, ServiceResponse};
 use actix_web::test;
 use serde_json::Value;
 
-pub(crate) async fn req(app: &impl Service<
+pub async fn req(app: &impl Service<
     actix_http::Request,
     Response = ServiceResponse<impl MessageBody>,
     Error = actix_web::Error,

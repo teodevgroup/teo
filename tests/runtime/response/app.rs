@@ -7,7 +7,7 @@ use teo_runtime::response::Response;
 use teo_runtime::{request, teon, Value};
 use teo::app::App;
 use teo::result::Result;
-use crate::lib::schema_path::schema_path_args;
+use teo::test::schema_path::schema_path_args;
 
 pub fn load_app() -> Result<App> {
     let app = App::new_with_argv(

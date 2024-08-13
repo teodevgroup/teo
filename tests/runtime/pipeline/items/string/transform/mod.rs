@@ -2,18 +2,18 @@
 mod tests {
     use std::cell::OnceCell;
     use actix_web::{http::header::ContentType, test};
-    use crate::lib::server::make_actix_app;
+    use teo::test::server::make_actix_app;
     use teo::prelude::App;
     use std::file;
     use actix_http::body::MessageBody;
     use actix_http::Method;
     use actix_web::dev::{Service, ServiceRequest, ServiceResponse};
-    use crate::lib::schema_path::schema_path_args;
+    use teo::test::schema_path::schema_path_args;
     use serde_json::{json, Value};
     use serial_test::serial;
     use test_helpers_async::*;
     use crate::{assert_json, matcher};
-    use crate::lib::handle::Handle;
+    use teo::test::handle::Handle;
 
     static mut HANDLE: OnceCell<Handle> = OnceCell::new();
 
