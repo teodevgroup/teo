@@ -110,7 +110,7 @@ We structure our messages like this:
 Run this command to startup testing databases:
 
 ```sh
-docker-compose -f databases.yml up -d
+docker compose -f databases.yml up -d
 ```
 
 ### Run integration tests
