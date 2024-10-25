@@ -16,8 +16,8 @@ teo-runtime = { version = "0.3.0-alpha.0", path = "../teo-runtime" }
 teo-sql-connector = { version = "0.3.0-alpha.0", path = "../teo-sql-connector" }
 teo-mongodb-connector = { version = "0.3.0-alpha.0", path = "../teo-mongodb-connector" }
 teo-generator = { version = "0.3.0-alpha.0", path = "../teo-generator" }
-actix-web = "4.8.0"
-actix-http = "3.8.0"
+actix-web = "4.9.0"
+actix-http = "3.9.0"
 actix-multipart = "0.7.2"
 actix-files = "0.6.6"
 serde = { version = "1.0", features = ["derive"] }
@@ -52,6 +52,7 @@ educe = "0.5.9"
 colored = "2.1.0"
 bson = { version = "2.9.0", features = ["chrono-0_4", "serde_with"] }
 ring = "0.17.7"
+time = "0.3.36"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 openssl = { version = "0.10", features = ["vendored"] }

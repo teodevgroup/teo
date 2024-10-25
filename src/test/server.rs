@@ -12,16 +12,9 @@ use crate::result::Result;
 use crate::seeder::seed::seed;
 use crate::server::make::make_server_app;
 
-pub async fn make_actix_app(app: &crate::prelude::App) -> Result<App<impl ServiceFactory<
-    ServiceRequest,
-    Response = ServiceResponse<impl MessageBody>,
-    Config = (),
-    InitError = (),
-    Error = actix_web::Error,
-> + 'static>> {
+pub async fn prepare_app_for_test(app: &crate::prelude::App) -> Result<()> {
     app.prepare_for_run().await?;
     connect_databases(app, app.compiled_main_namespace(), true).await?;
-    let conn_ctx = app.conn_ctx();
     migrate(app, false, false, true).await?;
     if app.compiled_main_namespace().database().is_some() {
         let mut diagnostics = Diagnostics::new();
@@ -35,7 +28,29 @@ pub async fn make_actix_app(app: &crate::prelude::App) -> Result<App<impl Servic
         let transaction_ctx = transaction::Ctx::new(app.conn_ctx().clone());
         setup.call(transaction_ctx).await?;
     }
+    Ok(())
+}
+
+pub async fn make_actix_app_without_prepare(app: &crate::prelude::App) -> Result<App<impl ServiceFactory<
+    ServiceRequest,
+    Response = ServiceResponse<impl MessageBody>,
+    Config = (),
+    InitError = (),
+    Error = actix_web::Error,
+> + 'static>> {
+    let conn_ctx = app.conn_ctx();
     let namespace = conn_ctx.namespace();
     let server_conf = conn_ctx.namespace().server().unwrap();
     Ok(make_server_app(namespace, server_conf))
+}
+
+pub async fn make_actix_app(app: &crate::prelude::App) -> Result<App<impl ServiceFactory<
+    ServiceRequest,
+    Response = ServiceResponse<impl MessageBody>,
+    Config = (),
+    InitError = (),
+    Error = actix_web::Error,
+> + 'static>> {
+    prepare_app_for_test(app).await?;
+    make_actix_app_without_prepare(app).await
 }
