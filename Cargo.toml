@@ -2,6 +2,7 @@
 name = "teo"
 version = "0.3.0-alpha.1"
 edition = "2021"
+rust-version = "1.82"
 description = "Schema-driven web server framework."
 license = "Apache-2.0"
 build = "build.rs"
