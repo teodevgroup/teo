@@ -8,6 +8,7 @@ pub mod database;
 pub mod app;
 mod message;
 pub mod test;
+pub mod hyper_server;
 
 pub mod prelude {
     pub use teo_runtime::app;
