@@ -30,7 +30,7 @@ pub(super) async fn parse_json_body(mut payload: web::Payload) -> Result<JsonVal
     Ok(parsed_json_body)
 }
 
-pub(super) async fn parse_form_body(http_request: HttpRequest, mut payload: web::Payload) -> Result<JsonValue> {
+pub(super) async fn parse_form_body(http_request: HttpRequest, payload: web::Payload) -> Result<JsonValue> {
     let mut inner_payload = payload.into_inner();
     let multipart_result = Multipart::from_request(&http_request, &mut inner_payload).await;
     let mut multipart = match multipart_result {
