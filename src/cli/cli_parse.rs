@@ -43,6 +43,19 @@ pub(crate) fn cli_parse(runtime_version: &RuntimeVersion, entrance: &Entrance, a
             .long("silent")
             .help("Silent outputs")
             .action(ArgAction::SetTrue))
+        .subcommand(ClapCommand::new("serve_hyper")
+            .about("Run migration and start the server")
+            .arg_required_else_help(false)
+            .arg(Arg::new("no-migration")
+                .short('M')
+                .long("no-migration")
+                .help("Start server without running migration")
+                .action(ArgAction::SetTrue))
+            .arg(Arg::new("no-autoseed")
+                .short('S')
+                .long("no-autoseed")
+                .help("Start server without auto seeding autoseed dataset")
+                .action(ArgAction::SetTrue)))
         .subcommand(ClapCommand::new("serve")
             .about("Run migration and start the server")
             .arg_required_else_help(false)
@@ -151,6 +164,10 @@ pub(crate) fn cli_parse(runtime_version: &RuntimeVersion, entrance: &Entrance, a
         Some(("serve", submatches)) => {
             let env: Option<&String> = submatches.get_one("ENV");
             CLICommand::Serve(ServeCommand { no_migration: submatches.get_flag("no-migration"), no_autoseed: submatches.get_flag("no-autoseed"), env: env.cloned() })
+        }
+        Some(("serve_hyper", submatches)) => {
+            let env: Option<&String> = submatches.get_one("ENV");
+            CLICommand::ServeHyper(ServeCommand { no_migration: submatches.get_flag("no-migration"), no_autoseed: submatches.get_flag("no-autoseed"), env: env.cloned() })
         }
         Some(("generate", submatches)) => {
             match submatches.subcommand() {

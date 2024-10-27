@@ -74,6 +74,7 @@ impl CLI {
 #[derive(Debug)]
 pub(crate) enum CLICommand {
     Serve(ServeCommand),
+    ServeHyper(ServeCommand),
     Generate(GenerateCommand),
     Migrate(MigrateCommand),
     Seed(SeedCommand),

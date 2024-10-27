@@ -14,7 +14,7 @@ async fn hello(_: Request<hyper::body::Incoming>) -> Result<Response<Full<Bytes>
     Ok(Response::new(Full::new(Bytes::from("Hello, World!"))))
 }
 
-async fn main() -> Result<(), Error> {
+pub async fn start_hyper_server() -> Result<(), Error> {
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
 
     // We create a TcpListener and bind it to 127.0.0.1:3000
