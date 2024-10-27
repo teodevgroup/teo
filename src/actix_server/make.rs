@@ -44,31 +44,6 @@ pub fn make_server_app(
     Error = actix_web::Error,
 > + 'static> {
     let app = App::new()
-        .wrap(DefaultHeaders::new()
-            .add(("Access-Control-Allow-Origin", "*"))
-            .add(("Access-Control-Allow-Methods", "OPTIONS, POST, GET"))
-            .add(("Access-Control-Allow-Headers", "*"))
-            .add(("Access-Control-Max-Age", "86400")))
-        .wrap_fn(|req, srv| {
-            let start = SystemTime::now();
-            let fut = srv.call(req);
-            async move {
-                let res = fut.await?;
-                {
-                    let binding = res.request().extensions();
-                    let handler_found_info = binding.get::<HandlerMatch>().clone();
-                    let time_elapsed = SystemTime::now().duration_since(start).unwrap();
-                    let path = res.request().path();
-                    let method = res.request().method().as_str();
-                    if let Some(handler_found_info) = handler_found_info {
-                        request_message(time_elapsed, method, path, handler_found_info.path(), handler_found_info.name(), res.response().status().as_u16());
-                    } else {
-                        unhandled_request_message(time_elapsed, method, path, res.response().status().as_u16());
-                    }
-                }
-                Ok(res)
-            }
-        })
         .default_service(web::route().to(move |http_request: HttpRequest, payload: web::Payload| async move {
             // validate path
             let path = main_namespace.handler_map().remove_path_prefix(http_request.path(), conf.path_prefix.as_ref().map(|s| s.as_str()));

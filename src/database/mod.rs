@@ -10,7 +10,7 @@ use teo_sql_connector::schema::dialect::SQLDialect;
 use teo_mongodb_connector::connector::MongoDBConnection;
 use crate::app::App;
 use teo_runtime::connection::Ctx as ConnCtx;
-use crate::message::info_message;
+use crate::prelude::message::info_message;
 
 pub async fn connect_databases(app: &App, namespace: &Namespace, silent: bool) -> Result<()> {
     may_connect_database(namespace, silent).await?;

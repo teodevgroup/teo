@@ -5,7 +5,6 @@ pub mod seeder;
 pub mod result;
 pub mod database;
 pub mod app;
-mod message;
 pub mod test;
 pub mod server;
 
@@ -24,6 +23,7 @@ pub mod prelude {
     pub use teo_runtime::namespace;
     pub use teo_runtime::r#enum;
     pub use teo_runtime::traits;
+    pub use teo_runtime::message;
     pub use teo_runtime::request;
     pub use teo_runtime::response::Response;
     pub use teo_runtime::model;
