@@ -896,10 +896,11 @@
 ### 0.3.0-alpha.1
 - Node.js: Separate memory management for generated classes **[DONE]**
 - Python: Separate memory management for generated classes **[DONE]**
+- Introduce `handler middleware` and `request middleware` **[DONE]**
+- Rewrite HTTP server with Hyper **[IN PROGRESS]**
+- Rewrite Rust unit tests with Hyper stack
 - Node.js: setup unit tests
-- Python: setup unit tests
 - Node.js: unit tests
-- Python: unit tests
 - Update official documentation
 - `createObject`, `findManyObjects`, `findFirstObject` and `findUniqueObject` in entities
 
@@ -907,52 +908,57 @@
 - Combined request in HTTP clients
 - Remove paging information from `findMany`
 
-### 0.3.0
-- Bug fixes
-
-### 0.3.1
+### 0.3.0-alpha.3
 - Handlers call handlers
-- Node.js: complete namespace API sets
-- Python: complete namespace API sets
 
-### 0.3.2
+### 0.3.0-alpha.4
+- Python: setup unit tests
+- Python: unit tests
+
+### 0.3.0-alpha.5
 - `@onSet!()` and `@onSet?()`
 - `$get!()` and `$get?()`
+
+### 0.3.0-alpha.6
 - Debug logging SQL
 - Migration dry run
 
-### 0.3.3
+### 0.3.0
+- Bug fixes
+- Node.js: complete namespace API sets
+- Python: complete namespace API sets
+
+### 0.3.1
 - Admin dashboard: Filters
 - Admin dashboard: Sort
 - Admin dashboard: Redesigned date time controls
 
-### 0.3.4
+### 0.3.2
 - Admin dashboard: Load records on scroll
 
-### 0.3.5
+### 0.3.3
 - Node.js: Support more linux systems
 
-### 0.3.6
+### 0.3.4
 - Embedded forms
 
-### 0.3.7
+### 0.3.5
 - Uploaders
 - Amazon S3 uploader
 - Aliyun OSS uploader
 - Local file directory uploader
 - Create and update with form data
 
-### 0.3.8
+### 0.3.6
 - Add `@example` to comment
 
-### 0.3.9
+### 0.3.7
 - Admin dashboard: dashboards
 
-### 0.3.10
+### 0.3.8
 - Unit test for pipeline items
 
-### 0.3.15
-- Windows: When server startup, fix port is not taken bug
+### 0.3.9
 - Action transformers
 - Soft delete
 - Run custom MongoDB query
