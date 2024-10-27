@@ -7,14 +7,13 @@ pub mod database;
 pub mod app;
 mod message;
 pub mod test;
-pub mod hyper_server;
+pub mod server;
 
 pub mod prelude {
     pub use teo_runtime::app;
     pub use crate::app::App;
     pub use teo_runtime::app::entrance::Entrance;
     pub use teo_runtime::app::runtime_version::RuntimeVersion;
-    //pub use crate::server::static_files::serve_static_files;
     pub use teo_runtime::namespace::Namespace;
     pub extern crate teo_result;
     pub use teo_result::{Error, Result, ResultExt};

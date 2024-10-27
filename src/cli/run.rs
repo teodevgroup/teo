@@ -5,7 +5,7 @@ use crate::cli::command::{CLICommand, GenerateCommand, SeedCommandAction};
 use teo_runtime::connection::transaction;
 use teo_runtime::schema::load::load_data_sets::load_data_sets;
 use crate::database::connect_databases;
-use crate::hyper_server::server::Server;
+use crate::server::server::Server;
 use crate::migrate::migrate;
 use crate::purge::purge;
 use crate::seeder::seed::seed;
