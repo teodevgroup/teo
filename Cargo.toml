@@ -11,7 +11,7 @@ documentation = "https://docs.teodev.io"
 repository = "https://github.com/teodevgroup/teo"
 
 [dependencies]
-teo-result = { version = "0.3.0-alpha.1", path = "../teo-result" }
+teo-result = { version = "0.3.0-alpha.1", path = "../teo-result", features = ["multer"] }
 teo-parser = { version = "0.3.0-alpha.0", path = "../teo-parser" }
 teo-runtime = { version = "0.3.0-alpha.1", path = "../teo-runtime" }
 teo-sql-connector = { version = "0.3.0-alpha.0", path = "../teo-sql-connector" }
@@ -45,7 +45,7 @@ clap = { version = "4.4.11", features = ["derive"] }
 path-absolutize = "3.1.1"
 dotenvy = "0.15.7"
 rand = "0.8.5"
-educe = "0.5.9"
+educe = "0.6.0"
 colored = "2.1.0"
 bson = { version = "2.9.0", features = ["chrono-0_4", "serde_with"] }
 ring = "0.17.7"
@@ -53,6 +53,7 @@ time = "0.3.36"
 hyper = { version = "1.5.0", features = ["full"]}
 hyper-util = { version = "0.1.9", features = ["full"] }
 http-body-util = "0.1"
+multer = "3.1.0"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 openssl = { version = "0.10", features = ["vendored"] }
