@@ -1,5 +1,6 @@
 use std::future::Future;
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use std::net::SocketAddr;
+use std::pin::Pin;
 use http_body_util::Full;
 use hyper::{Request, Response};
 use hyper::body::{Bytes, Incoming};
@@ -56,7 +57,7 @@ impl Server {
         }
     }
 
-    async fn handler(&self, hyper_request: Request<hyper::body::Incoming>) -> Result<Response<Full<Bytes>>> {
+    async fn handler(&self, hyper_request: Request<Incoming>) -> Result<Response<Full<Bytes>>> {
         Ok(Response::new(Full::new(Bytes::from("Hello, World!"))))
     }
 }
@@ -64,9 +65,10 @@ impl Server {
 impl Service<Request<Incoming>> for Server {
     type Response = Response<Full<Bytes>>;
     type Error = Error;
-    type Future = ();
+    type Future = Pin<Box<dyn Future<Output = core::result::Result<Self::Response, Self::Error>> + Send>>;
 
     fn call(&self, req: Request<Incoming>) -> Self::Future {
-        todo!()
+        let self_ = unsafe { &*(self as *const Server) } as &'static Server;
+        Box::pin(self_.handler(req))
     }
 }
