@@ -259,7 +259,7 @@ pub(crate) async fn serve(
     result.1
 }
 
-async fn server_start_message(port: u16, runtime_version: &RuntimeVersion, entrance: &Entrance, silent: bool) -> Result<()> {
+pub async fn server_start_message(port: u16, runtime_version: &RuntimeVersion, entrance: &Entrance, silent: bool) -> Result<()> {
     if silent { return Ok(()) }
     // Introducing
     let teo_version = env!("CARGO_PKG_VERSION");

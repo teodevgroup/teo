@@ -1,8 +1,7 @@
-use std::cell::Cell;
 use std::collections::BTreeMap;
 use std::process::exit;
 use std::env::current_dir;
-use std::ptr::{null, null_mut};
+use std::ptr::null;
 use std::sync::{Arc, Mutex};
 use teo_result::{Error, Result};
 use teo_runtime::namespace::Namespace;
