@@ -1,10 +1,6 @@
 use std::str::FromStr;
-use actix_web::{HttpRequest, HttpResponse};
-use actix_web::http::StatusCode;
 use teo_runtime::response::body::BodyInner;
 use teo_runtime::response::Response;
-use actix_files::NamedFile;
-use actix_http::header::HeaderName;
 
 pub trait IntoHttpResponse {
     fn into_http_response(self, http_request: HttpRequest) -> HttpResponse;

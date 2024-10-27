@@ -259,18 +259,6 @@ pub(crate) async fn serve(
     result.1
 }
 
-pub async fn server_start_message(port: u16, runtime_version: &RuntimeVersion, entrance: &Entrance, silent: bool) -> Result<()> {
-    if silent { return Ok(()) }
-    // Introducing
-    let teo_version = env!("CARGO_PKG_VERSION");
-    let teo = format!("Teo {}", teo_version);
-    info_message(format!("{} ({}, {})", teo, runtime_version.to_string(), entrance.to_str()));
-    // Listening
-    let port_str = format!("{port}").bold();
-    info_message(format!("listening on port {}", port_str));
-    Ok(())
-}
-
 fn method_from(m: &HttpMethod) -> Result<Method> {
     Ok(match m.as_str() {
         "GET" => Method::Get,

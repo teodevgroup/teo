@@ -13,14 +13,10 @@ repository = "https://github.com/teodevgroup/teo"
 [dependencies]
 teo-result = { version = "0.3.0-alpha.1", path = "../teo-result" }
 teo-parser = { version = "0.3.0-alpha.0", path = "../teo-parser" }
-teo-runtime = { version = "0.3.0-alpha.0", path = "../teo-runtime" }
+teo-runtime = { version = "0.3.0-alpha.1", path = "../teo-runtime" }
 teo-sql-connector = { version = "0.3.0-alpha.0", path = "../teo-sql-connector" }
 teo-mongodb-connector = { version = "0.3.0-alpha.0", path = "../teo-mongodb-connector" }
 teo-generator = { version = "0.3.0-alpha.0", path = "../teo-generator" }
-actix-web = "4.9.0"
-actix-http = "3.9.0"
-actix-multipart = "0.7.2"
-actix-files = "0.6.6"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0", features = ["preserve_order"] }
 chrono = { version = "0.4.38", features = ["serde"] }

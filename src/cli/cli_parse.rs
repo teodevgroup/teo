@@ -165,10 +165,6 @@ pub(crate) fn cli_parse(runtime_version: &RuntimeVersion, entrance: &Entrance, a
             let env: Option<&String> = submatches.get_one("ENV");
             CLICommand::Serve(ServeCommand { no_migration: submatches.get_flag("no-migration"), no_autoseed: submatches.get_flag("no-autoseed"), env: env.cloned() })
         }
-        Some(("serve_hyper", submatches)) => {
-            let env: Option<&String> = submatches.get_one("ENV");
-            CLICommand::ServeHyper(ServeCommand { no_migration: submatches.get_flag("no-migration"), no_autoseed: submatches.get_flag("no-autoseed"), env: env.cloned() })
-        }
         Some(("generate", submatches)) => {
             match submatches.subcommand() {
                 Some(("client", submatches)) => {

@@ -2,11 +2,10 @@ use teo_parser::diagnostics::diagnostics::Diagnostics;
 use teo_result::{Error, Result};
 use crate::app::App;
 use crate::cli::command::{CLICommand, GenerateCommand, SeedCommandAction};
-use crate::server::make::serve;
 use teo_runtime::connection::transaction;
 use teo_runtime::schema::load::load_data_sets::load_data_sets;
 use crate::database::connect_databases;
-use crate::hyper_server::start_hyper_server;
+use crate::hyper_server::server::Server;
 use crate::migrate::migrate;
 use crate::purge::purge;
 use crate::seeder::seed::seed;
@@ -14,10 +13,6 @@ use crate::seeder::seed::seed;
 pub async fn run(app: &App) -> Result<()> {
     let cli = app.cli();
     match &cli.command {
-        CLICommand::ServeHyper(serve_command) => {
-            start_hyper_server().await?;
-            Ok(())
-        },
         CLICommand::Serve(serve_command) => {
             connect_databases(app, app.compiled_main_namespace(), cli.silent).await?;
             let conn_ctx = app.conn_ctx();
@@ -40,7 +35,9 @@ pub async fn run(app: &App) -> Result<()> {
                 setup.call(transaction_ctx).await?;
             }
             // start server
-            serve(conn_ctx.namespace(), conn_ctx.namespace().server().as_ref().unwrap(), app.runtime_version(), app.entrance(), cli.silent).await
+            let server = Box::leak(Box::new(Server::new(app)));
+            server.serve(cli.silent).await
+            //serve(conn_ctx.namespace(), conn_ctx.namespace().server().as_ref().unwrap(), app.runtime_version(), app.entrance(), cli.silent).await
         }
         CLICommand::Generate(generate_command) => {
             match generate_command {
