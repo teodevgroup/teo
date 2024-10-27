@@ -10,7 +10,8 @@ use hyper_util::rt::TokioIo;
 use tokio::net::TcpListener;
 use crate::prelude::Error;
 
-async fn hello(_: Request<hyper::body::Incoming>) -> Result<Response<Full<Bytes>>, Infallible> {
+async fn hello(hyper_request: Request<hyper::body::Incoming>) -> Result<Response<Full<Bytes>>, Infallible> {
+
     Ok(Response::new(Full::new(Bytes::from("Hello, World!"))))
 }
 
