@@ -897,6 +897,7 @@
 - Node.js: Separate memory management for generated classes **[DONE]**
 - Python: Separate memory management for generated classes **[DONE]**
 - Introduce `handler middleware` and `request middleware` **[DONE]**
+- Remove request ctx **[DONE]**
 - Rewrite HTTP server with Hyper **[IN PROGRESS]**
 - Rewrite Rust unit tests with Hyper stack
 - Node.js: setup unit tests

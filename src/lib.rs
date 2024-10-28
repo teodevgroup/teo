@@ -42,7 +42,7 @@ pub mod prelude {
     pub use teo_runtime::value::option_variant::OptionVariant;
     pub use teo_runtime::value::range::Range;
     pub use teo_runtime::value::file::File;
-    pub use teo_runtime::request::ctx::extract::ExtractFromRequestCtx;
+    pub use teo_runtime::request::extract::ExtractFromRequest;
     pub use teo_runtime::request::Request;
     pub use teo_runtime::response;
     pub use teo_runtime::pipeline;

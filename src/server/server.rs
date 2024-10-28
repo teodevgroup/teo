@@ -7,6 +7,8 @@ use hyper::body::{Bytes, Incoming};
 use hyper::server::conn::http1;
 use hyper::service::Service;
 use hyper_util::rt::TokioIo;
+use teo_runtime::connection;
+use teo_runtime::connection::transaction;
 use tokio::net::TcpListener;
 use crate::app::App;
 use crate::server::message::server_start_message;
@@ -57,7 +59,14 @@ impl Server {
         }
     }
 
-    async fn handler(&self, hyper_request: Request<Incoming>) -> Result<Response<Full<Bytes>>> {
+    async fn hyper_handler(&self, original_hyper_request: Request<Incoming>) -> Result<Response<Full<Bytes>>> {
+        let main_namespace = self.app.compiled_main_namespace();
+        let conf = self.app.compiled_main_namespace().server().unwrap();
+        let conn_ctx = connection::Ctx::from_namespace(main_namespace);
+        let transaction_ctx = transaction::Ctx::new(conn_ctx);
+        let (parts, incoming) = original_hyper_request.into_parts();
+        let hyper_request = Request::from_parts(parts, ());
+
         Ok(Response::new(Full::new(Bytes::from("Hello, World!"))))
     }
 }
@@ -69,6 +78,6 @@ impl Service<Request<Incoming>> for Server {
 
     fn call(&self, req: Request<Incoming>) -> Self::Future {
         let self_ = unsafe { &*(self as *const Server) } as &'static Server;
-        Box::pin(self_.handler(req))
+        Box::pin(self_.hyper_handler(req))
     }
 }
