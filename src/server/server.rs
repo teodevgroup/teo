@@ -2,13 +2,13 @@ use std::future::Future;
 use std::net::SocketAddr;
 use std::pin::Pin;
 use http_body_util::{BodyExt, Full};
-use hyper::{Request, Response};
 use hyper::body::{Bytes, Incoming};
 use hyper::server::conn::http1;
 use hyper::service::Service;
 use hyper_util::rt::TokioIo;
 use teo_runtime::connection;
 use teo_runtime::connection::transaction;
+use teo_runtime::request::Request;
 use tokio::net::TcpListener;
 use crate::app::App;
 use crate::server::message::server_start_message;
@@ -59,24 +59,25 @@ impl Server {
         }
     }
 
-    async fn hyper_handler(&self, original_hyper_request: Request<Incoming>) -> Result<Response<Full<Bytes>>> {
+    async fn hyper_handler(&self, original_hyper_request: hyper::Request<Incoming>) -> Result<hyper::Response<Full<Bytes>>> {
         let main_namespace = self.app.compiled_main_namespace();
         let conf = self.app.compiled_main_namespace().server().unwrap();
         let conn_ctx = connection::Ctx::from_namespace(main_namespace);
         let transaction_ctx = transaction::Ctx::new(conn_ctx);
         let (parts, incoming) = original_hyper_request.into_parts();
-        let hyper_request = Request::from_parts(parts, ());
+        let hyper_request = hyper::Request::from_parts(parts, ());
+        let request = Request::new(hyper_request, transaction_ctx);
 
-        Ok(Response::new(Full::new(Bytes::from("Hello, World!"))))
+        Ok(hyper::Response::new(Full::new(Bytes::from("Hello, World!"))))
     }
 }
 
-impl Service<Request<Incoming>> for Server {
-    type Response = Response<Full<Bytes>>;
+impl Service<hyper::Request<Incoming>> for Server {
+    type Response = hyper::Response<Full<Bytes>>;
     type Error = Error;
     type Future = Pin<Box<dyn Future<Output = core::result::Result<Self::Response, Self::Error>> + Send>>;
 
-    fn call(&self, req: Request<Incoming>) -> Self::Future {
+    fn call(&self, req: hyper::Request<Incoming>) -> Self::Future {
         let self_ = unsafe { &*(self as *const Server) } as &'static Server;
         Box::pin(self_.hyper_handler(req))
     }
