@@ -9,11 +9,14 @@ use hyper_util::rt::TokioIo;
 use teo_runtime::connection;
 use teo_runtime::connection::transaction;
 use teo_runtime::request::Request;
+use teo_runtime::response::convert::hyper_response_from;
+use teo_runtime::response::Response;
 use tokio::net::TcpListener;
 use crate::app::App;
 use crate::server::message::server_start_message;
 use crate::prelude::Result;
 use crate::prelude::Error;
+use crate::server::droppable_next::DroppableNext;
 
 pub struct Server {
     app: App,
@@ -67,8 +70,11 @@ impl Server {
         let (parts, incoming) = original_hyper_request.into_parts();
         let hyper_request = hyper::Request::from_parts(parts, ());
         let request = Request::new(hyper_request, transaction_ctx);
-
-        Ok(hyper::Response::new(Full::new(Bytes::from("Hello, World!"))))
+        let droppable_next = DroppableNext::new(|request: Request| async move {
+            return Ok::<Response, Error>(Response::string("Hello, world!", "text/plain"))
+        });
+        let response = main_namespace.request_middleware_stack().call(request.clone(), droppable_next.get_next()).await?;
+        hyper_response_from(request, response)
     }
 }
 

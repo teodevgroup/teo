@@ -17,7 +17,6 @@ use maplit::btreemap;
 use teo_parser::ast::schema::Schema;
 use teo_runtime::connection::transaction;
 use teo_runtime::connection;
-use teo_runtime::app::cleanup::Cleanup;
 use teo_runtime::app::data::AppData;
 use teo_runtime::app::entrance::Entrance;
 use teo_runtime::app::runtime_version::RuntimeVersion;
