@@ -71,7 +71,7 @@ impl Server {
         let hyper_request = hyper::Request::from_parts(parts, ());
         let request = Request::new(hyper_request, transaction_ctx);
         let droppable_next = DroppableNext::new(|request: Request| async move {
-            return Ok::<Response, Error>(Response::string("Hello, world!", "text/plain"))
+            return Ok::<Response, Error>(Response::string("Hello, Kunkun! I'm Cici! I love you!", "text/plain"))
         });
         let response = main_namespace.request_middleware_stack().call(request.clone(), droppable_next.get_next()).await?;
         hyper_response_from(request, response)
