@@ -919,13 +919,6 @@
 ### 0.3.1
 - Node.js: Support more linux systems
 
-### 0.3.2
-- Uploaders
-- Amazon S3 uploader
-- Aliyun OSS uploader
-- Local file directory uploader
-- Create and update with form data
-
 ### 0.4.0
 - MongoDB migration
 - MongoDB `$queryRaw`
@@ -935,7 +928,6 @@
 - MongoDB: relation where: multiple keys should be allowed
 - MongoDB: relation where: 'every' results is incorrect
 - MongoDB: aggregate and group by for string and dates
-- Correct count with cursor
 
 ## Future Stage
 
@@ -957,6 +949,12 @@
 - Unit test for pipeline items
 - Action transformers
 - Soft delete
+- Uploaders
+- Amazon S3 uploader
+- Azure storage uploader
+- GCP uploader
+- Local file directory uploader
+- multipart/json: Create and update with form data
 
 ### 0.7.0 (Revamped admin dashboard)
 - Admin dashboard: Filters
@@ -981,16 +979,22 @@
 - First stable major version
 
 ### 1.1.0
-- Support first version of Teo Studio
+- Teo Studio for macOS
 
 ### 1.2.0
-- Support MSSQL
+- Teo Studio for Windows
 
 ### 1.3.0
-- Data subscriptions
+- Teo Studio for Linux (Electron)
 
 ### 1.4.0
+- Support MSSQL
+
+### 1.5.0
+- Data subscriptions
+
+### 1.6.0
 - Full text indexes
 
-### 2.0.0
+### 1.7.0
 - PostgreSQL: Support PostgresML and vector type
