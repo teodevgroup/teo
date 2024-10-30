@@ -903,74 +903,30 @@
 - Node.js: setup unit tests
 - Node.js: unit tests
 - Update official documentation
-- `createObject`, `findManyObjects`, `findFirstObject` and `findUniqueObject` in entities
+- Rename methods: `createObject`, `findManyObjects`, `findFirstObject` and `findUniqueObject` in entities
 
 ### 0.3.0-alpha.2
-- Combined request in HTTP clients
-- Remove paging information from `findMany`
-
-### 0.3.0-alpha.3
-- Handlers call handlers
-
-### 0.3.0-alpha.4
 - Python: setup unit tests
 - Python: unit tests
 
-### 0.3.0-alpha.5
-- `@onSet!()` and `@onSet?()`
-- `$get!()` and `$get?()`
-
-### 0.3.0-alpha.6
+### 0.3.0-alpha.3
 - Debug logging SQL
 - Migration dry run
 
 ### 0.3.0
 - Bug fixes
-- Node.js: complete namespace API sets
-- Python: complete namespace API sets
 
 ### 0.3.1
-- Admin dashboard: Filters
-- Admin dashboard: Sort
-- Admin dashboard: Redesigned date time controls
-
-### 0.3.2
-- Admin dashboard: Load records on scroll
-
-### 0.3.3
 - Node.js: Support more linux systems
 
-### 0.3.4
-- Embedded forms
-
-### 0.3.5
+### 0.3.2
 - Uploaders
 - Amazon S3 uploader
 - Aliyun OSS uploader
 - Local file directory uploader
 - Create and update with form data
 
-### 0.3.6
-- Add `@example` to comment
-
-### 0.3.7
-- Admin dashboard: dashboards
-
-### 0.3.8
-- Unit test for pipeline items
-
-### 0.3.9
-- Action transformers
-- Soft delete
-- Run custom MongoDB query
-- Update C# client with new namespace API
-- C# client: capitalized names and names with underscore
-- Revamp all client APIs
-
 ### 0.4.0
-- JSON type
-
-### 0.4.1
 - MongoDB migration
 - MongoDB `$queryRaw`
 - MongoDB: root skip take and distinct bug
@@ -981,25 +937,60 @@
 - MongoDB: aggregate and group by for string and dates
 - Correct count with cursor
 
-### 0.5.0
+## Future Stage
+
+### 0.5.0 (Revamped language & parser)
+- Rewrite parser with nom
+- Increase VSCode plugin speed
+
+### 0.5.1
+- `@onSet!()` and `@onSet?()`
+- `$get!()` and `$get?()`
+- Add `@example` to comment
+- Language: Default argument for argument list and config declaration
+
+### 0.6.0 (Revamped runtime & integration)
+- Combined request in HTTP clients
+- Remove paging information from `findMany`
+- Entity: Handlers call handlers
+- Maybe separate runtime and standard library
+- Unit test for pipeline items
+- Action transformers
+- Soft delete
+
+### 0.7.0 (Revamped admin dashboard)
+- Admin dashboard: Filters
+- Admin dashboard: Sort
+- Admin dashboard: Redesigned date time controls
+- Admin dashboard: Load records on scroll
+- Admin dashboard: Embedded forms
+- Admin dashboard: dashboards
+
+### 0.8.0 (Revamped databases)
+- Run custom MongoDB query
+- JSON type
 - PostgreSQL: Enum types
-- Default argument for argument list and config declaration
-
-### 0.7.0
 - Extended database type mapping
-- Support first version of Teo Studio
 
-### 0.8.0
-- Data subscriptions
-
-### 0.9.0
-- Full text indexes
+### 0.9.0 (Revamped generators)
+- Update C# client with new namespace API
+- C# client: capitalized names and names with underscore
+- Revamp all client APIs
 
 ### 1.0.0
 - First stable major version
 
 ### 1.1.0
+- Support first version of Teo Studio
+
+### 1.2.0
 - Support MSSQL
+
+### 1.3.0
+- Data subscriptions
+
+### 1.4.0
+- Full text indexes
 
 ### 2.0.0
 - PostgreSQL: Support PostgresML and vector type
