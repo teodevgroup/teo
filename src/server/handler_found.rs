@@ -1,3 +1,4 @@
+use teo_parser::ast::handler::HandlerInputFormat;
 use teo_runtime::action::Action;
 use teo_runtime::handler::action::builtin_action_handler_from_name;
 use teo_runtime::handler::Handler;
@@ -8,6 +9,15 @@ use teo_runtime::namespace::Namespace;
 pub(super) enum HandlerFound<'a> {
     Custom(&'a Handler),
     Builtin(&'a Model, Action),
+}
+
+impl<'a> HandlerFound<'a> {
+    pub fn handler_format(&self) -> HandlerInputFormat {
+        match self {
+            HandlerFound::Custom(handler) => handler.format(),
+            HandlerFound::Builtin(_, _) => HandlerInputFormat::Json,
+        }
+    }
 }
 
 pub(super) fn find_handler<'a>(main_namespace: &'static Namespace, match_result: &'a HandlerMatch) -> Option<(&'static Namespace, HandlerFound<'a>)> {
