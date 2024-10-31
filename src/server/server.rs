@@ -62,17 +62,18 @@ impl Server {
         }
     }
 
-    async fn hyper_handler(&self, original_hyper_request: hyper::Request<Incoming>) -> Result<hyper::Response<Full<Bytes>>> {
+    async fn hyper_handler(&self, hyper_request: hyper::Request<Incoming>) -> Result<hyper::Response<Full<Bytes>>> {
         let main_namespace = self.app.compiled_main_namespace();
         let conf = self.app.compiled_main_namespace().server().unwrap();
         let conn_ctx = connection::Ctx::from_namespace(main_namespace);
         let transaction_ctx = transaction::Ctx::new(conn_ctx);
-        let (parts, incoming) = original_hyper_request.into_parts();
-        let hyper_request = hyper::Request::from_parts(parts, ());
         let request = Request::new(hyper_request, transaction_ctx);
         let droppable_next = DroppableNext::new(|request: Request| async move {
-            //let incoming_ = incoming;
-            return Ok::<Response, Error>(Response::string("Hello, Kunkun! I'm Cici! I love you!", "text/plain"))
+            let Some(incoming) = request.take_incoming() else {
+                return Err(Error::internal_server_error_message("HTTP body is taken"))
+            };
+
+            return Ok::<Response, Error>(Response::string("see here", "text/plain"))
         });
         let response = main_namespace.request_middleware_stack().call(request.clone(), droppable_next.get_next()).await?;
         hyper_response_from(request, response)
