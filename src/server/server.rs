@@ -1,21 +1,24 @@
+use std::convert::Infallible;
 use std::future::Future;
 use std::net::SocketAddr;
 use std::pin::Pin;
 use std::sync::Arc;
-use http_body_util::{BodyExt, Full};
+use http_body_util::Full;
 use hyper::body::{Bytes, Incoming};
+use hyper::header::CONTENT_TYPE;
 use hyper::Method;
 use hyper::server::conn::http1;
 use hyper::service::Service;
 use hyper_util::rt::TokioIo;
 use teo_parser::ast::handler::HandlerInputFormat;
-use teo_runtime::connection;
+use teo_runtime::{connection, teon};
 use teo_runtime::connection::transaction;
 use teo_runtime::request::Request;
 use teo_runtime::response::convert::hyper_response_from;
 use teo_runtime::response::Response;
 use tokio::net::TcpListener;
 use serde_json::Value as JsonValue;
+use teo_result::ErrorSerializable;
 use teo_runtime::handler::default::{aggregate, copy, copy_many, count, create, create_many, delete, delete_many, find_first, find_many, find_unique, group_by, update, update_many, upsert};
 use teo_runtime::handler::input::{validate_and_transform_json_input_for_builtin_action, validate_and_transform_json_input_for_handler};
 use crate::app::App;
@@ -68,6 +71,16 @@ impl Server {
                     eprintln!("Error serving connection: {:?}", err);
                 }
             });
+        }
+    }
+
+    async fn hyper_handler_with_error_responses(&self, hyper_request: hyper::Request<Incoming>) -> core::result::Result<hyper::Response<Full<Bytes>>, Infallible> {
+        match self.hyper_handler(hyper_request).await {
+            Ok(response) => Ok(response),
+            Err(error) => {
+                let error_string = serde_json::to_string(&ErrorSerializable::from_error(&error)).unwrap();
+                Ok(hyper::Response::builder().header(CONTENT_TYPE, "application/json").body(error_string.into()).unwrap())
+            },
         }
     }
 
@@ -170,11 +183,11 @@ impl Server {
 
 impl Service<hyper::Request<Incoming>> for Server {
     type Response = hyper::Response<Full<Bytes>>;
-    type Error = Error;
+    type Error = Infallible;
     type Future = Pin<Box<dyn Future<Output = core::result::Result<Self::Response, Self::Error>> + Send>>;
 
     fn call(&self, req: hyper::Request<Incoming>) -> Self::Future {
         let self_ = unsafe { &*(self as *const Server) } as &'static Server;
-        Box::pin(self_.hyper_handler(req))
+        Box::pin(self_.hyper_handler_with_error_responses(req))
     }
 }
