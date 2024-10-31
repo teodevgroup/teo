@@ -902,8 +902,8 @@
 - Rewrite Rust unit tests with Hyper stack
 - Node.js: setup unit tests
 - Node.js: unit tests
-- Update official documentation
 - Rename methods: `createObject`, `findManyObjects`, `findFirstObject` and `findUniqueObject` in entities
+- Update official documentation
 
 ### 0.3.0-alpha.2
 - Python: setup unit tests
