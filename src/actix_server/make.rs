@@ -45,16 +45,6 @@ pub fn make_server_app(
 > + 'static> {
     let app = App::new()
         .default_service(web::route().to(move |http_request: HttpRequest, payload: web::Payload| async move {
-            // validate path
-            let path = main_namespace.handler_map().remove_path_prefix(http_request.path(), conf.path_prefix.as_ref().map(|s| s.as_str()));
-            let method = method_from(http_request.method())?;
-            let match_result = if let Some(m_result) = main_namespace.handler_map().r#match(method, path) {
-                m_result
-            } else if let Some(m_result) = main_namespace.handler_map().default_match(method, path) {
-                m_result
-            } else {
-                Err(Error::not_found())?
-            };
 
             // Normal handling
             let mut group = false;
@@ -213,40 +203,4 @@ pub fn make_server_app(
             }
         }));
     app
-}
-
-pub(crate) async fn serve(
-    namespace: &'static Namespace,
-    conf: &'static Server,
-    runtime_version: RuntimeVersion,
-    entrance: Entrance,
-    silent: bool,
-) -> Result<()> {
-    let bind = conf.bind.clone();
-    let port = bind.1;
-    let server = HttpServer::new(move || {
-        make_server_app(namespace, conf)
-    })
-        .bind((bind.0, bind.1 as u16))
-        .unwrap()
-        .run();
-    let result = future::join(server, server_start_message(port as u16, &runtime_version, &entrance, silent)).await;
-    result.1
-}
-
-fn method_from(m: &HttpMethod) -> Result<Method> {
-    Ok(match m.as_str() {
-        "GET" => Method::Get,
-        "POST" => Method::Post,
-        "PATCH" => Method::Patch,
-        "PUT" => Method::Put,
-        "DELETE" => Method::Delete,
-        "OPTIONS" => Method::Options,
-        _ => Err(Error::new(format!("unknown http method {}", m.as_str())))?
-    })
-}
-
-enum HandlerResolved<'a> {
-    Custom(&'a Handler),
-    Builtin(&'a Model, Action),
 }

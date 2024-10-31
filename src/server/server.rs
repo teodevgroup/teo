@@ -17,6 +17,7 @@ use crate::server::message::server_start_message;
 use crate::prelude::Result;
 use crate::prelude::Error;
 use crate::server::droppable_next::DroppableNext;
+use crate::server::utils::remove_path_prefix;
 
 pub struct Server {
     app: App,
@@ -68,7 +69,13 @@ impl Server {
         let conn_ctx = connection::Ctx::from_namespace(main_namespace);
         let transaction_ctx = transaction::Ctx::new(conn_ctx);
         let request = Request::new(hyper_request, transaction_ctx);
-        let droppable_next = DroppableNext::new(|request: Request| async move {
+        let droppable_next = DroppableNext::new(move |request: Request| async move {
+            let path = remove_path_prefix(request.path(), conf.path_prefix());
+            let Some(handler_match) = main_namespace.handler_map().match_all(request.method(), &path) else {
+                return Err(Error::not_found());
+            };
+            request.set_handler_match(handler_match.clone());
+
             let Some(incoming) = request.take_incoming() else {
                 return Err(Error::internal_server_error_message("HTTP body is taken"))
             };
