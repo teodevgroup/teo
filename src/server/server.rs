@@ -17,7 +17,7 @@ use teo_runtime::request::Request;
 use teo_runtime::response::convert::hyper_response_from;
 use teo_runtime::response::Response;
 use tokio::net::TcpListener;
-use serde_json::Value as JsonValue;
+use serde_json::{json, Value as JsonValue};
 use teo_result::ErrorSerializable;
 use teo_runtime::handler::default::{aggregate, copy, copy_many, count, create, create_many, delete, delete_many, find_first, find_many, find_unique, group_by, update, update_many, upsert};
 use teo_runtime::handler::input::{validate_and_transform_json_input_for_builtin_action, validate_and_transform_json_input_for_handler};
@@ -78,8 +78,15 @@ impl Server {
         match self.hyper_handler(hyper_request).await {
             Ok(response) => Ok(response),
             Err(error) => {
-                let error_string = serde_json::to_string(&ErrorSerializable::from_error(&error)).unwrap();
-                Ok(hyper::Response::builder().header(CONTENT_TYPE, "application/json").body(error_string.into()).unwrap())
+                let mut result_value = json!({
+                    "type": error.inferred_title(),
+                    "message": error.message(),
+                });
+                if error.errors.is_some() {
+                    result_value["errors"] = ErrorSerializable::from_error(&error).errors;
+                }
+                let error_string = serde_json::to_string(&result_value).unwrap();
+                Ok(hyper::Response::builder().status(error.code).header(CONTENT_TYPE, "application/json").body(error_string.into()).unwrap())
             },
         }
     }
