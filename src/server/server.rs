@@ -3,6 +3,7 @@ use std::net::SocketAddr;
 use std::pin::Pin;
 use http_body_util::{BodyExt, Full};
 use hyper::body::{Bytes, Incoming};
+use hyper::Method;
 use hyper::server::conn::http1;
 use hyper::service::Service;
 use hyper_util::rt::TokioIo;
@@ -17,6 +18,7 @@ use crate::server::message::server_start_message;
 use crate::prelude::Result;
 use crate::prelude::Error;
 use crate::server::droppable_next::DroppableNext;
+use crate::server::handler_found::find_handler;
 use crate::server::utils::remove_path_prefix;
 
 pub struct Server {
@@ -75,7 +77,14 @@ impl Server {
                 return Err(Error::not_found());
             };
             request.set_handler_match(handler_match.clone());
-
+            let Some((dest_namespace, handler_found)) = find_handler(main_namespace, &handler_match) else {
+                return Err(Error::not_found());
+            };
+            if request.method() == Method::OPTIONS {
+                return dest_namespace.handler_middleware_stack().call(request, &|_: Request| async {
+                    Ok::<Response, Error>(Response::empty())
+                }).await;
+            }
             let Some(incoming) = request.take_incoming() else {
                 return Err(Error::internal_server_error_message("HTTP body is taken"))
             };
