@@ -90,12 +90,13 @@ impl Server {
         }
     }
 
-    async fn hyper_handler(&self, hyper_request: hyper::Request<Incoming>) -> Result<hyper::Response<Either<Full<Bytes>, ServeFileSystemResponseBody>>> {
+    pub async fn process_test_request(&self, hyper_request: hyper::Request<Incoming>) -> Result<hyper::Response<Either<Full<Bytes>, ServeFileSystemResponseBody>>> {
+        self.hyper_handler(hyper_request).await
+    }
+
+    pub async fn process_request(&self, request: Request) -> Result<Response> {
         let main_namespace = self.app.compiled_main_namespace();
         let conf = self.app.compiled_main_namespace().server().unwrap();
-        let conn_ctx = connection::Ctx::from_namespace(main_namespace);
-        let transaction_ctx = transaction::Ctx::new(conn_ctx);
-        let request = Request::new(hyper_request, transaction_ctx);
         let droppable_next = DroppableNext::new(move |request: Request| async move {
             let path = remove_path_prefix(request.path(), conf.path_prefix());
             let Some(handler_match) = main_namespace.handler_map().match_all(request.method(), &path) else {
@@ -183,6 +184,15 @@ impl Server {
             }
         });
         let response = main_namespace.request_middleware_stack().call(request.clone(), droppable_next.get_next()).await?;
+        Ok(response)
+    }
+
+    async fn hyper_handler(&self, hyper_request: hyper::Request<Incoming>) -> Result<hyper::Response<Either<Full<Bytes>, ServeFileSystemResponseBody>>> {
+        let main_namespace = self.app.compiled_main_namespace();
+        let conn_ctx = connection::Ctx::from_namespace(main_namespace);
+        let transaction_ctx = transaction::Ctx::new(conn_ctx);
+        let request = Request::new(hyper_request, transaction_ctx);
+        let response = self.process_request(request.clone()).await?;
         hyper_response_from(request, response).await
     }
 }
