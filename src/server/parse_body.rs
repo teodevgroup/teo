@@ -1,8 +1,10 @@
 use std::ffi::OsStr;
 use std::io::Write;
 use std::path::Path;
+use bytes::Bytes;
 use http_body_util::{BodyStream, BodyExt};
 use futures_util::{StreamExt, TryStreamExt};
+use hyper::body::{Body, Incoming};
 use hyper::header::CONTENT_TYPE;
 use regex::Regex;
 use serde_json::{json, Value as JsonValue};
@@ -10,7 +12,7 @@ use teo_result::{Result, Error};
 use teo_runtime::request::Request;
 use multer::Multipart;
 
-pub(super) async fn parse_json_body(incoming: hyper::body::Incoming) -> Result<JsonValue> {
+pub(super) async fn parse_json_body(incoming: impl Body) -> Result<JsonValue> {
     let body = match incoming.collect().await {
         Ok(body) => body,
         Err(_) => return Err(Error::internal_server_error_message("cannot read HTTP body")),
@@ -28,7 +30,11 @@ pub(super) async fn parse_json_body(incoming: hyper::body::Incoming) -> Result<J
     Ok(parsed_json_body)
 }
 
-pub(super) async fn parse_form_body(request: &Request, incoming: hyper::body::Incoming) -> Result<JsonValue> {
+pub(super) async fn parse_form_body<I>(request: &Request, incoming: I) -> Result<JsonValue> where
+    I: Body + Send,
+    <I as Body>::Data: Send + 'static,
+    Bytes: From<I::Data>,
+    <I as Body>::Error: std::error::Error + Send + Sync + 'static {
     let boundary = request
         .headers()
         .get(CONTENT_TYPE)
