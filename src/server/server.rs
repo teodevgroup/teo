@@ -90,8 +90,8 @@ impl Server {
         }
     }
 
-    pub async fn process_test_request(&self, hyper_request: hyper::Request<Incoming>) -> Result<hyper::Response<Either<Full<Bytes>, ServeFileSystemResponseBody>>> {
-        self.hyper_handler(hyper_request).await
+    pub async fn process_test_request(&self, hyper_request: hyper::Request<String>) -> Result<hyper::Response<Either<Full<Bytes>, ServeFileSystemResponseBody>>> {
+        self.hyper_test_handler(hyper_request).await
     }
 
     pub async fn process_request(&self, request: Request) -> Result<Response> {
@@ -111,16 +111,32 @@ impl Server {
                     Ok::<Response, Error>(Response::empty())
                 }).await;
             }
-            let Some(incoming) = request.take_incoming() else {
+            let incoming_string = request.take_incoming_string_for_test();
+            let incoming = request.take_incoming();
+            if incoming_string.is_none() && incoming.is_none() {
                 return Err(Error::internal_server_error_message("HTTP body is taken"))
-            };
-            let body_value = match handler_found.handler_format() {
-                HandlerInputFormat::Json => if request.method() == Method::GET || request.method() == Method::DELETE {
-                    JsonValue::Null
-                } else {
-                    parse_json_body(incoming).await?
-                },
-                HandlerInputFormat::Form => parse_form_body(&request, incoming).await?,
+            }
+
+            let body_value = if let Some(incoming) = incoming {
+                match handler_found.handler_format() {
+                    HandlerInputFormat::Json => if request.method() == Method::GET || request.method() == Method::DELETE {
+                        JsonValue::Null
+                    } else {
+                        parse_json_body(incoming).await?
+                    },
+                    HandlerInputFormat::Form => parse_form_body(&request, incoming).await?,
+                }
+            } else if let Some(incoming_string) = incoming_string {
+                match handler_found.handler_format() {
+                    HandlerInputFormat::Json => if request.method() == Method::GET || request.method() == Method::DELETE {
+                        JsonValue::Null
+                    } else {
+                        parse_json_body(incoming_string).await?
+                    },
+                    HandlerInputFormat::Form => parse_form_body(&request, incoming_string).await?,
+                }
+            } else {
+                unreachable!()
             };
             // dispatch and run
             return match handler_found {
@@ -185,6 +201,15 @@ impl Server {
         });
         let response = main_namespace.request_middleware_stack().call(request.clone(), droppable_next.get_next()).await?;
         Ok(response)
+    }
+
+    async fn hyper_test_handler(&self, hyper_request: hyper::Request<String>) -> Result<hyper::Response<Either<Full<Bytes>, ServeFileSystemResponseBody>>> {
+        let main_namespace = self.app.compiled_main_namespace();
+        let conn_ctx = connection::Ctx::from_namespace(main_namespace);
+        let transaction_ctx = transaction::Ctx::new(conn_ctx);
+        let request = Request::new_for_test(hyper_request, transaction_ctx);
+        let response = self.process_request(request.clone()).await?;
+        hyper_response_from(request, response).await
     }
 
     async fn hyper_handler(&self, hyper_request: hyper::Request<Incoming>) -> Result<hyper::Response<Either<Full<Bytes>, ServeFileSystemResponseBody>>> {
