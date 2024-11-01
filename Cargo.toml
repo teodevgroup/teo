@@ -17,6 +17,13 @@ teo-runtime = { version = "0.3.0-alpha.1", path = "../teo-runtime" }
 teo-sql-connector = { version = "0.3.0-alpha.1", path = "../teo-sql-connector" }
 teo-mongodb-connector = { version = "0.3.0-alpha.1", path = "../teo-mongodb-connector" }
 teo-generator = { version = "0.3.0-alpha.1", path = "../teo-generator" }
+hyper = { version = "1.5.0", features = ["full"]}
+hyper-util = { version = "0.1.9", features = ["full"] }
+http-body-util = "0.1"
+multer = "3.1.0"
+mime_guess = "2.0.5"
+mime = "0.3.17"
+tower-http = { version = "0.6", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0", features = ["preserve_order"] }
 chrono = { version = "0.4.38", features = ["serde"] }
@@ -39,10 +46,6 @@ colored = "2.1.0"
 bson = { version = "2.13.0", features = ["chrono-0_4", "serde_with"] }
 ring = "0.17.7"
 time = "0.3.36"
-hyper = { version = "1.5.0", features = ["full"]}
-hyper-util = { version = "0.1.9", features = ["full"] }
-http-body-util = "0.1"
-multer = "3.1.0"
 key-path = "0.2.2"
 
 [target.'cfg(target_os = "linux")'.dependencies]

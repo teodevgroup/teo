@@ -2,9 +2,9 @@ use std::convert::Infallible;
 use std::future::Future;
 use std::net::SocketAddr;
 use std::pin::Pin;
-use std::sync::Arc;
-use http_body_util::Full;
-use hyper::body::{Bytes, Incoming};
+use http_body_util::{Either, Full};
+use http_body_util::combinators::BoxBody;
+use hyper::body::{Body, Bytes, Incoming};
 use hyper::header::CONTENT_TYPE;
 use hyper::Method;
 use hyper::server::conn::http1;
@@ -14,7 +14,6 @@ use teo_parser::ast::handler::HandlerInputFormat;
 use teo_runtime::{connection, teon};
 use teo_runtime::connection::transaction;
 use teo_runtime::request::Request;
-use teo_runtime::response::convert::hyper_response_from;
 use teo_runtime::response::Response;
 use tokio::net::TcpListener;
 use serde_json::{json, Value as JsonValue};
@@ -28,6 +27,7 @@ use crate::prelude::Error;
 use crate::server::droppable_next::DroppableNext;
 use crate::server::handler_found::{find_handler, HandlerFound};
 use crate::server::parse_body::{parse_form_body, parse_json_body};
+use crate::server::response::hyper_response_from;
 use crate::server::utils::remove_path_prefix;
 
 pub struct Server {
@@ -74,7 +74,7 @@ impl Server {
         }
     }
 
-    async fn hyper_handler_with_error_responses(&self, hyper_request: hyper::Request<Incoming>) -> core::result::Result<hyper::Response<Full<Bytes>>, Infallible> {
+    async fn hyper_handler_with_error_responses(&self, hyper_request: hyper::Request<Incoming>) -> Result<hyper::Response<Either<Full<Bytes>, BoxBody<Bytes, Error>>>> {
         match self.hyper_handler(hyper_request).await {
             Ok(response) => Ok(response),
             Err(error) => {
@@ -86,12 +86,12 @@ impl Server {
                     result_value["errors"] = ErrorSerializable::from_error(&error).errors;
                 }
                 let error_string = serde_json::to_string(&result_value).unwrap();
-                Ok(hyper::Response::builder().status(error.code).header(CONTENT_TYPE, "application/json").body(error_string.into()).unwrap())
+                Ok(hyper::Response::builder().status(error.code).header(CONTENT_TYPE, "application/json").body(Either::Left(error_string.into())).unwrap())
             },
         }
     }
 
-    async fn hyper_handler(&self, hyper_request: hyper::Request<Incoming>) -> Result<hyper::Response<Full<Bytes>>> {
+    async fn hyper_handler(&self, hyper_request: hyper::Request<Incoming>) -> Result<hyper::Response<Either<Full<Bytes>, BoxBody<Bytes, Error>>>> {
         let main_namespace = self.app.compiled_main_namespace();
         let conf = self.app.compiled_main_namespace().server().unwrap();
         let conn_ctx = connection::Ctx::from_namespace(main_namespace);
@@ -184,13 +184,13 @@ impl Server {
             }
         });
         let response = main_namespace.request_middleware_stack().call(request.clone(), droppable_next.get_next()).await?;
-        hyper_response_from(request, response)
+        hyper_response_from(request, response).await
     }
 }
 
 impl Service<hyper::Request<Incoming>> for Server {
-    type Response = hyper::Response<Full<Bytes>>;
-    type Error = Infallible;
+    type Response = hyper::Response<Either<Full<Bytes>, BoxBody<Bytes, Error>>>;
+    type Error = Error;
     type Future = Pin<Box<dyn Future<Output = core::result::Result<Self::Response, Self::Error>> + Send>>;
 
     fn call(&self, req: hyper::Request<Incoming>) -> Self::Future {
