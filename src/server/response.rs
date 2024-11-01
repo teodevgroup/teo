@@ -1,5 +1,4 @@
 use bytes::Bytes;
-use http_body_util::combinators::BoxBody;
 use http_body_util::{Either, Full};
 use hyper::body::Body;
 use hyper::header::CONTENT_TYPE;
@@ -8,8 +7,10 @@ use teo_result::{Error, Result};
 use teo_runtime::request::Request;
 use teo_runtime::response::body::BodyInner;
 use teo_runtime::response::Response;
+use tower_http::services::fs::ServeFileSystemResponseBody;
+use tower_http::services::ServeFile;
 
-pub async fn hyper_response_from(request: Request, response: Response) -> Result<hyper::Response<Either<Full<Bytes>, BoxBody<Bytes, Error>>>> {
+pub async fn hyper_response_from(request: Request, response: Response) -> Result<hyper::Response<Either<Full<Bytes>, ServeFileSystemResponseBody>>> {
     let mut builder = hyper::Response::builder().status(response.code());
     for key in response.headers().keys() {
         builder = builder.header(key.clone(), response.headers().get(&key).unwrap().clone());
@@ -33,8 +34,17 @@ pub async fn hyper_response_from(request: Request, response: Response) -> Result
             Ok(builder.body(Either::Left(string_value.into())).unwrap())
         },
         BodyInner::File(path_buf) => {
-            todo!()
-            //send_file(&request, path_buf).await
+            let result = ServeFile::new(path_buf).try_call(request.clone_hyper_request()).await;
+            match result {
+                Ok(response) => {
+                    let (parts, body) = response.into_parts();
+                    Ok(hyper::Response::from_parts(parts, Either::Right(body)))
+                }
+                Err(err) => {
+                    let error = Error::internal_server_error_message(format!("cannot read file: {:?}", err));
+                    Err(error)
+                }
+            }
         }
     }
 }

@@ -1,9 +1,7 @@
-use std::convert::Infallible;
 use std::future::Future;
 use std::net::SocketAddr;
 use std::pin::Pin;
 use http_body_util::{Either, Full};
-use http_body_util::combinators::BoxBody;
 use hyper::body::{Body, Bytes, Incoming};
 use hyper::header::CONTENT_TYPE;
 use hyper::Method;
@@ -11,7 +9,7 @@ use hyper::server::conn::http1;
 use hyper::service::Service;
 use hyper_util::rt::TokioIo;
 use teo_parser::ast::handler::HandlerInputFormat;
-use teo_runtime::{connection, teon};
+use teo_runtime::{connection};
 use teo_runtime::connection::transaction;
 use teo_runtime::request::Request;
 use teo_runtime::response::Response;
@@ -20,6 +18,7 @@ use serde_json::{json, Value as JsonValue};
 use teo_result::ErrorSerializable;
 use teo_runtime::handler::default::{aggregate, copy, copy_many, count, create, create_many, delete, delete_many, find_first, find_many, find_unique, group_by, update, update_many, upsert};
 use teo_runtime::handler::input::{validate_and_transform_json_input_for_builtin_action, validate_and_transform_json_input_for_handler};
+use tower_http::services::fs::ServeFileSystemResponseBody;
 use crate::app::App;
 use crate::server::message::server_start_message;
 use crate::prelude::Result;
@@ -74,7 +73,7 @@ impl Server {
         }
     }
 
-    async fn hyper_handler_with_error_responses(&self, hyper_request: hyper::Request<Incoming>) -> Result<hyper::Response<Either<Full<Bytes>, BoxBody<Bytes, Error>>>> {
+    async fn hyper_handler_with_error_responses(&self, hyper_request: hyper::Request<Incoming>) -> Result<hyper::Response<Either<Full<Bytes>, ServeFileSystemResponseBody>>> {
         match self.hyper_handler(hyper_request).await {
             Ok(response) => Ok(response),
             Err(error) => {
@@ -91,7 +90,7 @@ impl Server {
         }
     }
 
-    async fn hyper_handler(&self, hyper_request: hyper::Request<Incoming>) -> Result<hyper::Response<Either<Full<Bytes>, BoxBody<Bytes, Error>>>> {
+    async fn hyper_handler(&self, hyper_request: hyper::Request<Incoming>) -> Result<hyper::Response<Either<Full<Bytes>, ServeFileSystemResponseBody>>> {
         let main_namespace = self.app.compiled_main_namespace();
         let conf = self.app.compiled_main_namespace().server().unwrap();
         let conn_ctx = connection::Ctx::from_namespace(main_namespace);
@@ -189,7 +188,7 @@ impl Server {
 }
 
 impl Service<hyper::Request<Incoming>> for Server {
-    type Response = hyper::Response<Either<Full<Bytes>, BoxBody<Bytes, Error>>>;
+    type Response = hyper::Response<Either<Full<Bytes>, ServeFileSystemResponseBody>>;
     type Error = Error;
     type Future = Pin<Box<dyn Future<Output = core::result::Result<Self::Response, Self::Error>> + Send>>;
 
