@@ -28,7 +28,7 @@ mod tests {
         }
         unsafe {
             SERVER.get_or_init(|| {
-                Server::new(crate::runtime::response::app::load_app().unwrap())
+                Server::new(load_app().unwrap())
             })
         };
         server().setup_app_for_unit_test().await.unwrap();
@@ -38,7 +38,6 @@ mod tests {
     async fn before_each() {
         server().reset_app_for_unit_test().await.unwrap();
     }
-
 
     #[serial]
     #[tokio::test]
@@ -114,7 +113,7 @@ mod tests {
     async fn path_combined_argument() {
         before_all().await;
         before_each().await;
-        let req = TestRequest::new(Method::GET, "/echo/foo/bar");
+        let req = TestRequest::new(Method::GET, "/echo/foo/bar/echo");
         let res = server().process_test_request(req).await.unwrap().body_as_string();
         assert_eq!(&res, "foo/bar");
     }
@@ -124,7 +123,7 @@ mod tests {
     async fn json_body() {
         before_all().await;
         before_each().await;
-        let req = TestRequest::new(Method::POST, "/echo/jsonBody").json_body(json!({
+        let req = TestRequest::new(Method::PATCH, "/echo/jsonBody").json_body(json!({
             "name": "foo",
             "age": 1,
         })).await.unwrap();

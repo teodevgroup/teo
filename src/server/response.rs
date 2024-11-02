@@ -26,7 +26,7 @@ pub async fn hyper_response_from(request: Request, response: Response) -> Result
             },
             BodyInner::Teon(value) => {
                 let mut builder = hyper::Response::builder().status(response.code());
-                builder = builder.header(CONTENT_TYPE, APPLICATION_JSON.essence_str());
+                builder = builder.header(CONTENT_TYPE, APPLICATION_JSON.to_string());
                 let json_value = serde_json::Value::try_from(value).unwrap();
                 let string_value = serde_json::to_string(&json_value).unwrap();
                 Ok(builder.body(Either::Left(string_value.into())).unwrap())

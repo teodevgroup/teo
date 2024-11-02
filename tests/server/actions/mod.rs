@@ -46,7 +46,7 @@ mod tests {
         before_all().await;
         before_each().await;
         let req = TestRequest::new(Method::GET, "/")
-            .insert_header(CONTENT_TYPE, TEXT_PLAIN.essence_str());
+            .insert_header(CONTENT_TYPE, TEXT_PLAIN.as_ref());
         let res = server().process_test_request(req).await.unwrap();
         assert_eq!(res.status().as_u16(), 404);
     }

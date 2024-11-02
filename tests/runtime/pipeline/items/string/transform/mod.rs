@@ -1,43 +1,41 @@
 #[cfg(test)]
 mod tests {
     use std::cell::OnceCell;
-    use actix_web::{http::header::ContentType, test};
-    use teo::test::server::make_actix_app;
     use teo::prelude::App;
     use std::file;
-    use actix_http::body::MessageBody;
-    use actix_http::Method;
-    use actix_web::dev::{Service, ServiceRequest, ServiceResponse};
+    use hyper::Method;
     use teo::test::schema_path::schema_path_args;
     use serde_json::{json, Value};
     use serial_test::serial;
     use test_helpers_async::*;
+    use teo::server::server::Server;
+    use teo::server::test_request::TestRequest;
     use crate::{assert_json, matcher};
-    use teo::test::handle::Handle;
 
-    static mut HANDLE: OnceCell<Handle> = OnceCell::new();
+    static mut SERVER: OnceCell<Server> = OnceCell::new();
+    static mut BEFORE_ALL_EXECUTED: bool = false;
 
-    async fn make_app() -> impl Service<
-        actix_http::Request,
-        Response = ServiceResponse<impl MessageBody>,
-        Error = actix_web::Error,
-    > {
-        unsafe {
-            let teo_app = HANDLE.get_or_init(|| {
-                let mut h = Handle::new();
-                h.load(|| {
-                    App::new_with_argv(
-                        schema_path_args(file!(), "schema.teo")
-                    ).unwrap()
-                });
-                h
-            }).teo_app();
-            test::init_service(
-                make_actix_app(
-                    &teo_app
-                ).await.unwrap()
-            ).await
+    fn server() -> &'static Server {
+        unsafe { SERVER.get().unwrap() }
+    }
+
+    async fn before_all() {
+        if unsafe { BEFORE_ALL_EXECUTED } {
+            return;
         }
+        unsafe {
+            SERVER.get_or_init(|| {
+                Server::new(App::new_with_argv(
+                    schema_path_args(file!(), "schema.teo")
+                ).unwrap())
+            })
+        };
+        server().setup_app_for_unit_test().await.unwrap();
+        unsafe { BEFORE_ALL_EXECUTED = true; }
+    }
+
+    async fn before_each() {
+        server().reset_app_for_unit_test().await.unwrap();
     }
 
     #[serial]
@@ -45,16 +43,13 @@ mod tests {
     async fn to_word_case() {
         before_all().await;
         before_each().await;
-        let req = test::TestRequest::default()
-            .method(Method::POST)
-            .uri("/Support/create")
-            .set_json(json!({
+        let req = TestRequest::new(Method::POST, "/Support/create")
+            .json_body(json!({
                 "create": {
                     "toWordCase": "fooBar",
                 },
-            }))
-            .to_request();
-        let res: Value = test::call_and_read_body_json(&app, req).await;
+            })).await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -68,16 +63,13 @@ mod tests {
     async fn to_lower_case() {
         before_all().await;
         before_each().await;
-        let req = test::TestRequest::default()
-            .method(Method::POST)
-            .uri("/Support/create")
-            .set_json(json!({
+        let req = TestRequest::new(Method::POST, "/Support/create")
+            .json_body(json!({
                 "create": {
                     "toLowerCase": "Foo BaR",
                 },
-            }))
-            .to_request();
-        let res: Value = test::call_and_read_body_json(&app, req).await;
+            })).await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -91,16 +83,13 @@ mod tests {
     async fn to_upper_case() {
         before_all().await;
         before_each().await;
-        let req = test::TestRequest::default()
-            .method(Method::POST)
-            .uri("/Support/create")
-            .set_json(json!({
+        let req = TestRequest::new(Method::POST, "/Support/create")
+            .json_body(json!({
                 "create": {
                     "toUpperCase": "foo bar",
                 },
-            }))
-            .to_request();
-        let res: Value = test::call_and_read_body_json(&app, req).await;
+            })).await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -114,16 +103,13 @@ mod tests {
     async fn to_sentence_case() {
         before_all().await;
         before_each().await;
-        let req = test::TestRequest::default()
-            .method(Method::POST)
-            .uri("/Support/create")
-            .set_json(json!({
+        let req = TestRequest::new(Method::POST, "/Support/create")
+            .json_body(json!({
                 "create": {
                     "toSentenceCase": "fooBar",
                 },
-            }))
-            .to_request();
-        let res: Value = test::call_and_read_body_json(&app, req).await;
+            })).await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -137,16 +123,13 @@ mod tests {
     async fn to_title_case() {
         before_all().await;
         before_each().await;
-        let req = test::TestRequest::default()
-            .method(Method::POST)
-            .uri("/Support/create")
-            .set_json(json!({
+        let req = TestRequest::new(Method::POST, "/Support/create")
+            .json_body(json!({
                 "create": {
                     "toTitleCase": "foo bar",
                 },
-            }))
-            .to_request();
-        let res: Value = test::call_and_read_body_json(&app, req).await;
+            })).await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -160,16 +143,13 @@ mod tests {
     async fn trim() {
         before_all().await;
         before_each().await;
-        let req = test::TestRequest::default()
-            .method(Method::POST)
-            .uri("/Support/create")
-            .set_json(json!({
+        let req = TestRequest::new(Method::POST, "/Support/create")
+            .json_body(json!({
                 "create": {
                     "trim": " abc def\t",
                 },
-            }))
-            .to_request();
-        let res: Value = test::call_and_read_body_json(&app, req).await;
+            })).await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -183,16 +163,13 @@ mod tests {
     async fn pad_end() {
         before_all().await;
         before_each().await;
-        let req = test::TestRequest::default()
-            .method(Method::POST)
-            .uri("/Support/create")
-            .set_json(json!({
+        let req = TestRequest::new(Method::POST, "/Support/create")
+            .json_body(json!({
                 "create": {
                     "padEnd": "123",
                 },
-            }))
-            .to_request();
-        let res: Value = test::call_and_read_body_json(&app, req).await;
+            })).await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -206,16 +183,13 @@ mod tests {
     async fn pad_start() {
         before_all().await;
         before_each().await;
-        let req = test::TestRequest::default()
-            .method(Method::POST)
-            .uri("/Support/create")
-            .set_json(json!({
+        let req = TestRequest::new(Method::POST, "/Support/create")
+            .json_body(json!({
                 "create": {
                     "padStart": "123",
                 },
-            }))
-            .to_request();
-        let res: Value = test::call_and_read_body_json(&app, req).await;
+            })).await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -229,16 +203,13 @@ mod tests {
     async fn regex_replace() {
         before_all().await;
         before_each().await;
-        let req = test::TestRequest::default()
-            .method(Method::POST)
-            .uri("/Support/create")
-            .set_json(json!({
+        let req = TestRequest::new(Method::POST, "/Support/create")
+            .json_body(json!({
                 "create": {
                     "regexReplace": "foo_bar",
                 },
-            }))
-            .to_request();
-        let res: Value = test::call_and_read_body_json(&app, req).await;
+            })).await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
