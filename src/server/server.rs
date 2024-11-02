@@ -15,14 +15,21 @@ use teo_runtime::request::Request;
 use teo_runtime::response::Response;
 use tokio::net::TcpListener;
 use serde_json::{json, Value as JsonValue};
+use teo_parser::diagnostics::diagnostics::Diagnostics;
 use teo_result::ErrorSerializable;
 use teo_runtime::handler::default::{aggregate, copy, copy_many, count, create, create_many, delete, delete_many, find_first, find_many, find_unique, group_by, update, update_many, upsert};
 use teo_runtime::handler::input::{validate_and_transform_json_input_for_builtin_action, validate_and_transform_json_input_for_handler};
+use teo_runtime::schema::load::load_data_sets::load_data_sets;
 use tower_http::services::fs::ServeFileSystemResponseBody;
 use crate::app::App;
+use crate::cli::command::SeedCommandAction;
+use crate::database::connect_databases;
+use crate::migrate::migrate;
 use crate::server::message::server_start_message;
 use crate::prelude::Result;
 use crate::prelude::Error;
+use crate::purge::purge;
+use crate::seeder::seed::seed;
 use crate::server::droppable_next::DroppableNext;
 use crate::server::handler_found::{find_handler, HandlerFound};
 use crate::server::parse_body::{parse_form_body, parse_json_body};
@@ -43,6 +50,26 @@ impl Server {
     }
 
     pub async fn before_serve(&self) -> Result<()> {
+        Ok(())
+    }
+
+    pub async fn prepare_app_for_unit_test(&self) -> Result<()> {
+        let app = &self.app;
+        app.prepare_for_run().await?;
+        connect_databases(app, app.compiled_main_namespace(), true).await?;
+        migrate(app, false, false, true).await?;
+        if app.compiled_main_namespace().database().is_some() {
+            let mut diagnostics = Diagnostics::new();
+            let data_sets = load_data_sets(app.main_namespace(), None, false, app.schema(), &mut diagnostics)?;
+            let transaction_ctx = transaction::Ctx::new(app.conn_ctx().clone());
+            purge(app).await?;
+            seed(SeedCommandAction::Seed, data_sets, transaction_ctx, false).await?;
+        }
+        // setup
+        if let Some(setup) = app.get_setup() {
+            let transaction_ctx = transaction::Ctx::new(app.conn_ctx().clone());
+            setup.call(transaction_ctx).await?;
+        }
         Ok(())
     }
 
