@@ -5,7 +5,7 @@ mod tests {
     use std::file;
     use teo::server::server::Server;
     use teo::test::schema_path::schema_path_args;
-    use serde_json::{json, Value};
+    use serde_json::json;
     use crate::{assert_json, matcher};
     use serial_test::serial;
     use crate::lib::matcher_functions::one_match;

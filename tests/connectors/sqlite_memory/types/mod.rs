@@ -6,7 +6,7 @@ mod tests {
     use hyper::Method;
     use teo::server::{server::Server, test_request::TestRequest};
     use teo::test::schema_path::schema_path_args;
-    use serde_json::{json, Value};
+    use serde_json::json;
     use serial_test::serial;
     use crate::{assert_json, matcher};
     use crate::lib::matcher_functions::{date_time_value, decimal_value, date_value};

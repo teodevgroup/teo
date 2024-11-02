@@ -55,8 +55,7 @@ openssl = { version = "0.10", features = ["vendored"] }
 
 [dev-dependencies]
 serial_test = "3.1.1"
-test-helpers-async = { version = "0.2.3" }
-whoami = "1.4.1"
+lazy_static = "1.4.0"
 
 [build-dependencies]
 rustc_version = "0.4.0"
