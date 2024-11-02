@@ -39,7 +39,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn path() {
         before_all().await;
         before_each().await;
@@ -49,7 +49,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn query() {
         before_all().await;
         before_each().await;
@@ -59,7 +59,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn content_type_from_header() {
         before_all().await;
         before_each().await;
@@ -72,7 +72,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn content_type() {
         before_all().await;
         before_each().await;
@@ -85,7 +85,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn method() {
         before_all().await;
         before_each().await;
@@ -98,7 +98,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn path_argument() {
         before_all().await;
         before_each().await;
@@ -108,7 +108,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn path_combined_argument() {
         before_all().await;
         before_each().await;
@@ -118,7 +118,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn json_body() {
         before_all().await;
         before_each().await;
@@ -134,7 +134,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn form_body() {
         // TODO: complete this
 //         let app = make_app().await;
@@ -154,7 +154,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn cookie() {
         before_all().await;
         before_each().await;

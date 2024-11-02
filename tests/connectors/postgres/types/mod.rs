@@ -39,7 +39,7 @@ mod tests {
 
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn int32() {
         before_all().await;
         before_each().await;
@@ -60,7 +60,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn int64() {
         before_all().await;
         before_each().await;
@@ -81,7 +81,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn float32() {
         before_all().await;
         before_each().await;
@@ -102,7 +102,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn float64() {
         before_all().await;
         before_each().await;
@@ -123,7 +123,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn bool() {
         before_all().await;
         before_each().await;
@@ -144,7 +144,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn string() {
         before_all().await;
         before_each().await;
@@ -165,7 +165,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn date() {
         before_all().await;
         before_each().await;
@@ -186,7 +186,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn date_time() {
         before_all().await;
         before_each().await;
@@ -207,7 +207,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn decimal() {
         before_all().await;
         before_each().await;
@@ -228,7 +228,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn r#enum() {
         before_all().await;
         before_each().await;
@@ -249,7 +249,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn int32_array() {
         before_all().await;
         before_each().await;
@@ -270,7 +270,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn int64_array() {
         before_all().await;
         before_each().await;
@@ -291,7 +291,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn float32_array() {
         before_all().await;
         before_each().await;
@@ -312,7 +312,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn float64_array() {
         before_all().await;
         before_each().await;
@@ -333,7 +333,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn bool_array() {
         before_all().await;
         before_each().await;
@@ -354,7 +354,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn string_array() {
         before_all().await;
         before_each().await;
@@ -375,7 +375,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn date_array() {
         before_all().await;
         before_each().await;
@@ -396,7 +396,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn date_time_array() {
         before_all().await;
         before_each().await;
@@ -417,7 +417,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn decimal_array() {
         before_all().await;
         before_each().await;
@@ -438,7 +438,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn enum_array() {
         before_all().await;
         before_each().await;

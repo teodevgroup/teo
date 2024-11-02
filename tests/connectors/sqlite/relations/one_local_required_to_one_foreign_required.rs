@@ -37,7 +37,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn create_with_nested_create() {
         before_all().await;
         before_each().await;
@@ -69,7 +69,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn update_with_nested_update() {
         before_all().await;
         before_each().await;

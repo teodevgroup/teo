@@ -39,7 +39,7 @@ mod tests {
 
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn int32() {
         before_all().await;
         before_each().await;
@@ -60,7 +60,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn int64() {
         before_all().await;
         before_each().await;
@@ -81,7 +81,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn float32() {
         before_all().await;
         before_each().await;
@@ -102,7 +102,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn float64() {
         before_all().await;
         before_each().await;
@@ -123,7 +123,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn bool() {
         before_all().await;
         before_each().await;
@@ -144,7 +144,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn string() {
         before_all().await;
         before_each().await;
@@ -165,7 +165,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn date() {
         before_all().await;
         before_each().await;
@@ -186,7 +186,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn date_time() {
         before_all().await;
         before_each().await;
@@ -207,7 +207,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn decimal() {
         before_all().await;
         before_each().await;
@@ -228,7 +228,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn r#enum() {
         before_all().await;
         before_each().await;

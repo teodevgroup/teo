@@ -56,6 +56,7 @@ openssl = { version = "0.10", features = ["vendored"] }
 [dev-dependencies]
 serial_test = "3.1.1"
 lazy_static = "1.4.0"
+shared-tokio-runtime = { version = "0.1.8" }
 
 [build-dependencies]
 rustc_version = "0.4.0"

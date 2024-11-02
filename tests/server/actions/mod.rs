@@ -41,7 +41,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn test_get_index() {
         before_all().await;
         before_each().await;
@@ -52,7 +52,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn test_create_record() {
         before_all().await;
         before_each().await;

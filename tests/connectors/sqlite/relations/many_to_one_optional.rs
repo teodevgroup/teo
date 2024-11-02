@@ -37,7 +37,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn create_with_nested_create() {
         before_all().await;
         before_each().await;
@@ -71,7 +71,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn create_with_nested_create_many() {
         before_all().await;
         before_each().await;
@@ -119,7 +119,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn create_with_nested_connect_one() {
         before_all().await;
         before_each().await;
@@ -153,7 +153,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn create_with_nested_connect_more_than_one() {
         before_all().await;
         before_each().await;
@@ -201,7 +201,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn update_with_nested_create_one() {
         before_all().await;
         before_each().await;
@@ -251,7 +251,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn update_with_nested_create_many() {
         before_all().await;
         before_each().await;
@@ -311,7 +311,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn update_with_nested_connect_one() {
         before_all().await;
         before_each().await;
@@ -361,7 +361,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn update_with_nested_connect_more_than_one() {
         before_all().await;
         before_each().await;
@@ -421,7 +421,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn update_with_nested_set() {
         before_all().await;
         before_each().await;
@@ -474,7 +474,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn update_with_nested_disconnect_one() {
         before_all().await;
         before_each().await;
@@ -510,7 +510,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn update_with_nested_disconnect_more_than_one() {
         before_all().await;
         before_each().await;
@@ -545,7 +545,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn update_with_nested_update_one() {
         before_all().await;
         before_each().await;
@@ -595,7 +595,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn update_with_nested_update_more_than_one() {
         before_all().await;
         before_each().await;
@@ -655,7 +655,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn update_with_nested_update_many() {
         before_all().await;
         before_each().await;
@@ -705,7 +705,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn update_with_nested_update_many_more() {
         before_all().await;
         before_each().await;
@@ -765,7 +765,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn update_with_nested_delete_one() {
         before_all().await;
         before_each().await;
@@ -801,7 +801,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn update_with_nested_delete_more_than_one() {
         before_all().await;
         before_each().await;
@@ -840,7 +840,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn update_with_nested_delete_many() {
         before_all().await;
         before_each().await;
@@ -876,7 +876,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn update_with_nested_delete_many_more() {
         before_all().await;
         before_each().await;

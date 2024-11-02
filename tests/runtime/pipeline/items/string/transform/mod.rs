@@ -38,7 +38,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn to_word_case() {
         before_all().await;
         before_each().await;
@@ -58,7 +58,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn to_lower_case() {
         before_all().await;
         before_each().await;
@@ -78,7 +78,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn to_upper_case() {
         before_all().await;
         before_each().await;
@@ -98,7 +98,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn to_sentence_case() {
         before_all().await;
         before_each().await;
@@ -118,7 +118,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn to_title_case() {
         before_all().await;
         before_each().await;
@@ -138,7 +138,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn trim() {
         before_all().await;
         before_each().await;
@@ -158,7 +158,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn pad_end() {
         before_all().await;
         before_each().await;
@@ -178,7 +178,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn pad_start() {
         before_all().await;
         before_each().await;
@@ -198,7 +198,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn regex_replace() {
         before_all().await;
         before_each().await;

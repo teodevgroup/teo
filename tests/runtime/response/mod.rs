@@ -38,7 +38,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn text_response() {
         before_all().await;
         before_each().await;
@@ -48,7 +48,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn json_response() {
         before_all().await;
         before_each().await;
@@ -60,7 +60,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn file_response() {
         before_all().await;
         before_each().await;
@@ -70,7 +70,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn cookie_in_text_response() {
         before_all().await;
         before_each().await;
@@ -80,7 +80,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn cookie_in_json_response() {
         before_all().await;
         before_each().await;
@@ -90,7 +90,7 @@ mod tests {
     }
 
     #[serial]
-    #[tokio::test]
+    #[shared_tokio_runtime::runtime_test]
     async fn cookie_in_file_response() {
         before_all().await;
         before_each().await;
