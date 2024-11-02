@@ -31,6 +31,7 @@ use crate::server::test_request::TestRequest;
 use crate::server::test_response::TestResponse;
 use crate::server::utils::remove_path_prefix;
 
+#[derive(Clone, Debug)]
 pub struct Server {
     app: App,
 }
@@ -201,7 +202,7 @@ impl Server {
         Ok(response)
     }
 
-    async fn test_process(&self, test_request: TestRequest) -> Result<TestResponse> {
+    pub async fn process_test_request(&self, test_request: TestRequest) -> Result<TestResponse> {
         let main_namespace = self.app.compiled_main_namespace();
         let conn_ctx = connection::Ctx::from_namespace(main_namespace);
         let transaction_ctx = transaction::Ctx::new(conn_ctx);
