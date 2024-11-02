@@ -43,7 +43,7 @@ mod tests {
     async fn int32() {
         before_all().await;
         before_each().await;
-        let req = TestRequest::new(Method::POST, "Support/create")
+        let req = TestRequest::new(Method::POST, "/Support/create")
             .json_body(json!({
                 "create": {
                     "int32": 1,
@@ -64,7 +64,7 @@ mod tests {
     async fn int64() {
         before_all().await;
         before_each().await;
-        let req = TestRequest::new(Method::POST, "Support/create")
+        let req = TestRequest::new(Method::POST, "/Support/create")
             .json_body(json!({
                 "create": {
                     "int64": 1,
@@ -85,7 +85,7 @@ mod tests {
     async fn float32() {
         before_all().await;
         before_each().await;
-        let req = TestRequest::new(Method::POST, "Support/create")
+        let req = TestRequest::new(Method::POST, "/Support/create")
             .json_body(json!({
                 "create": {
                     "float32": 1.5,
@@ -106,7 +106,7 @@ mod tests {
     async fn float64() {
         before_all().await;
         before_each().await;
-        let req = TestRequest::new(Method::POST, "Support/create")
+        let req = TestRequest::new(Method::POST, "/Support/create")
             .json_body(json!({
                 "create": {
                     "float64": 1.2,
@@ -127,7 +127,7 @@ mod tests {
     async fn bool() {
         before_all().await;
         before_each().await;
-        let req = TestRequest::new(Method::POST, "Support/create")
+        let req = TestRequest::new(Method::POST, "/Support/create")
             .json_body(json!({
                 "create": {
                     "bool": true,
@@ -148,7 +148,7 @@ mod tests {
     async fn string() {
         before_all().await;
         before_each().await;
-        let req = TestRequest::new(Method::POST, "Support/create")
+        let req = TestRequest::new(Method::POST, "/Support/create")
             .json_body(json!({
                 "create": {
                     "string": "KOF XV",
@@ -169,7 +169,7 @@ mod tests {
     async fn date() {
         before_all().await;
         before_each().await;
-        let req = TestRequest::new(Method::POST, "Support/create")
+        let req = TestRequest::new(Method::POST, "/Support/create")
             .json_body(json!({
                 "create": {
                     "date": "2005-12-25",
@@ -190,7 +190,7 @@ mod tests {
     async fn date_time() {
         before_all().await;
         before_each().await;
-        let req = TestRequest::new(Method::POST, "Support/create")
+        let req = TestRequest::new(Method::POST, "/Support/create")
             .json_body(json!({
                 "create": {
                     "dateTime": "2003-04-17T08:12:34.567Z",
@@ -211,7 +211,7 @@ mod tests {
     async fn decimal() {
         before_all().await;
         before_each().await;
-        let req = TestRequest::new(Method::POST, "Support/create")
+        let req = TestRequest::new(Method::POST, "/Support/create")
             .json_body(json!({
                 "create": {
                     "decimal": "5.78",
@@ -232,7 +232,7 @@ mod tests {
     async fn r#enum() {
         before_all().await;
         before_each().await;
-        let req = TestRequest::new(Method::POST, "Support/create")
+        let req = TestRequest::new(Method::POST, "/Support/create")
             .json_body(json!({
                 "create": {
                     "sex": "FEMALE",
