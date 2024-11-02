@@ -45,7 +45,7 @@ pub struct Server {
 
 impl Server {
 
-    pub fn new(app: &App) -> Self {
+    pub fn new(app: App) -> Self {
         Self { app: app.clone() }
     }
 
@@ -113,20 +113,22 @@ impl Server {
         }
     }
 
-    async fn hyper_handler_with_error_responses(&self, hyper_request: hyper::Request<Incoming>) -> Result<hyper::Response<Either<Full<Bytes>, ServeFileSystemResponseBody>>> {
-        match self.hyper_handler(hyper_request).await {
-            Ok(response) => Ok(response),
-            Err(error) => {
-                let mut result_value = json!({
+    fn error_to_hyper_response(&self, error: Error) -> hyper::Response<Either<Full<Bytes>, ServeFileSystemResponseBody>> {
+        let mut result_value = json!({
                     "type": error.inferred_title(),
                     "message": error.message(),
                 });
-                if error.errors.is_some() {
-                    result_value["errors"] = ErrorSerializable::from_error(&error).errors;
-                }
-                let error_string = serde_json::to_string(&result_value).unwrap();
-                Ok(hyper::Response::builder().status(error.code).header(CONTENT_TYPE, "application/json").body(Either::Left(error_string.into())).unwrap())
-            },
+        if error.errors.is_some() {
+            result_value["errors"] = ErrorSerializable::from_error(&error).errors;
+        }
+        let error_string = serde_json::to_string(&result_value).unwrap();
+        hyper::Response::builder().status(error.code).header(CONTENT_TYPE, "application/json").body(Either::Left(error_string.into())).unwrap()
+    }
+
+    async fn hyper_handler_with_error_responses(&self, hyper_request: hyper::Request<Incoming>) -> Result<hyper::Response<Either<Full<Bytes>, ServeFileSystemResponseBody>>> {
+        match self.hyper_handler(hyper_request).await {
+            Ok(response) => Ok(response),
+            Err(error) => Ok(self.error_to_hyper_response(error)),
         }
     }
 
@@ -240,6 +242,16 @@ impl Server {
     }
 
     pub async fn process_test_request(&self, test_request: TestRequest) -> Result<TestResponse> {
+        match self.process_test_request_inner(test_request).await {
+            Ok(res) => Ok(res),
+            Err(err) => {
+                let hyper_res = self.error_to_hyper_response(err);
+                TestResponse::new(hyper_res).await
+            },
+        }
+    }
+
+    async fn process_test_request_inner(&self, test_request: TestRequest) -> Result<TestResponse> {
         let main_namespace = self.app.compiled_main_namespace();
         let conn_ctx = connection::Ctx::from_namespace(main_namespace);
         let transaction_ctx = transaction::Ctx::new(conn_ctx);
