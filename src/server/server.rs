@@ -53,7 +53,7 @@ impl Server {
         Ok(())
     }
 
-    pub async fn prepare_app_for_unit_test(&self) -> Result<()> {
+    pub async fn setup_app_for_unit_test(&self) -> Result<()> {
         let app = &self.app;
         app.prepare_for_run().await?;
         connect_databases(app, app.compiled_main_namespace(), true).await?;
@@ -70,6 +70,16 @@ impl Server {
             let transaction_ctx = transaction::Ctx::new(app.conn_ctx().clone());
             setup.call(transaction_ctx).await?;
         }
+        Ok(())
+    }
+
+    pub async fn reset_app_for_unit_test(&self) -> Result<()> {
+        let app = &self.app;
+        purge(app).await?;
+        let mut diagnostics = Diagnostics::new();
+        let data_sets = load_data_sets(app.main_namespace(), None, false, app.schema(), &mut diagnostics)?;
+        let transaction_ctx = transaction::Ctx::new(app.conn_ctx().clone());
+        seed(SeedCommandAction::Seed, data_sets, transaction_ctx, false).await?;
         Ok(())
     }
 
