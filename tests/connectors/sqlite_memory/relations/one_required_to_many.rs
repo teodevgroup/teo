@@ -54,7 +54,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn create_with_nested_create() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _create_res = req(&app, "create", "Post", json!({
             "create": {
                 "name": "UIKit",
@@ -85,7 +86,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn create_with_nested_connect() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _create_res = req(&app, "create", "Post", json!({
             "create": {
                 "name": "UIKit",
@@ -116,7 +118,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn update_with_nested_create() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _create_res = req(&app, "update", "Post", json!({
             "where": {
                 "name": "Swift 1.0"
@@ -149,7 +152,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn update_with_nested_connect() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _create_res = req(&app, "update", "Post", json!({
             "where": {
                 "name": "Swift 1.0"
@@ -182,7 +186,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn update_with_nested_set_to_another_one() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _create_res = req(&app, "update", "Post", json!({
             "where": {
                 "name": "Swift 1.0"
@@ -216,7 +221,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn update_with_nested_update() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _create_res = req(&app, "update", "Post", json!({
             "where": {
                 "name": "Swift 1.0"

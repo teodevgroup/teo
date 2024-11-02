@@ -54,7 +54,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn create_with_nested_create() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _create_res = req(&app, "create", "User", json!({
             "create": {
                 "name": "Dan",
@@ -85,7 +86,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn update_with_nested_update() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _update_res = req(&app, "update", "User", json!({
             "where": {
                 "name": "John"

@@ -43,7 +43,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn int32() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let req = test::TestRequest::default()
             .method(Method::POST)
             .uri("/Support/create")
@@ -65,7 +66,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn int64() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let req = test::TestRequest::default()
             .method(Method::POST)
             .uri("/Support/create")
@@ -87,7 +89,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn float32() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let req = test::TestRequest::default()
             .method(Method::POST)
             .uri("/Support/create")
@@ -110,7 +113,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn float64() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let req = test::TestRequest::default()
             .method(Method::POST)
             .uri("/Support/create")
@@ -132,7 +136,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn bool() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let req = test::TestRequest::default()
             .method(Method::POST)
             .uri("/Support/create")
@@ -154,7 +159,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn string() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let req = test::TestRequest::default()
             .method(Method::POST)
             .uri("/Support/create")
@@ -176,7 +182,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn date() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let req = test::TestRequest::default()
             .method(Method::POST)
             .uri("/Support/create")
@@ -198,7 +205,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn date_time() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let req = test::TestRequest::default()
             .method(Method::POST)
             .uri("/Support/create")
@@ -220,7 +228,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn object_id() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let req = test::TestRequest::default()
             .method(Method::POST)
             .uri("/Support/create")
@@ -242,7 +251,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn r#enum() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let req = test::TestRequest::default()
             .method(Method::POST)
             .uri("/Support/create")
@@ -264,7 +274,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn int32_array() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let req = test::TestRequest::default()
             .method(Method::POST)
             .uri("/Support/create")
@@ -286,7 +297,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn int64_array() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let req = test::TestRequest::default()
             .method(Method::POST)
             .uri("/Support/create")
@@ -308,7 +320,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn float32_array() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let req = test::TestRequest::default()
             .method(Method::POST)
             .uri("/Support/create")
@@ -330,7 +343,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn float64_array() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let req = test::TestRequest::default()
             .method(Method::POST)
             .uri("/Support/create")
@@ -352,7 +366,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn bool_array() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let req = test::TestRequest::default()
             .method(Method::POST)
             .uri("/Support/create")
@@ -374,7 +389,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn string_array() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let req = test::TestRequest::default()
             .method(Method::POST)
             .uri("/Support/create")
@@ -396,7 +412,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn date_array() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let req = test::TestRequest::default()
             .method(Method::POST)
             .uri("/Support/create")
@@ -418,7 +435,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn date_time_array() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let req = test::TestRequest::default()
             .method(Method::POST)
             .uri("/Support/create")
@@ -440,7 +458,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn object_id_array() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let req = test::TestRequest::default()
             .method(Method::POST)
             .uri("/Support/create")
@@ -462,7 +481,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn enum_array() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let req = test::TestRequest::default()
             .method(Method::POST)
             .uri("/Support/create")

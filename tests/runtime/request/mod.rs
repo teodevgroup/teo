@@ -3,152 +3,132 @@ pub mod app;
 #[cfg(test)]
 mod tests {
     use std::cell::OnceCell;
-    use actix_web::{http::header::ContentType, test};
-    use teo::test::server::make_actix_app;
     use teo::prelude::App;
     use std::file;
-    use actix_http::body::MessageBody;
-    use actix_http::Method;
-    use actix_web::dev::{Service, ServiceRequest, ServiceResponse};
+    use hyper::Method;
     use teo::test::schema_path::schema_path_args;
     use serde_json::{json, Value};
     use serial_test::serial;
     use test_helpers_async::*;
+    use teo::server::server::Server;
+    use teo::server::test_request::TestRequest;
     use crate::{assert_json, matcher};
-    use teo::test::handle::Handle;
     use crate::runtime::request::app::load_app;
-    use actix_multipart::test::create_form_data_payload_and_headers;
-    use actix_web::cookie::Cookie;
-    use actix_web::web::Bytes;
 
-    static mut HANDLE: OnceCell<Handle> = OnceCell::new();
+    static mut SERVER: OnceCell<Server> = OnceCell::new();
+    static mut BEFORE_ALL_EXECUTED: bool = false;
 
-    async fn make_app() -> impl Service<
-        actix_http::Request,
-        Response = ServiceResponse<impl MessageBody>,
-        Error = actix_web::Error,
-    > {
-        unsafe {
-            let teo_app = HANDLE.get_or_init(|| {
-                let mut h = Handle::new();
-                h.load(|| {
-                    load_app().unwrap()
-                });
-                h
-            }).teo_app();
-            test::init_service(
-                make_actix_app(
-                    &teo_app
-                ).await.unwrap()
-            ).await
-        }
+    fn server() -> &'static Server {
+        unsafe { SERVER.get().unwrap() }
     }
+
+    async fn before_all() {
+        if unsafe { BEFORE_ALL_EXECUTED } {
+            return;
+        }
+        unsafe {
+            SERVER.get_or_init(|| {
+                Server::new(crate::runtime::response::app::load_app().unwrap())
+            })
+        };
+        server().setup_app_for_unit_test().await.unwrap();
+        unsafe { BEFORE_ALL_EXECUTED = true; }
+    }
+
+    async fn before_each() {
+        server().reset_app_for_unit_test().await.unwrap();
+    }
+
 
     #[serial]
     #[tokio::test]
     async fn path() {
-        let app = make_app().await;
-        let req = test::TestRequest::default()
-            .method(Method::POST)
-            .uri("/")
-            .set_json(json!({}))
-            .to_request();
-        let res: Value = test::call_and_read_body_json(&app, req).await;
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/").json_body(json!({})).await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
         assert_eq!(res["path"], "/");
     }
 
     #[serial]
     #[tokio::test]
-    async fn query_string() {
-        let app = make_app().await;
-        let req = test::TestRequest::default()
-            .method(Method::POST)
-            .uri("/?foo=bar")
-            .set_json(json!({}))
-            .to_request();
-        let res: Value = test::call_and_read_body_json(&app, req).await;
+    async fn query() {
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/?foo=bar").json_body(json!({})).await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
         assert_eq!(res["queryString"], "foo=bar");
     }
 
     #[serial]
     #[tokio::test]
     async fn content_type_from_header() {
-        let app = make_app().await;
-        let req = test::TestRequest::default()
-            .method(Method::POST)
-            .uri("/?foo=bar")
-            .insert_header(("content-type", "json"))
-            .set_json(json!({}))
-            .to_request();
-        let res: Value = test::call_and_read_body_json(&app, req).await;
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/?foo=bar")
+            .insert_header("content-type", "json")
+            .json_body(json!({}))
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
         assert_eq!(res["contentTypeFromHeader"], "application/json");
     }
 
     #[serial]
     #[tokio::test]
     async fn content_type() {
-        let app = make_app().await;
-        let req = test::TestRequest::default()
-            .method(Method::POST)
-            .uri("/?foo=bar")
-            .insert_header(("content-type", "json"))
-            .set_json(json!({}))
-            .to_request();
-        let res: Value = test::call_and_read_body_json(&app, req).await;
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/?foo=bar")
+            .insert_header("content-type", "json")
+            .json_body(json!({}))
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
         assert_eq!(res["contentType"], "application/json");
     }
 
     #[serial]
     #[tokio::test]
     async fn method() {
-        let app = make_app().await;
-        let req = test::TestRequest::default()
-            .method(Method::POST)
-            .uri("/?foo=bar")
-            .insert_header(("content-type", "json"))
-            .set_json(json!({}))
-            .to_request();
-        let res: Value = test::call_and_read_body_json(&app, req).await;
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/?foo=bar")
+            .insert_header("content-type", "json")
+            .json_body(json!({}))
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
         assert_eq!(res["method"], "POST");
     }
 
     #[serial]
     #[tokio::test]
     async fn path_argument() {
-        let app = make_app().await;
-        let req = test::TestRequest::default()
-            .method(Method::GET)
-            .uri("/echo/foo")
-            .to_request();
-        let res = test::call_and_read_body(&app, req).await;
-        assert_eq!(res.as_ref(), "foo".as_bytes());
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::GET, "/echo/foo");
+        let res = server().process_test_request(req).await.unwrap().body_as_string();
+        assert_eq!(&res, "foo");
     }
 
     #[serial]
     #[tokio::test]
     async fn path_combined_argument() {
-        let app = make_app().await;
-        let req = test::TestRequest::default()
-            .method(Method::GET)
-            .uri("/echo/foo/bar/echo")
-            .to_request();
-        let res = test::call_and_read_body(&app, req).await;
-        assert_eq!(res.as_ref(), "foo/bar".as_bytes());
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::GET, "/echo/foo/bar");
+        let res = server().process_test_request(req).await.unwrap().body_as_string();
+        assert_eq!(&res, "foo/bar");
     }
 
     #[serial]
     #[tokio::test]
     async fn json_body() {
-        let app = make_app().await;
-        let req = test::TestRequest::default()
-            .method(Method::PATCH)
-            .uri("/echo/jsonBody")
-            .set_json(json!({
-                "name": "foo",
-                "age": 1,
-            }))
-            .to_request();
-        let res: Value = test::call_and_read_body_json(&app, req).await;
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/echo/jsonBody").json_body(json!({
+            "name": "foo",
+            "age": 1,
+        })).await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
         assert_json!(res, matcher!({
             "name": "foo",
             "age": 1,
@@ -178,14 +158,12 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn cookie() {
-        let app = make_app().await;
-        let req = test::TestRequest::default()
-            .method(Method::POST)
-            .uri("/echo/cookie")
-            .cookie(Cookie::new("a", "b"))
-            .set_json(json!({}))
-            .to_request();
-        let res: Value = test::call_and_read_body_json(&app, req).await;
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/echo/cookie")
+            .append_header("Cookie", "a=b")
+            .json_body(json!({})).await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
         assert_json!(res, matcher!({
             "cookies": [
                 { "name": "a", "value": "b" }

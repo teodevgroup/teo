@@ -13,6 +13,7 @@ mod tests {
     use teo::server::test_request::TestRequest;
     use crate::{assert_json, matcher};
     use crate::runtime::response::app::load_app;
+
     static mut SERVER: OnceCell<Server> = OnceCell::new();
     static mut BEFORE_ALL_EXECUTED: bool = false;
 

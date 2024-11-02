@@ -55,7 +55,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn create_with_nested_create_one() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _create_res = req(&app, "create", "Artist", json!({
             "create": {
                 "name": "Taylor Swift",
@@ -87,7 +88,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn create_with_nested_create_many() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _create_res = req(&app, "create", "Artist", json!({
             "create": {
                 "name": "Taylor Swift",
@@ -132,7 +134,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn create_with_nested_connect_one() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _create_res = req(&app, "create", "Artist", json!({
             "create": {
                 "name": "Taylor Swift",
@@ -182,7 +185,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn create_with_nested_connect_more_than_one() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _create_res = req(&app, "create", "Artist", json!({
             "create": {
                 "name": "Taylor Swift",
@@ -255,7 +259,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn update_with_nested_create_one() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _update_res = req(&app, "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
@@ -301,7 +306,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn update_with_nested_create_many() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _update_res = req(&app, "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
@@ -356,7 +362,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn update_with_nested_connect_one() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _update_res = req(&app, "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
@@ -416,7 +423,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn update_with_nested_connect_more_than_one() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _update_res = req(&app, "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
@@ -485,7 +493,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn update_with_nested_set() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _update_res = req(&app, "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
@@ -546,7 +555,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn update_with_nested_disconnect_one() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _update_res = req(&app, "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
@@ -580,7 +590,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn update_with_nested_disconnect_more_than_one() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _update_res = req(&app, "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
@@ -614,7 +625,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn update_with_nested_update_one() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _update_res = req(&app, "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
@@ -661,7 +673,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn update_with_nested_update_more_than_one() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _update_res = req(&app, "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
@@ -718,7 +731,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn update_with_nested_update_many() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _update_res = req(&app, "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
@@ -765,7 +779,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn update_with_nested_update_many_more() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _update_res = req(&app, "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
@@ -822,7 +837,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn update_with_nested_delete_one() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _update_res = req(&app, "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
@@ -856,7 +872,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn update_with_nested_delete_more_than_one() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _update_res = req(&app, "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
@@ -890,7 +907,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn update_with_nested_delete_many() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _update_res = req(&app, "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
@@ -924,7 +942,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn update_with_nested_delete_many_more() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _update_res = req(&app, "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"

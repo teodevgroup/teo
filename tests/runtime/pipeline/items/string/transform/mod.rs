@@ -43,7 +43,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn to_word_case() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let req = test::TestRequest::default()
             .method(Method::POST)
             .uri("/Support/create")
@@ -65,7 +66,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn to_lower_case() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let req = test::TestRequest::default()
             .method(Method::POST)
             .uri("/Support/create")
@@ -87,7 +89,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn to_upper_case() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let req = test::TestRequest::default()
             .method(Method::POST)
             .uri("/Support/create")
@@ -109,7 +112,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn to_sentence_case() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let req = test::TestRequest::default()
             .method(Method::POST)
             .uri("/Support/create")
@@ -131,7 +135,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn to_title_case() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let req = test::TestRequest::default()
             .method(Method::POST)
             .uri("/Support/create")
@@ -153,7 +158,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn trim() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let req = test::TestRequest::default()
             .method(Method::POST)
             .uri("/Support/create")
@@ -175,7 +181,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn pad_end() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let req = test::TestRequest::default()
             .method(Method::POST)
             .uri("/Support/create")
@@ -197,7 +204,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn pad_start() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let req = test::TestRequest::default()
             .method(Method::POST)
             .uri("/Support/create")
@@ -219,7 +227,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn regex_replace() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let req = test::TestRequest::default()
             .method(Method::POST)
             .uri("/Support/create")

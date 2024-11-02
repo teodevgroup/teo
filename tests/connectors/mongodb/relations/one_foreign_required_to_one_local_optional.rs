@@ -54,7 +54,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn create_with_nested_create() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _create_res = req(&app, "create", "Note", json!({
             "create": {
                 "name": "Note of The Russian Revolutions",
@@ -85,7 +86,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn create_with_nested_connect() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _create_res = req(&app, "create", "Note", json!({
             "create": {
                 "name": "Note of The Russian Revolutions",
@@ -116,7 +118,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn update_with_nested_create() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _update_res = req(&app, "update", "Note", json!({
             "where": {
                 "name": "Note of The Renaissance",
@@ -149,7 +152,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn update_with_nested_connect() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _update_res = req(&app, "update", "Note", json!({
             "where": {
                 "name": "Note of The Renaissance",
@@ -182,7 +186,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn update_with_nested_set_to_another_one() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _update_res = req(&app, "update", "Note", json!({
             "where": {
                 "name": "Note of The Renaissance",
@@ -215,7 +220,8 @@ mod tests {
     #[serial]
     #[tokio::test]
     async fn update_with_nested_update() {
-        let app = make_app().await;
+        before_all().await;
+        before_each().await;
         let _update_res = req(&app, "update", "Note", json!({
             "where": {
                 "name": "Note of The Renaissance",
