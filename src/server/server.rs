@@ -75,11 +75,13 @@ impl Server {
 
     pub async fn reset_app_for_unit_test(&self) -> Result<()> {
         let app = &self.app;
-        purge(app).await?;
-        let mut diagnostics = Diagnostics::new();
-        let data_sets = load_data_sets(app.main_namespace(), None, false, app.schema(), &mut diagnostics)?;
-        let transaction_ctx = transaction::Ctx::new(app.conn_ctx().clone());
-        seed(SeedCommandAction::Seed, data_sets, transaction_ctx, false).await?;
+        if app.compiled_main_namespace().database().is_some() {
+            purge(app).await?;
+            let mut diagnostics = Diagnostics::new();
+            let data_sets = load_data_sets(app.main_namespace(), None, false, app.schema(), &mut diagnostics)?;
+            let transaction_ctx = transaction::Ctx::new(app.conn_ctx().clone());
+            seed(SeedCommandAction::Seed, data_sets, transaction_ctx, false).await?;
+        }
         Ok(())
     }
 

@@ -2,118 +2,100 @@ pub mod app;
 
 mod tests {
     use std::cell::OnceCell;
-    use actix_web::{http::header::ContentType, test};
-    use teo::test::server::make_actix_app;
     use teo::prelude::App;
     use std::file;
-    use actix_http::body::MessageBody;
-    use actix_http::Method;
-    use actix_web::dev::{Service, ServiceRequest, ServiceResponse};
+    use hyper::Method;
     use teo::test::schema_path::schema_path_args;
     use serde_json::{json, Value};
     use serial_test::serial;
     use test_helpers_async::*;
+    use teo::server::server::Server;
+    use teo::server::test_request::TestRequest;
     use crate::{assert_json, matcher};
-    use teo::test::handle::Handle;
     use crate::runtime::response::app::load_app;
-    use actix_multipart::test::create_form_data_payload_and_headers;
-    use actix_web::cookie::Cookie;
-    use actix_web::web::Bytes;
+    static mut SERVER: OnceCell<Server> = OnceCell::new();
+    static mut BEFORE_ALL_EXECUTED: bool = false;
 
-    static mut HANDLE: OnceCell<Handle> = OnceCell::new();
+    fn server() -> &'static Server {
+        unsafe { SERVER.get().unwrap() }
+    }
 
-    async fn make_app() -> impl Service<
-        actix_http::Request,
-        Response = ServiceResponse<impl MessageBody>,
-        Error = actix_web::Error,
-    > {
-        unsafe {
-            let teo_app = HANDLE.get_or_init(|| {
-                let mut h = Handle::new();
-                h.load(|| {
-                    load_app().unwrap()
-                });
-                h
-            }).teo_app();
-            test::init_service(
-                make_actix_app(
-                    &teo_app
-                ).await.unwrap()
-            ).await
+    async fn before_all() {
+        if unsafe { BEFORE_ALL_EXECUTED } {
+            return;
         }
+        unsafe {
+            SERVER.get_or_init(|| {
+                Server::new(load_app().unwrap())
+            })
+        };
+        server().setup_app_for_unit_test().await.unwrap();
+        unsafe { BEFORE_ALL_EXECUTED = true; }
+    }
+
+    async fn before_each() {
+        server().reset_app_for_unit_test().await.unwrap();
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn text_response() {
-        let app = make_app().await;
-        let req = test::TestRequest::default()
-            .method(Method::GET)
-            .uri("/textResponse")
-            .to_request();
-        let res = test::call_and_read_body(&app, req).await;
-        assert_eq!(res, "foo");
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::GET, "/textResponse");
+        let res = server().process_test_request(req).await.unwrap();
+        assert_eq!(res.body_as_string().as_str(), "foo");
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn json_response() {
-        let app = make_app().await;
-        let req = test::TestRequest::default()
-            .method(Method::GET)
-            .uri("/jsonResponse")
-            .to_request();
-        let res: Value = test::call_and_read_body_json(&app, req).await;
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::GET, "/jsonResponse");
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
         assert_json!(res, matcher!({
             "foo": "bar",
         }))
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn file_response() {
-        let app = make_app().await;
-        let req = test::TestRequest::default()
-            .method(Method::GET)
-            .uri("/fileResponse")
-            .to_request();
-        let res = test::call_and_read_body(&app, req).await;
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::GET, "/fileResponse");
+        let res = server().process_test_request(req).await.unwrap().body_as_string();
         assert_eq!(res, "foo");
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn cookie_in_text_response() {
-        let app = make_app().await;
-        let req = test::TestRequest::default()
-            .method(Method::GET)
-            .uri("/textResponse")
-            .to_request();
-        let res = test::call_service(&app, req).await;
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::GET, "/textResponse");
+        let res = server().process_test_request(req).await.unwrap();
         assert_eq!(res.headers().get("set-cookie").unwrap().to_str().unwrap(), "foo=bar");
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn cookie_in_json_response() {
-        let app = make_app().await;
-        let req = test::TestRequest::default()
-            .method(Method::GET)
-            .uri("/jsonResponse")
-            .to_request();
-        let res = test::call_service(&app, req).await;
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::GET, "/jsonResponse");
+        let res = server().process_test_request(req).await.unwrap();
         assert_eq!(res.headers().get("set-cookie").unwrap().to_str().unwrap(), "foo=bar");
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn cookie_in_file_response() {
-        let app = make_app().await;
-        let req = test::TestRequest::default()
-            .method(Method::GET)
-            .uri("/fileResponse")
-            .to_request();
-        let res = test::call_service(&app, req).await;
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::GET, "/fileResponse");
+        let res = server().process_test_request(req).await.unwrap();
         assert_eq!(res.headers().get("set-cookie").unwrap().to_str().unwrap(), "foo=bar");
     }
 }

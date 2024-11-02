@@ -32,6 +32,14 @@ impl TestRequest {
         self
     }
 
+    pub async fn json_body(mut self, json: serde_json::Value) -> Result<Self> {
+        let body = match serde_json::to_string(&json) {
+            Ok(body) => body,
+            Err(_) => return Err(Error::internal_server_error_message("cannot serialize json value"))
+        };
+        self.set_body(body).await
+    }
+
     pub async fn set_body<T: Body>(mut self, body: T) -> Result<Self> {
         let body = match body.collect().await {
             Ok(body) => body,

@@ -48,6 +48,7 @@ ring = "0.17.7"
 time = "0.3.36"
 key-path = "0.2.2"
 bytes = "1.8.0"
+cookie = { version = "0.18.1", features = ["percent-encode"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 openssl = { version = "0.10", features = ["vendored"] }

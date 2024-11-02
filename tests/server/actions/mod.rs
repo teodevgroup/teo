@@ -15,7 +15,6 @@ mod tests {
     use crate::{assert_json, matcher};
 
     static mut SERVER: OnceCell<Server> = OnceCell::new();
-
     static mut BEFORE_ALL_EXECUTED: bool = false;
 
     fn server() -> &'static Server {
@@ -28,11 +27,9 @@ mod tests {
         }
         unsafe {
             SERVER.get_or_init(|| {
-                let app = App::new_with_argv(
+                Server::new(App::new_with_argv(
                     schema_path_args(file!(), "schema.teo")
-                ).unwrap();
-                let mut server = Server::new(app);
-                server
+                ).unwrap())
             })
         };
         server().setup_app_for_unit_test().await.unwrap();
@@ -53,27 +50,26 @@ mod tests {
         let res = server().process_test_request(req).await.unwrap();
         assert_eq!(res.status().as_u16(), 404);
     }
-    //
-    // #[serial]
-    // async fn test_create_record() {
-    //     let app = make_app().await;
-    //     let req = test::TestRequest::default()
-    //         .method(Method::POST)
-    //         .uri("/Support/create")
-    //         .set_json(json!({
-    //             "create": {
-    //                 "string": "lulua",
-    //                 "int": 123456,
-    //             },
-    //         }))
-    //         .to_request();
-    //     let res_body: Value = test::call_and_read_body_json(&app, req).await;
-    //     assert_json!(res_body, matcher!({
-    //         "data": {
-    //             "id": ignore,
-    //             "string": "lulua",
-    //             "int": 123456,
-    //         }
-    //     }));
-    // }
+
+    #[serial]
+    #[tokio::test]
+    async fn test_create_record() {
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/Support/create")
+            .json_body(json!({
+                "create": {
+                    "string": "lulua",
+                    "int": 123456,
+                },
+            })).await.unwrap();
+        let res = server().process_test_request(req).await.unwrap();
+        assert_json!(res.body_as_json().unwrap(), matcher!({
+            "data": {
+                "id": ignore,
+                "string": "lulua",
+                "int": 123456,
+            }
+        }));
+    }
 }

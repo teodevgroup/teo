@@ -52,7 +52,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn create_with_nested_create() {
         let app = make_app().await;
         let _create_res = req(&app, "create", "Player", json!({
@@ -83,7 +83,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn create_with_nested_connect() {
         let app = make_app().await;
         let _create_res = req(&app, "create", "Player", json!({
@@ -114,7 +114,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn update_with_nested_create() {
         let app = make_app().await;
         let _update_res = req(&app, "update", "Player", json!({
@@ -147,7 +147,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn update_with_nested_connect() {
         let app = make_app().await;
         let _update_res = req(&app, "update", "Player", json!({
@@ -180,7 +180,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn update_with_nested_set_to_another_one() {
         let app = make_app().await;
         let _update_res = req(&app, "update", "Player", json!({
@@ -213,7 +213,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn update_with_nested_set_to_null() {
         let app = make_app().await;
         let _update_res = req(&app, "update", "Player", json!({
@@ -239,7 +239,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn update_with_nested_disconnect() {
         let app = make_app().await;
         let _update_res = req(&app, "update", "Player", json!({
@@ -265,7 +265,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn update_with_nested_update() {
         let app = make_app().await;
         let _update_res = req(&app, "update", "Player", json!({
@@ -298,7 +298,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn update_with_nested_delete() {
         let app = make_app().await;
         let _update_res = req(&app, "update", "Player", json!({

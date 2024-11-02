@@ -52,7 +52,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn create_with_nested_create() {
         let app = make_app().await;
         let _create_res = req(&app, "create", "Category", json!({
@@ -85,7 +85,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn create_with_nested_create_many() {
         let app = make_app().await;
         let _create_res = req(&app, "create", "Category", json!({
@@ -132,7 +132,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn create_with_nested_connect_one() {
         let app = make_app().await;
         let _create_res = req(&app, "create", "Category", json!({
@@ -165,7 +165,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn create_with_nested_connect_more_than_one() {
         let app = make_app().await;
         let _create_res = req(&app, "create", "Category", json!({
@@ -212,7 +212,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn update_with_nested_create_one() {
         let app = make_app().await;
 
@@ -262,7 +262,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn update_with_nested_create_many() {
         let app = make_app().await;
 
@@ -322,7 +322,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn update_with_nested_connect_one() {
         let app = make_app().await;
         let _update_res = req(&app, "update", "Category", json!({
@@ -371,7 +371,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn update_with_nested_connect_more_than_one() {
         let app = make_app().await;
         let _update_res = req(&app, "update", "Category", json!({
@@ -430,7 +430,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn update_with_nested_set() {
         let app = make_app().await;
         let _update_res = req(&app, "update", "Category", json!({
@@ -482,7 +482,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn update_with_nested_disconnect_one() {
         let app = make_app().await;
         let _update_res = req(&app, "update", "Category", json!({
@@ -517,7 +517,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn update_with_nested_disconnect_more_than_one() {
         let app = make_app().await;
         let _update_res = req(&app, "update", "Category", json!({
@@ -551,7 +551,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn update_with_nested_update_one() {
         let app = make_app().await;
         let _update_res = req(&app, "update", "Category", json!({
@@ -600,7 +600,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn update_with_nested_update_more_than_one() {
         let app = make_app().await;
         let _update_res = req(&app, "update", "Category", json!({
@@ -659,7 +659,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn update_with_nested_update_many() {
         let app = make_app().await;
         let _update_res = req(&app, "update", "Category", json!({
@@ -708,7 +708,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn update_with_nested_update_many_more() {
         let app = make_app().await;
         let _update_res = req(&app, "update", "Category", json!({
@@ -767,7 +767,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn update_with_nested_delete_one() {
         let app = make_app().await;
         let _update_res = req(&app, "update", "Category", json!({
@@ -802,7 +802,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn update_with_nested_delete_more_than_one() {
         let app = make_app().await;
         let _update_res = req(&app, "update", "Category", json!({
@@ -840,7 +840,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn update_with_nested_delete_many() {
         let app = make_app().await;
         let _update_res = req(&app, "update", "Category", json!({
@@ -875,7 +875,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn update_with_nested_delete_many_more() {
         let app = make_app().await;
         let _update_res = req(&app, "update", "Category", json!({

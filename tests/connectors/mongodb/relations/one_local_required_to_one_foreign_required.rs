@@ -52,7 +52,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn create_with_nested_create() {
         let app = make_app().await;
         let _create_res = req(&app, "create", "Profile", json!({
@@ -83,7 +83,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn update_with_nested_update() {
         let app = make_app().await;
         let _update_res = req(&app, "update", "Profile", json!({

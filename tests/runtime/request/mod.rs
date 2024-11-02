@@ -45,7 +45,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn path() {
         let app = make_app().await;
         let req = test::TestRequest::default()
@@ -58,7 +58,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn query_string() {
         let app = make_app().await;
         let req = test::TestRequest::default()
@@ -71,7 +71,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn content_type_from_header() {
         let app = make_app().await;
         let req = test::TestRequest::default()
@@ -85,7 +85,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn content_type() {
         let app = make_app().await;
         let req = test::TestRequest::default()
@@ -99,7 +99,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn method() {
         let app = make_app().await;
         let req = test::TestRequest::default()
@@ -113,7 +113,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn path_argument() {
         let app = make_app().await;
         let req = test::TestRequest::default()
@@ -125,7 +125,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn path_combined_argument() {
         let app = make_app().await;
         let req = test::TestRequest::default()
@@ -137,7 +137,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn json_body() {
         let app = make_app().await;
         let req = test::TestRequest::default()
@@ -156,7 +156,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn form_body() {
         // TODO: complete this
 //         let app = make_app().await;
@@ -176,7 +176,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn cookie() {
         let app = make_app().await;
         let req = test::TestRequest::default()

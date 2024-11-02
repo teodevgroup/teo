@@ -41,7 +41,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn int32() {
         let app = make_app().await;
         let req = test::TestRequest::default()
@@ -63,7 +63,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn int64() {
         let app = make_app().await;
         let req = test::TestRequest::default()
@@ -85,7 +85,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn float32() {
         let app = make_app().await;
         let req = test::TestRequest::default()
@@ -107,7 +107,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn float64() {
         let app = make_app().await;
         let req = test::TestRequest::default()
@@ -129,7 +129,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn bool() {
         let app = make_app().await;
         let req = test::TestRequest::default()
@@ -151,7 +151,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn string() {
         let app = make_app().await;
         let req = test::TestRequest::default()
@@ -173,7 +173,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn date() {
         let app = make_app().await;
         let req = test::TestRequest::default()
@@ -195,7 +195,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn date_time() {
         let app = make_app().await;
         let req = test::TestRequest::default()
@@ -217,7 +217,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn decimal() {
         let app = make_app().await;
         let req = test::TestRequest::default()
@@ -239,7 +239,7 @@ mod tests {
     }
 
     #[serial]
-    #[actix_web::test]
+    #[tokio::test]
     async fn r#enum() {
         let app = make_app().await;
         let req = test::TestRequest::default()
