@@ -1,8 +1,6 @@
 #[cfg(test)]
 mod tests {
     use std::cell::OnceCell;
-    use actix_web::{http::header::ContentType, test};
-    use teo::test::server::make_actix_app;
     use teo::prelude::App;
     use std::file;
     use actix_http::body::MessageBody;
@@ -12,7 +10,6 @@ mod tests {
     use serde_json::{json, Value};
     use serial_test::serial;
     use crate::{assert_json, matcher};
-    use teo::test::handle::Handle;
     use crate::lib::matcher_functions::{date_time_value, decimal_value, date_value};
 
     static mut HANDLE: OnceCell<Handle> = OnceCell::new();
