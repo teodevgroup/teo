@@ -3,7 +3,8 @@ mod tests {
     use std::cell::OnceCell;
     use teo::prelude::App;
     use std::file;
-    use teo::server::server::Server;
+    use hyper::Method;
+    use teo::server::{server::Server, test_request::TestRequest};
     use teo::test::schema_path::schema_path_args;
     use serde_json::{json, Value};
     use serial_test::serial;
@@ -42,16 +43,14 @@ mod tests {
     async fn int32() {
         before_all().await;
         before_each().await;
-        let req = test::TestRequest::default()
-            .method(Method::POST)
-            .uri("/Support/create")
-            .set_json(json!({
+        let req = TestRequest::new(Method::POST, "Support/create")
+            .json_body(json!({
                 "create": {
                     "int32": 1,
                 },
             }))
-            .to_request();
-        let res: Value = test::call_and_read_body_json(&app, req).await;
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -65,16 +64,14 @@ mod tests {
     async fn int64() {
         before_all().await;
         before_each().await;
-        let req = test::TestRequest::default()
-            .method(Method::POST)
-            .uri("/Support/create")
-            .set_json(json!({
+        let req = TestRequest::new(Method::POST, "Support/create")
+            .json_body(json!({
                 "create": {
                     "int64": 1,
                 },
             }))
-            .to_request();
-        let res: Value = test::call_and_read_body_json(&app, req).await;
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -88,16 +85,14 @@ mod tests {
     async fn float32() {
         before_all().await;
         before_each().await;
-        let req = test::TestRequest::default()
-            .method(Method::POST)
-            .uri("/Support/create")
-            .set_json(json!({
+        let req = TestRequest::new(Method::POST, "Support/create")
+            .json_body(json!({
                 "create": {
                     "float32": 1.5,
                 },
             }))
-            .to_request();
-        let res: Value = test::call_and_read_body_json(&app, req).await;
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -111,16 +106,14 @@ mod tests {
     async fn float64() {
         before_all().await;
         before_each().await;
-        let req = test::TestRequest::default()
-            .method(Method::POST)
-            .uri("/Support/create")
-            .set_json(json!({
+        let req = TestRequest::new(Method::POST, "Support/create")
+            .json_body(json!({
                 "create": {
                     "float64": 1.2,
                 },
             }))
-            .to_request();
-        let res: Value = test::call_and_read_body_json(&app, req).await;
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -134,16 +127,14 @@ mod tests {
     async fn bool() {
         before_all().await;
         before_each().await;
-        let req = test::TestRequest::default()
-            .method(Method::POST)
-            .uri("/Support/create")
-            .set_json(json!({
+        let req = TestRequest::new(Method::POST, "Support/create")
+            .json_body(json!({
                 "create": {
                     "bool": true,
                 },
             }))
-            .to_request();
-        let res: Value = test::call_and_read_body_json(&app, req).await;
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -157,16 +148,14 @@ mod tests {
     async fn string() {
         before_all().await;
         before_each().await;
-        let req = test::TestRequest::default()
-            .method(Method::POST)
-            .uri("/Support/create")
-            .set_json(json!({
+        let req = TestRequest::new(Method::POST, "Support/create")
+            .json_body(json!({
                 "create": {
                     "string": "KOF XV",
                 },
             }))
-            .to_request();
-        let res: Value = test::call_and_read_body_json(&app, req).await;
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -180,16 +169,14 @@ mod tests {
     async fn date() {
         before_all().await;
         before_each().await;
-        let req = test::TestRequest::default()
-            .method(Method::POST)
-            .uri("/Support/create")
-            .set_json(json!({
+        let req = TestRequest::new(Method::POST, "Support/create")
+            .json_body(json!({
                 "create": {
                     "date": "2005-12-25",
                 },
             }))
-            .to_request();
-        let res: Value = test::call_and_read_body_json(&app, req).await;
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -203,16 +190,14 @@ mod tests {
     async fn date_time() {
         before_all().await;
         before_each().await;
-        let req = test::TestRequest::default()
-            .method(Method::POST)
-            .uri("/Support/create")
-            .set_json(json!({
+        let req = TestRequest::new(Method::POST, "Support/create")
+            .json_body(json!({
                 "create": {
                     "dateTime": "2003-04-17T08:12:34.567Z",
                 },
             }))
-            .to_request();
-        let res: Value = test::call_and_read_body_json(&app, req).await;
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -226,16 +211,14 @@ mod tests {
     async fn decimal() {
         before_all().await;
         before_each().await;
-        let req = test::TestRequest::default()
-            .method(Method::POST)
-            .uri("/Support/create")
-            .set_json(json!({
+        let req = TestRequest::new(Method::POST, "Support/create")
+            .json_body(json!({
                 "create": {
                     "decimal": "5.78",
                 },
             }))
-            .to_request();
-        let res: Value = test::call_and_read_body_json(&app, req).await;
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
@@ -249,16 +232,14 @@ mod tests {
     async fn r#enum() {
         before_all().await;
         before_each().await;
-        let req = test::TestRequest::default()
-            .method(Method::POST)
-            .uri("/Support/create")
-            .set_json(json!({
+        let req = TestRequest::new(Method::POST, "Support/create")
+            .json_body(json!({
                 "create": {
                     "sex": "FEMALE",
                 },
             }))
-            .to_request();
-        let res: Value = test::call_and_read_body_json(&app, req).await;
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
         assert_json!(res, matcher!({
             "data": {
                 "id": ignore,
