@@ -27,6 +27,8 @@ use crate::server::droppable_next::DroppableNext;
 use crate::server::handler_found::{find_handler, HandlerFound};
 use crate::server::parse_body::{parse_form_body, parse_json_body};
 use crate::server::response::hyper_response_from;
+use crate::server::test_request::TestRequest;
+use crate::server::test_response::TestResponse;
 use crate::server::utils::remove_path_prefix;
 
 pub struct Server {
@@ -88,10 +90,6 @@ impl Server {
                 Ok(hyper::Response::builder().status(error.code).header(CONTENT_TYPE, "application/json").body(Either::Left(error_string.into())).unwrap())
             },
         }
-    }
-
-    pub async fn process_test_request(&self, hyper_request: hyper::Request<String>) -> Result<hyper::Response<Either<Full<Bytes>, ServeFileSystemResponseBody>>> {
-        self.hyper_test_handler(hyper_request).await
     }
 
     pub async fn process_request(&self, request: Request) -> Result<Response> {
@@ -203,13 +201,15 @@ impl Server {
         Ok(response)
     }
 
-    async fn hyper_test_handler(&self, hyper_request: hyper::Request<String>) -> Result<hyper::Response<Either<Full<Bytes>, ServeFileSystemResponseBody>>> {
+    async fn test_process(&self, test_request: TestRequest) -> Result<TestResponse> {
         let main_namespace = self.app.compiled_main_namespace();
         let conn_ctx = connection::Ctx::from_namespace(main_namespace);
         let transaction_ctx = transaction::Ctx::new(conn_ctx);
+        let hyper_request = test_request.to_hyper_request();
         let request = Request::new_for_test(hyper_request, transaction_ctx);
         let response = self.process_request(request.clone()).await?;
-        hyper_response_from(request, response).await
+        let hyper_response = hyper_response_from(request, response).await?;
+        TestResponse::new(hyper_response).await
     }
 
     async fn hyper_handler(&self, hyper_request: hyper::Request<Incoming>) -> Result<hyper::Response<Either<Full<Bytes>, ServeFileSystemResponseBody>>> {
