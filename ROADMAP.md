@@ -899,7 +899,7 @@
 - Introduce `handler middleware` and `request middleware` **[DONE]**
 - Remove request ctx **[DONE]**
 - Rewrite HTTP server with Hyper **[IN PROGRESS]**
-- Rewrite Rust unit tests with Hyper stack
+- Rewrite Rust unit tests with Hyper stack **[IN PROGRESS]**
 - Node.js: setup unit tests
 - Node.js: unit tests
 - Rename methods: `createObject`, `findManyObjects`, `findFirstObject` and `findUniqueObject` in entities
