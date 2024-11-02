@@ -10,29 +10,30 @@ mod tests {
     use crate::{assert_json, matcher};
     use crate::lib::matcher_functions::{date_time_value, decimal_value, date_value};
 
-    static mut HANDLE: OnceCell<Handle> = OnceCell::new();
+    static mut SERVER: OnceCell<Server> = OnceCell::new();
+    static mut BEFORE_ALL_EXECUTED: bool = false;
 
-    async fn make_app() -> impl Service<
-        actix_http::Request,
-        Response = ServiceResponse<impl MessageBody>,
-        Error = actix_web::Error,
-    > {
-        unsafe {
-            let teo_app = HANDLE.get_or_init(|| {
-                let mut h = Handle::new();
-                h.load(|| {
-                    App::new_with_argv(
-                        schema_path_args(file!(), "schema.teo")
-                    ).unwrap()
-                });
-                h
-            }).teo_app();
-            test::init_service(
-                make_actix_app(
-                    &teo_app
-                ).await.unwrap()
-            ).await
+    fn server() -> &'static Server {
+        unsafe { SERVER.get().unwrap() }
+    }
+
+    async fn before_all() {
+        if unsafe { BEFORE_ALL_EXECUTED } {
+            return;
         }
+        unsafe {
+            SERVER.get_or_init(|| {
+                Server::new(App::new_with_argv(
+                    schema_path_args(file!(), "schema.teo")
+                ).unwrap())
+            })
+        };
+        server().setup_app_for_unit_test().await.unwrap();
+        unsafe { BEFORE_ALL_EXECUTED = true; }
+    }
+
+    async fn before_each() {
+        server().reset_app_for_unit_test().await.unwrap();
     }
 
     #[serial]

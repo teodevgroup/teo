@@ -41,7 +41,7 @@ mod tests {
     async fn create_with_nested_create() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "create", "Product", json!({
+        let _create_res = req(server(), "create", "Product", json!({
             "create": {
                 "name": "Shampoo",
                 "category": {
@@ -51,7 +51,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Product", json!({
+        let find_many_res = req(server(), "findMany", "Product", json!({
             "include": {
                 "category": true
             }
@@ -73,7 +73,7 @@ mod tests {
     async fn create_with_nested_connect() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "create", "Product", json!({
+        let _create_res = req(server(), "create", "Product", json!({
             "create": {
                 "name": "Shampoo",
                 "category": {
@@ -83,7 +83,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Product", json!({
+        let find_many_res = req(server(), "findMany", "Product", json!({
             "include": {
                 "category": true
             }
@@ -105,7 +105,7 @@ mod tests {
     async fn update_with_nested_create() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "update", "Product", json!({
+        let _create_res = req(server(), "update", "Product", json!({
             "where": {
                 "name": "Hair Jelly"
             },
@@ -117,7 +117,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Product", json!({
+        let find_many_res = req(server(), "findMany", "Product", json!({
             "include": {
                 "category": true
             }
@@ -139,7 +139,7 @@ mod tests {
     async fn update_with_nested_connect() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "update", "Product", json!({
+        let _create_res = req(server(), "update", "Product", json!({
             "where": {
                 "name": "Hair Jelly"
             },
@@ -151,7 +151,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Product", json!({
+        let find_many_res = req(server(), "findMany", "Product", json!({
             "include": {
                 "category": true
             }
@@ -173,7 +173,7 @@ mod tests {
     async fn update_with_nested_set_to_another_one() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "update", "Product", json!({
+        let _create_res = req(server(), "update", "Product", json!({
             "where": {
                 "name": "Lipstick"
             },
@@ -185,7 +185,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Product", json!({
+        let find_many_res = req(server(), "findMany", "Product", json!({
             "include": {
                 "category": true
             }
@@ -207,7 +207,7 @@ mod tests {
     async fn update_with_nested_set_to_null() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "update", "Product", json!({
+        let _create_res = req(server(), "update", "Product", json!({
             "where": {
                 "name": "Lipstick"
             },
@@ -217,7 +217,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Product", json!({
+        let find_many_res = req(server(), "findMany", "Product", json!({
             "include": {
                 "category": true
             }
@@ -234,7 +234,7 @@ mod tests {
     async fn update_with_nested_disconnect() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "update", "Product", json!({
+        let _create_res = req(server(), "update", "Product", json!({
             "where": {
                 "name": "Lipstick"
             },
@@ -244,7 +244,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Product", json!({
+        let find_many_res = req(server(), "findMany", "Product", json!({
             "include": {
                 "category": true
             }
@@ -261,7 +261,7 @@ mod tests {
     async fn update_with_nested_update() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "update", "Product", json!({
+        let _create_res = req(server(), "update", "Product", json!({
             "where": {
                 "name": "Lipstick"
             },
@@ -273,7 +273,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Product", json!({
+        let find_many_res = req(server(), "findMany", "Product", json!({
             "include": {
                 "category": true
             }
@@ -295,7 +295,7 @@ mod tests {
     async fn update_with_nested_delete() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "update", "Product", json!({
+        let _create_res = req(server(), "update", "Product", json!({
             "where": {
                 "name": "Lipstick"
             },
@@ -305,7 +305,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Product", json!({
+        let find_many_res = req(server(), "findMany", "Product", json!({
             "include": {
                 "category": true
             }

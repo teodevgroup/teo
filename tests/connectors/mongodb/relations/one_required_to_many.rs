@@ -41,7 +41,7 @@ mod tests {
     async fn create_with_nested_create() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "create", "Post", json!({
+        let _create_res = req(server(), "create", "Post", json!({
             "create": {
                 "name": "UIKit",
                 "author": {
@@ -51,7 +51,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Post", json!({
+        let find_many_res = req(server(), "findMany", "Post", json!({
             "include": {
                 "author": true
             }
@@ -73,7 +73,7 @@ mod tests {
     async fn create_with_nested_connect() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "create", "Post", json!({
+        let _create_res = req(server(), "create", "Post", json!({
             "create": {
                 "name": "UIKit",
                 "author": {
@@ -83,7 +83,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Post", json!({
+        let find_many_res = req(server(), "findMany", "Post", json!({
             "include": {
                 "author": true
             }
@@ -105,7 +105,7 @@ mod tests {
     async fn update_with_nested_create() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "update", "Post", json!({
+        let _create_res = req(server(), "update", "Post", json!({
             "where": {
                 "name": "Swift 1.0"
             },
@@ -117,7 +117,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Post", json!({
+        let find_many_res = req(server(), "findMany", "Post", json!({
             "include": {
                 "author": true
             }
@@ -139,7 +139,7 @@ mod tests {
     async fn update_with_nested_connect() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "update", "Post", json!({
+        let _create_res = req(server(), "update", "Post", json!({
             "where": {
                 "name": "Swift 1.0"
             },
@@ -151,7 +151,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Post", json!({
+        let find_many_res = req(server(), "findMany", "Post", json!({
             "include": {
                 "author": true
             }
@@ -173,7 +173,7 @@ mod tests {
     async fn update_with_nested_set_to_another_one() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "update", "Post", json!({
+        let _create_res = req(server(), "update", "Post", json!({
             "where": {
                 "name": "Swift 1.0"
             },
@@ -185,7 +185,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Post", json!({
+        let find_many_res = req(server(), "findMany", "Post", json!({
             "include": {
                 "author": true
             }
@@ -208,7 +208,7 @@ mod tests {
     async fn update_with_nested_update() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "update", "Post", json!({
+        let _create_res = req(server(), "update", "Post", json!({
             "where": {
                 "name": "Swift 1.0"
             },
@@ -220,7 +220,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Post", json!({
+        let find_many_res = req(server(), "findMany", "Post", json!({
             "include": {
                 "author": true
             }

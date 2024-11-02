@@ -41,7 +41,7 @@ mod tests {
     async fn create_with_nested_create() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "create", "Profile", json!({
+        let _create_res = req(server(), "create", "Profile", json!({
             "create": {
                 "name": "Dan",
                 "user": {
@@ -51,7 +51,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Profile", json!({
+        let find_many_res = req(server(), "findMany", "Profile", json!({
             "include": {
                 "user": true
             }
@@ -73,7 +73,7 @@ mod tests {
     async fn update_with_nested_update() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Profile", json!({
+        let _update_res = req(server(), "update", "Profile", json!({
             "where": {
                 "name": "John's profile"
             },
@@ -85,7 +85,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Profile", json!({
+        let find_many_res = req(server(), "findMany", "Profile", json!({
             "include": {
                 "user": true
             }

@@ -41,7 +41,7 @@ mod tests {
     async fn create_with_nested_create() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "create", "Player", json!({
+        let _create_res = req(server(), "create", "Player", json!({
             "create": {
                 "name": "Dan",
                 "kof": {
@@ -51,7 +51,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Player", json!({
+        let find_many_res = req(server(), "findMany", "Player", json!({
             "include": {
                 "kof": true
             }
@@ -73,7 +73,7 @@ mod tests {
     async fn create_with_nested_connect() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "create", "Player", json!({
+        let _create_res = req(server(), "create", "Player", json!({
             "create": {
                 "name": "Dan",
                 "kof": {
@@ -83,7 +83,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Player", json!({
+        let find_many_res = req(server(), "findMany", "Player", json!({
             "include": {
                 "kof": true
             }
@@ -105,7 +105,7 @@ mod tests {
     async fn update_with_nested_create() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Player", json!({
+        let _update_res = req(server(), "update", "Player", json!({
             "where": {
                 "name": "Justin Wong"
             },
@@ -117,7 +117,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Player", json!({
+        let find_many_res = req(server(), "findMany", "Player", json!({
             "include": {
                 "kof": true
             }
@@ -139,7 +139,7 @@ mod tests {
     async fn update_with_nested_connect() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Player", json!({
+        let _update_res = req(server(), "update", "Player", json!({
             "where": {
                 "name": "Justin Wong"
             },
@@ -151,7 +151,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Player", json!({
+        let find_many_res = req(server(), "findMany", "Player", json!({
             "include": {
                 "kof": true
             }
@@ -173,7 +173,7 @@ mod tests {
     async fn update_with_nested_set_to_another_one() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Player", json!({
+        let _update_res = req(server(), "update", "Player", json!({
             "where": {
                 "name": "Justin Wong"
             },
@@ -185,7 +185,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Player", json!({
+        let find_many_res = req(server(), "findMany", "Player", json!({
             "include": {
                 "kof": true
             }
@@ -207,7 +207,7 @@ mod tests {
     async fn update_with_nested_set_to_null() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Player", json!({
+        let _update_res = req(server(), "update", "Player", json!({
             "where": {
                 "name": "Justin Wong"
             },
@@ -217,7 +217,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Player", json!({
+        let find_many_res = req(server(), "findMany", "Player", json!({
             "include": {
                 "kof": true
             }
@@ -234,7 +234,7 @@ mod tests {
     async fn update_with_nested_disconnect() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Player", json!({
+        let _update_res = req(server(), "update", "Player", json!({
             "where": {
                 "name": "Justin Wong"
             },
@@ -244,7 +244,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Player", json!({
+        let find_many_res = req(server(), "findMany", "Player", json!({
             "include": {
                 "kof": true
             }
@@ -261,7 +261,7 @@ mod tests {
     async fn update_with_nested_update() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Player", json!({
+        let _update_res = req(server(), "update", "Player", json!({
             "where": {
                 "name": "Justin Wong"
             },
@@ -273,7 +273,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Player", json!({
+        let find_many_res = req(server(), "findMany", "Player", json!({
             "include": {
                 "kof": true
             }
@@ -295,7 +295,7 @@ mod tests {
     async fn update_with_nested_delete() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Player", json!({
+        let _update_res = req(server(), "update", "Player", json!({
             "where": {
                 "name": "Justin Wong"
             },
@@ -305,7 +305,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Player", json!({
+        let find_many_res = req(server(), "findMany", "Player", json!({
             "include": {
                 "kof": true
             }

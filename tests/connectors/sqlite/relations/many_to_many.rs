@@ -41,7 +41,7 @@ mod tests {
     async fn create_with_nested_create_one() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "create", "Artist", json!({
+        let _create_res = req(server(), "create", "Artist", json!({
             "create": {
                 "name": "Taylor Swift",
                 "songs": {
@@ -51,7 +51,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Artist", json!({
+        let find_many_res = req(server(), "findMany", "Artist", json!({
             "include": {
                 "songs": true
             }
@@ -74,7 +74,7 @@ mod tests {
     async fn create_with_nested_create_many() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "create", "Artist", json!({
+        let _create_res = req(server(), "create", "Artist", json!({
             "create": {
                 "name": "Taylor Swift",
                 "songs": {
@@ -89,7 +89,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Artist", json!({
+        let find_many_res = req(server(), "findMany", "Artist", json!({
             "include": {
                 "songs": {
                     "orderBy": {
@@ -120,7 +120,7 @@ mod tests {
     async fn create_with_nested_connect_one() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "create", "Artist", json!({
+        let _create_res = req(server(), "create", "Artist", json!({
             "create": {
                 "name": "Taylor Swift",
                 "songs": {
@@ -130,7 +130,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Artist", json!({
+        let find_many_res = req(server(), "findMany", "Artist", json!({
             "include": {
                 "songs": {
                     "orderBy": {
@@ -171,7 +171,7 @@ mod tests {
     async fn create_with_nested_connect_more_than_one() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "create", "Artist", json!({
+        let _create_res = req(server(), "create", "Artist", json!({
             "create": {
                 "name": "Taylor Swift",
                 "songs": {
@@ -186,7 +186,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Artist", json!({
+        let find_many_res = req(server(), "findMany", "Artist", json!({
             "include": {
                 "songs": {
                     "orderBy": {
@@ -245,7 +245,7 @@ mod tests {
     async fn update_with_nested_create_one() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Artist", json!({
+        let _update_res = req(server(), "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
             },
@@ -257,7 +257,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Artist", json!({
+        let find_many_res = req(server(), "findMany", "Artist", json!({
             "include": {
                 "songs": {
                     "orderBy": {
@@ -292,7 +292,7 @@ mod tests {
     async fn update_with_nested_create_many() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Artist", json!({
+        let _update_res = req(server(), "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
             },
@@ -309,7 +309,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Artist", json!({
+        let find_many_res = req(server(), "findMany", "Artist", json!({
             "include": {
                 "songs": {
                     "orderBy": {
@@ -348,7 +348,7 @@ mod tests {
     async fn update_with_nested_connect_one() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Artist", json!({
+        let _update_res = req(server(), "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
             },
@@ -360,7 +360,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Artist", json!({
+        let find_many_res = req(server(), "findMany", "Artist", json!({
             "include": {
                 "songs": {
                     "orderBy": {
@@ -409,7 +409,7 @@ mod tests {
     async fn update_with_nested_connect_more_than_one() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Artist", json!({
+        let _update_res = req(server(), "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
             },
@@ -426,7 +426,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Artist", json!({
+        let find_many_res = req(server(), "findMany", "Artist", json!({
             "include": {
                 "songs": {
                     "orderBy": {
@@ -479,7 +479,7 @@ mod tests {
     async fn update_with_nested_set() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Artist", json!({
+        let _update_res = req(server(), "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
             },
@@ -496,7 +496,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Artist", json!({
+        let find_many_res = req(server(), "findMany", "Artist", json!({
             "include": {
                 "songs": {
                     "orderBy": {
@@ -541,7 +541,7 @@ mod tests {
     async fn update_with_nested_disconnect_one() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Artist", json!({
+        let _update_res = req(server(), "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
             },
@@ -553,7 +553,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Artist", json!({
+        let find_many_res = req(server(), "findMany", "Artist", json!({
             "include": {
                 "songs": true
             }
@@ -576,7 +576,7 @@ mod tests {
     async fn update_with_nested_disconnect_more_than_one() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Artist", json!({
+        let _update_res = req(server(), "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
             },
@@ -593,7 +593,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Artist", json!({
+        let find_many_res = req(server(), "findMany", "Artist", json!({
             "include": {
                 "songs": true
             }
@@ -611,7 +611,7 @@ mod tests {
     async fn update_with_nested_update_one() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Artist", json!({
+        let _update_res = req(server(), "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
             },
@@ -628,7 +628,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Artist", json!({
+        let find_many_res = req(server(), "findMany", "Artist", json!({
             "include": {
                 "songs": {
                     "orderBy": {
@@ -659,7 +659,7 @@ mod tests {
     async fn update_with_nested_update_more_than_one() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Artist", json!({
+        let _update_res = req(server(), "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
             },
@@ -686,7 +686,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Artist", json!({
+        let find_many_res = req(server(), "findMany", "Artist", json!({
             "include": {
                 "songs": {
                     "orderBy": {
@@ -717,7 +717,7 @@ mod tests {
     async fn update_with_nested_update_many() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Artist", json!({
+        let _update_res = req(server(), "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
             },
@@ -734,7 +734,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Artist", json!({
+        let find_many_res = req(server(), "findMany", "Artist", json!({
             "include": {
                 "songs": {
                     "orderBy": {
@@ -765,7 +765,7 @@ mod tests {
     async fn update_with_nested_update_many_more() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Artist", json!({
+        let _update_res = req(server(), "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
             },
@@ -792,7 +792,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Artist", json!({
+        let find_many_res = req(server(), "findMany", "Artist", json!({
             "include": {
                 "songs": {
                     "orderBy": {
@@ -823,7 +823,7 @@ mod tests {
     async fn update_with_nested_delete_one() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Artist", json!({
+        let _update_res = req(server(), "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
             },
@@ -835,7 +835,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Artist", json!({
+        let find_many_res = req(server(), "findMany", "Artist", json!({
             "include": {
                 "songs": true
             }
@@ -858,7 +858,7 @@ mod tests {
     async fn update_with_nested_delete_more_than_one() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Artist", json!({
+        let _update_res = req(server(), "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
             },
@@ -875,7 +875,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Artist", json!({
+        let find_many_res = req(server(), "findMany", "Artist", json!({
             "include": {
                 "songs": true
             }
@@ -893,7 +893,7 @@ mod tests {
     async fn update_with_nested_delete_many() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Artist", json!({
+        let _update_res = req(server(), "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
             },
@@ -905,7 +905,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Artist", json!({
+        let find_many_res = req(server(), "findMany", "Artist", json!({
             "include": {
                 "songs": true
             }
@@ -928,7 +928,7 @@ mod tests {
     async fn update_with_nested_delete_many_more() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Artist", json!({
+        let _update_res = req(server(), "update", "Artist", json!({
             "where": {
                 "name": "Ed Sheeran"
             },
@@ -945,7 +945,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Artist", json!({
+        let find_many_res = req(server(), "findMany", "Artist", json!({
             "include": {
                 "songs": true
             }

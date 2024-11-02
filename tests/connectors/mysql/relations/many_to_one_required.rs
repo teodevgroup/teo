@@ -41,7 +41,7 @@ mod tests {
     async fn create_with_nested_create() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "create", "Author", json!({
+        let _create_res = req(server(), "create", "Author", json!({
             "create": {
                 "name": "Jack",
                 "posts": {
@@ -51,7 +51,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Author", json!({
+        let find_many_res = req(server(), "findMany", "Author", json!({
             "include": {
                 "posts": true
             }
@@ -75,7 +75,7 @@ mod tests {
     async fn create_with_nested_create_many() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "create", "Author", json!({
+        let _create_res = req(server(), "create", "Author", json!({
             "create": {
                 "name": "Jack",
                 "posts": {
@@ -90,7 +90,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Author", json!({
+        let find_many_res = req(server(), "findMany", "Author", json!({
             "include": {
                 "posts": {
                     "orderBy": {
@@ -123,7 +123,7 @@ mod tests {
     async fn create_with_nested_connect_one() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "create", "Author", json!({
+        let _create_res = req(server(), "create", "Author", json!({
             "create": {
                 "name": "Jack",
                 "posts": {
@@ -133,7 +133,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Author", json!({
+        let find_many_res = req(server(), "findMany", "Author", json!({
             "include": {
                 "posts": true
             }
@@ -157,7 +157,7 @@ mod tests {
     async fn create_with_nested_connect_more_than_one() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "create", "Author", json!({
+        let _create_res = req(server(), "create", "Author", json!({
             "create": {
                 "name": "Jack",
                 "posts": {
@@ -172,7 +172,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Author", json!({
+        let find_many_res = req(server(), "findMany", "Author", json!({
             "include": {
                 "posts": {
                     "orderBy": {
@@ -205,7 +205,7 @@ mod tests {
     async fn update_with_nested_create_one() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Author", json!({
+        let _update_res = req(server(), "update", "Author", json!({
             "where": {
                 "name": "Paul"
             },
@@ -217,7 +217,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Author", json!({
+        let find_many_res = req(server(), "findMany", "Author", json!({
             "include": {
                 "posts": {
                     "orderBy": {
@@ -260,7 +260,7 @@ mod tests {
     async fn update_with_nested_create_many() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Author", json!({
+        let _update_res = req(server(), "update", "Author", json!({
             "where": {
                 "name": "Paul"
             },
@@ -277,7 +277,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Author", json!({
+        let find_many_res = req(server(), "findMany", "Author", json!({
             "include": {
                 "posts": {
                     "orderBy": {
@@ -325,7 +325,7 @@ mod tests {
     async fn update_with_nested_connect_one() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Author", json!({
+        let _update_res = req(server(), "update", "Author", json!({
             "where": {
                 "name": "Paul"
             },
@@ -337,7 +337,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Author", json!({
+        let find_many_res = req(server(), "findMany", "Author", json!({
             "include": {
                 "posts": {
                     "orderBy": {
@@ -380,7 +380,7 @@ mod tests {
     async fn update_with_nested_connect_more_than_one() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Author", json!({
+        let _update_res = req(server(), "update", "Author", json!({
             "where": {
                 "name": "Paul"
             },
@@ -397,7 +397,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Author", json!({
+        let find_many_res = req(server(), "findMany", "Author", json!({
             "include": {
                 "posts": {
                     "orderBy": {
@@ -445,7 +445,7 @@ mod tests {
     async fn update_with_nested_update_one() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Author", json!({
+        let _update_res = req(server(), "update", "Author", json!({
             "where": {
                 "name": "Paul"
             },
@@ -462,7 +462,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Author", json!({
+        let find_many_res = req(server(), "findMany", "Author", json!({
             "include": {
                 "posts": {
                     "orderBy": {
@@ -500,7 +500,7 @@ mod tests {
     async fn update_with_nested_update_more_than_one() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Author", json!({
+        let _update_res = req(server(), "update", "Author", json!({
             "where": {
                 "name": "Paul"
             },
@@ -527,7 +527,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Author", json!({
+        let find_many_res = req(server(), "findMany", "Author", json!({
             "include": {
                 "posts": {
                     "orderBy": {
@@ -565,7 +565,7 @@ mod tests {
     async fn update_with_nested_update_many() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Author", json!({
+        let _update_res = req(server(), "update", "Author", json!({
             "where": {
                 "name": "Paul"
             },
@@ -582,7 +582,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Author", json!({
+        let find_many_res = req(server(), "findMany", "Author", json!({
             "include": {
                 "posts": {
                     "orderBy": {
@@ -620,7 +620,7 @@ mod tests {
     async fn update_with_nested_update_many_more() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Author", json!({
+        let _update_res = req(server(), "update", "Author", json!({
             "where": {
                 "name": "Paul"
             },
@@ -647,7 +647,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Author", json!({
+        let find_many_res = req(server(), "findMany", "Author", json!({
             "include": {
                 "posts": {
                     "orderBy": {
@@ -685,7 +685,7 @@ mod tests {
     async fn update_with_nested_delete_one() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Author", json!({
+        let _update_res = req(server(), "update", "Author", json!({
             "where": {
                 "name": "Paul"
             },
@@ -697,7 +697,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Author", json!({
+        let find_many_res = req(server(), "findMany", "Author", json!({
             "include": {
                 "posts": {
                     "orderBy": {
@@ -730,7 +730,7 @@ mod tests {
     async fn update_with_nested_delete_more_than_one() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Author", json!({
+        let _update_res = req(server(), "update", "Author", json!({
             "where": {
                 "name": "Paul"
             },
@@ -747,7 +747,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Author", json!({
+        let find_many_res = req(server(), "findMany", "Author", json!({
             "include": {
                 "posts": {
                     "orderBy": {
@@ -775,7 +775,7 @@ mod tests {
     async fn update_with_nested_delete_many() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Author", json!({
+        let _update_res = req(server(), "update", "Author", json!({
             "where": {
                 "name": "Paul"
             },
@@ -787,7 +787,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Author", json!({
+        let find_many_res = req(server(), "findMany", "Author", json!({
             "include": {
                 "posts": {
                     "orderBy": {
@@ -820,7 +820,7 @@ mod tests {
     async fn update_with_nested_delete_many_more() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Author", json!({
+        let _update_res = req(server(), "update", "Author", json!({
             "where": {
                 "name": "Paul"
             },
@@ -837,7 +837,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Author", json!({
+        let find_many_res = req(server(), "findMany", "Author", json!({
             "include": {
                 "posts": {
                     "orderBy": {

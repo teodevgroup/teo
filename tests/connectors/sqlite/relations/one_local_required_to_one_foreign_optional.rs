@@ -41,7 +41,7 @@ mod tests {
     async fn create_with_nested_create() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "create", "CommandList", json!({
+        let _create_res = req(server(), "create", "CommandList", json!({
             "create": {
                 "name": "KOFXIV Command List",
                 "game": {
@@ -51,7 +51,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "CommandList", json!({
+        let find_many_res = req(server(), "findMany", "CommandList", json!({
             "include": {
                 "game": true
             }
@@ -73,7 +73,7 @@ mod tests {
     async fn create_with_nested_connect() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "create", "CommandList", json!({
+        let _create_res = req(server(), "create", "CommandList", json!({
             "create": {
                 "name": "KOFXIV Command List",
                 "game": {
@@ -83,7 +83,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "CommandList", json!({
+        let find_many_res = req(server(), "findMany", "CommandList", json!({
             "include": {
                 "game": true
             }
@@ -105,7 +105,7 @@ mod tests {
     async fn update_with_nested_create() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "CommandList", json!({
+        let _update_res = req(server(), "update", "CommandList", json!({
             "where": {
                 "name": "KOF97 Command List"
             },
@@ -117,7 +117,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "CommandList", json!({
+        let find_many_res = req(server(), "findMany", "CommandList", json!({
             "include": {
                 "game": true
             }
@@ -139,7 +139,7 @@ mod tests {
     async fn update_with_nested_connect() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "CommandList", json!({
+        let _update_res = req(server(), "update", "CommandList", json!({
             "where": {
                 "name": "KOF97 Command List"
             },
@@ -151,7 +151,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "CommandList", json!({
+        let find_many_res = req(server(), "findMany", "CommandList", json!({
             "include": {
                 "game": true
             }
@@ -173,7 +173,7 @@ mod tests {
     async fn update_with_nested_set_to_another_one() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "CommandList", json!({
+        let _update_res = req(server(), "update", "CommandList", json!({
             "where": {
                 "name": "KOF97 Command List"
             },
@@ -185,7 +185,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "CommandList", json!({
+        let find_many_res = req(server(), "findMany", "CommandList", json!({
             "include": {
                 "game": true
             }
@@ -207,7 +207,7 @@ mod tests {
     async fn update_with_nested_update() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "CommandList", json!({
+        let _update_res = req(server(), "update", "CommandList", json!({
             "where": {
                 "name": "KOF97 Command List"
             },
@@ -219,7 +219,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "CommandList", json!({
+        let find_many_res = req(server(), "findMany", "CommandList", json!({
             "include": {
                 "game": true
             }

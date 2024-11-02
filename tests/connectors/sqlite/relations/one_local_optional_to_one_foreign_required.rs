@@ -41,7 +41,7 @@ mod tests {
     async fn create_with_nested_create() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "create", "Event", json!({
+        let _create_res = req(server(), "create", "Event", json!({
             "create": {
                 "name": "The Enlightenment",
                 "note": {
@@ -51,7 +51,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Event", json!({
+        let find_many_res = req(server(), "findMany", "Event", json!({
             "include": {
                 "note": true
             }
@@ -73,7 +73,7 @@ mod tests {
     async fn create_with_nested_connect() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "create", "Event", json!({
+        let _create_res = req(server(), "create", "Event", json!({
             "create": {
                 "name": "The Enlightenment",
                 "note": {
@@ -83,7 +83,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Event", json!({
+        let find_many_res = req(server(), "findMany", "Event", json!({
             "include": {
                 "note": true
             }
@@ -105,7 +105,7 @@ mod tests {
     async fn update_with_nested_create() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Event", json!({
+        let _update_res = req(server(), "update", "Event", json!({
             "where": {
                 "name": "The Industrial Revolution"
             },
@@ -117,7 +117,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Event", json!({
+        let find_many_res = req(server(), "findMany", "Event", json!({
             "include": {
                 "note": true
             }
@@ -139,7 +139,7 @@ mod tests {
     async fn update_with_nested_connect() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Event", json!({
+        let _update_res = req(server(), "update", "Event", json!({
             "where": {
                 "name": "The Industrial Revolution"
             },
@@ -151,7 +151,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Event", json!({
+        let find_many_res = req(server(), "findMany", "Event", json!({
             "include": {
                 "note": true
             }
@@ -173,7 +173,7 @@ mod tests {
     async fn update_with_nested_set_to_another_one() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Event", json!({
+        let _update_res = req(server(), "update", "Event", json!({
             "where": {
                 "name": "The Industrial Revolution"
             },
@@ -185,7 +185,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Event", json!({
+        let find_many_res = req(server(), "findMany", "Event", json!({
             "include": {
                 "note": true
             }
@@ -207,7 +207,7 @@ mod tests {
     async fn update_with_nested_update() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Event", json!({
+        let _update_res = req(server(), "update", "Event", json!({
             "where": {
                 "name": "The Renaissance"
             },
@@ -219,7 +219,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Event", json!({
+        let find_many_res = req(server(), "findMany", "Event", json!({
             "include": {
                 "note": true
             }
@@ -241,7 +241,7 @@ mod tests {
     async fn update_with_nested_delete() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Event", json!({
+        let _update_res = req(server(), "update", "Event", json!({
             "where": {
                 "name": "The Renaissance"
             },
@@ -251,7 +251,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Event", json!({
+        let find_many_res = req(server(), "findMany", "Event", json!({
             "include": {
                 "note": true
             }

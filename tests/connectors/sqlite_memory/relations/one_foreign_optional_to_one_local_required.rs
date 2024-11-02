@@ -41,7 +41,7 @@ mod tests {
     async fn create_with_nested_create() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "create", "Game", json!({
+        let _create_res = req(server(), "create", "Game", json!({
             "create": {
                 "name": "KOFXIII",
                 "commandList": {
@@ -51,7 +51,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Game", json!({
+        let find_many_res = req(server(), "findMany", "Game", json!({
             "include": {
                 "commandList": true
             }
@@ -73,7 +73,7 @@ mod tests {
     async fn create_with_nested_connect() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "create", "Game", json!({
+        let _create_res = req(server(), "create", "Game", json!({
             "create": {
                 "name": "KOFXIII",
                 "commandList": {
@@ -83,7 +83,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Game", json!({
+        let find_many_res = req(server(), "findMany", "Game", json!({
             "include": {
                 "commandList": true
             }
@@ -105,7 +105,7 @@ mod tests {
     async fn update_with_nested_create() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Game", json!({
+        let _update_res = req(server(), "update", "Game", json!({
             "where": {
                 "name": "KOFXV"
             },
@@ -117,7 +117,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Game", json!({
+        let find_many_res = req(server(), "findMany", "Game", json!({
             "include": {
                 "commandList": true
             }
@@ -139,7 +139,7 @@ mod tests {
     async fn update_with_nested_connect() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Game", json!({
+        let _update_res = req(server(), "update", "Game", json!({
             "where": {
                 "name": "KOFXV"
             },
@@ -151,7 +151,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Game", json!({
+        let find_many_res = req(server(), "findMany", "Game", json!({
             "include": {
                 "commandList": true
             }
@@ -173,7 +173,7 @@ mod tests {
     async fn update_with_nested_set_to_another_one() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Game", json!({
+        let _update_res = req(server(), "update", "Game", json!({
             "where": {
                 "name": "KOFXV"
             },
@@ -185,7 +185,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Game", json!({
+        let find_many_res = req(server(), "findMany", "Game", json!({
             "include": {
                 "commandList": true
             }
@@ -207,7 +207,7 @@ mod tests {
     async fn update_with_nested_update() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Game", json!({
+        let _update_res = req(server(), "update", "Game", json!({
             "where": {
                 "name": "KOF98"
             },
@@ -219,7 +219,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Game", json!({
+        let find_many_res = req(server(), "findMany", "Game", json!({
             "include": {
                 "commandList": true
             }
@@ -241,7 +241,7 @@ mod tests {
     async fn update_with_nested_delete() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Game", json!({
+        let _update_res = req(server(), "update", "Game", json!({
             "where": {
                 "name": "KOF98"
             },
@@ -251,7 +251,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Game", json!({
+        let find_many_res = req(server(), "findMany", "Game", json!({
             "include": {
                 "commandList": true
             }

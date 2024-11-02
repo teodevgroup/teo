@@ -41,7 +41,7 @@ mod tests {
     async fn create_with_nested_create() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "create", "Category", json!({
+        let _create_res = req(server(), "create", "Category", json!({
             "create": {
                 "name": "Toiletries",
                 "products": {
@@ -51,7 +51,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Category", json!({
+        let find_many_res = req(server(), "findMany", "Category", json!({
             "include": {
                 "products": true
             }
@@ -75,7 +75,7 @@ mod tests {
     async fn create_with_nested_create_many() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "create", "Category", json!({
+        let _create_res = req(server(), "create", "Category", json!({
             "create": {
                 "name": "Toiletries",
                 "products": {
@@ -90,7 +90,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Category", json!({
+        let find_many_res = req(server(), "findMany", "Category", json!({
             "include": {
                 "products": {
                     "orderBy": {
@@ -123,7 +123,7 @@ mod tests {
     async fn create_with_nested_connect_one() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "create", "Category", json!({
+        let _create_res = req(server(), "create", "Category", json!({
             "create": {
                 "name": "Toiletries",
                 "products": {
@@ -133,7 +133,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Category", json!({
+        let find_many_res = req(server(), "findMany", "Category", json!({
             "include": {
                 "products": true
             }
@@ -157,7 +157,7 @@ mod tests {
     async fn create_with_nested_connect_more_than_one() {
         before_all().await;
         before_each().await;
-        let _create_res = req(&app, "create", "Category", json!({
+        let _create_res = req(server(), "create", "Category", json!({
             "create": {
                 "name": "Toiletries",
                 "products": {
@@ -172,7 +172,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Category", json!({
+        let find_many_res = req(server(), "findMany", "Category", json!({
             "include": {
                 "products": {
                     "orderBy": {
@@ -205,7 +205,7 @@ mod tests {
     async fn update_with_nested_create_one() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Category", json!({
+        let _update_res = req(server(), "update", "Category", json!({
             "where": {
                 "name": "Skincares"
             },
@@ -217,7 +217,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Category", json!({
+        let find_many_res = req(server(), "findMany", "Category", json!({
             "include": {
                 "products": {
                     "orderBy": {
@@ -255,7 +255,7 @@ mod tests {
     async fn update_with_nested_create_many() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Category", json!({
+        let _update_res = req(server(), "update", "Category", json!({
             "where": {
                 "name": "Skincares"
             },
@@ -272,7 +272,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Category", json!({
+        let find_many_res = req(server(), "findMany", "Category", json!({
             "include": {
                 "products": {
                     "orderBy": {
@@ -315,7 +315,7 @@ mod tests {
     async fn update_with_nested_connect_one() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Category", json!({
+        let _update_res = req(server(), "update", "Category", json!({
             "where": {
                 "name": "Skincares"
             },
@@ -327,7 +327,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Category", json!({
+        let find_many_res = req(server(), "findMany", "Category", json!({
             "include": {
                 "products": {
                     "orderBy": {
@@ -365,7 +365,7 @@ mod tests {
     async fn update_with_nested_connect_more_than_one() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Category", json!({
+        let _update_res = req(server(), "update", "Category", json!({
             "where": {
                 "name": "Skincares"
             },
@@ -382,7 +382,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Category", json!({
+        let find_many_res = req(server(), "findMany", "Category", json!({
             "include": {
                 "products": {
                     "orderBy": {
@@ -425,7 +425,7 @@ mod tests {
     async fn update_with_nested_set() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Category", json!({
+        let _update_res = req(server(), "update", "Category", json!({
             "where": {
                 "name": "Skincares"
             },
@@ -439,7 +439,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Category", json!({
+        let find_many_res = req(server(), "findMany", "Category", json!({
             "include": {
                 "products": {
                     "orderBy": {
@@ -478,7 +478,7 @@ mod tests {
     async fn update_with_nested_disconnect_one() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Category", json!({
+        let _update_res = req(server(), "update", "Category", json!({
             "where": {
                 "name": "Cosmetics"
             },
@@ -490,7 +490,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Category", json!({
+        let find_many_res = req(server(), "findMany", "Category", json!({
             "include": {
                 "products": true
             }
@@ -514,7 +514,7 @@ mod tests {
     async fn update_with_nested_disconnect_more_than_one() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Category", json!({
+        let _update_res = req(server(), "update", "Category", json!({
             "where": {
                 "name": "Cosmetics"
             },
@@ -531,7 +531,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Category", json!({
+        let find_many_res = req(server(), "findMany", "Category", json!({
             "include": {
                 "products": true
             }
@@ -549,7 +549,7 @@ mod tests {
     async fn update_with_nested_update_one() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Category", json!({
+        let _update_res = req(server(), "update", "Category", json!({
             "where": {
                 "name": "Cosmetics"
             },
@@ -566,7 +566,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Category", json!({
+        let find_many_res = req(server(), "findMany", "Category", json!({
             "include": {
                 "products": {
                     "orderBy": {
@@ -599,7 +599,7 @@ mod tests {
     async fn update_with_nested_update_more_than_one() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Category", json!({
+        let _update_res = req(server(), "update", "Category", json!({
             "where": {
                 "name": "Cosmetics"
             },
@@ -626,7 +626,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Category", json!({
+        let find_many_res = req(server(), "findMany", "Category", json!({
             "include": {
                 "products": {
                     "orderBy": {
@@ -659,7 +659,7 @@ mod tests {
     async fn update_with_nested_update_many() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Category", json!({
+        let _update_res = req(server(), "update", "Category", json!({
             "where": {
                 "name": "Cosmetics"
             },
@@ -676,7 +676,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Category", json!({
+        let find_many_res = req(server(), "findMany", "Category", json!({
             "include": {
                 "products": {
                     "orderBy": {
@@ -709,7 +709,7 @@ mod tests {
     async fn update_with_nested_update_many_more() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Category", json!({
+        let _update_res = req(server(), "update", "Category", json!({
             "where": {
                 "name": "Cosmetics"
             },
@@ -736,7 +736,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Category", json!({
+        let find_many_res = req(server(), "findMany", "Category", json!({
             "include": {
                 "products": {
                     "orderBy": {
@@ -769,7 +769,7 @@ mod tests {
     async fn update_with_nested_delete_one() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Category", json!({
+        let _update_res = req(server(), "update", "Category", json!({
             "where": {
                 "name": "Cosmetics"
             },
@@ -781,7 +781,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Category", json!({
+        let find_many_res = req(server(), "findMany", "Category", json!({
             "include": {
                 "products": true
             }
@@ -805,7 +805,7 @@ mod tests {
     async fn update_with_nested_delete_more_than_one() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Category", json!({
+        let _update_res = req(server(), "update", "Category", json!({
             "where": {
                 "name": "Cosmetics"
             },
@@ -822,7 +822,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Category", json!({
+        let find_many_res = req(server(), "findMany", "Category", json!({
             "include": {
                 "products": {
                     "orderBy": {
@@ -844,7 +844,7 @@ mod tests {
     async fn update_with_nested_delete_many() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Category", json!({
+        let _update_res = req(server(), "update", "Category", json!({
             "where": {
                 "name": "Cosmetics"
             },
@@ -856,7 +856,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Category", json!({
+        let find_many_res = req(server(), "findMany", "Category", json!({
             "include": {
                 "products": true
             }
@@ -880,7 +880,7 @@ mod tests {
     async fn update_with_nested_delete_many_more() {
         before_all().await;
         before_each().await;
-        let _update_res = req(&app, "update", "Category", json!({
+        let _update_res = req(server(), "update", "Category", json!({
             "where": {
                 "name": "Cosmetics"
             },
@@ -897,7 +897,7 @@ mod tests {
                 }
             },
         })).await;
-        let find_many_res = req(&app, "findMany", "Category", json!({
+        let find_many_res = req(server(), "findMany", "Category", json!({
             "include": {
                 "products": {
                     "orderBy": {
