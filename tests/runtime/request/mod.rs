@@ -99,7 +99,7 @@ mod tests {
 
     #[serial]
     #[shared_tokio_runtime::runtime_test]
-    async fn path_argument() {
+    async fn captures() {
         before_all().await;
         before_each().await;
         let req = TestRequest::new(Method::GET, "/echo/foo");
@@ -109,7 +109,7 @@ mod tests {
 
     #[serial]
     #[shared_tokio_runtime::runtime_test]
-    async fn path_combined_argument() {
+    async fn combined_captures() {
         before_all().await;
         before_each().await;
         let req = TestRequest::new(Method::GET, "/echo/foo/bar/echo");

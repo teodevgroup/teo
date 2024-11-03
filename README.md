@@ -117,7 +117,7 @@ for detailed usage.
 Declare the handler in the schema.
 
 ```teo
-@map(.get, "/echo/:data", interface: "EchoPathArguments")
+@map(.get, "/echo/:data", interface: "EchoCaptures")
 declare nonapi handler echo(): Any
 ```
 
@@ -126,13 +126,13 @@ Implement the handler with program code.
 #### Node.js implementation
 
 ```ts
-import { App, Response, RequestCtx } from '@teocloud/teo'
+import { App, Response, Request } from '@teocloud/teo'
 import { EchoPathArguments } from './entities'
  
 const app = new App()
-app.mainNamespace().defineHandler("echo", (ctx: RequestCtx) => {
-    const pathArguments: EchoPathArguments = ctx.pathArguments()
-    return Response.string(pathArguments.data, "text/plain")
+app.mainNamespace().defineHandler("echo", (request: Request) => {
+    const captures: EchoCaptures = request.captures()
+    return Response.string(captures.data, "text/plain")
 })
 app.run()
 ```
@@ -141,14 +141,14 @@ app.run()
 
 ```python
 from asyncio import run
-from teo import App, Response, RequestCtx
-from entities import EchoPathArguments
+from teo import App, Response, Request
+from entities import EchoCaptures
  
 async def main():
     app = App()
-    def echo_handler(ctx: RequestCtx):
-        path_arguments: EchoPathArguments = ctx.path_arguments()
-        return Response.string(path_arguments["data"], "text/plain")
+    def echo_handler(request: Request):
+        captures: EchoCaptures = request.captures()
+        return Response.string(captures["data"], "text/plain")
     app.main_namespace().define_handler("echo", echo_handler)
     await app.run()
  
@@ -159,16 +159,16 @@ run(main())
 
 ```rust
 mod entities;
- 
+
 use tokio::main;
 use teo::prelude::{App, Response, Result, path};
-use crate::entities::EchoPathArguments;
- 
+use crate::entities::EchoCaptures;
+
 #[main]
 async fn main() -> Result<()> {
     let app = App::new()?;
-    app.main_namespace().define_handler("echo", |path_args: EchoPathArguments| async move {
-        Ok::<Response, Error>(Response::string(path_args.data(), "text/plain"))
+    app.main_namespace_mut().define_handler("echo", |captures: EchoCaptures| async move {
+        Ok::<Response, Error>(Response::string(captures.data(), "text/plain"))
     });
     app.run().await
 }
