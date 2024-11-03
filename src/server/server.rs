@@ -244,7 +244,11 @@ impl Server {
     }
 
     pub async fn process_test_request(&self, test_request: TestRequest) -> Result<TestResponse> {
-        match self.process_test_request_inner(test_request).await {
+        self.process_test_request_with_hyper_request(test_request.to_hyper_request()).await
+    }
+
+    pub async fn process_test_request_with_hyper_request(&self, test_hyper_request: hyper::Request<String>) -> Result<TestResponse> {
+        match self.process_test_request_inner(test_hyper_request).await {
             Ok(res) => Ok(res),
             Err(err) => {
                 let hyper_res = self.error_to_hyper_response(err);
@@ -253,11 +257,10 @@ impl Server {
         }
     }
 
-    async fn process_test_request_inner(&self, test_request: TestRequest) -> Result<TestResponse> {
+    async fn process_test_request_inner(&self, hyper_request: hyper::Request<String>) -> Result<TestResponse> {
         let main_namespace = self.app.compiled_main_namespace();
         let conn_ctx = connection::Ctx::from_namespace(main_namespace);
         let transaction_ctx = transaction::Ctx::new(conn_ctx);
-        let hyper_request = test_request.to_hyper_request();
         let request = Request::new_for_test(hyper_request, transaction_ctx);
         let response = self.process_request(request.clone()).await?;
         let hyper_response = hyper_response_from(request, response).await?;

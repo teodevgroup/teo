@@ -55,7 +55,7 @@ mod tests {
         before_each().await;
         let req = TestRequest::new(Method::POST, "/?foo=bar").json_body(json!({})).await.unwrap();
         let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
-        assert_eq!(res["queryString"], "foo=bar");
+        assert_eq!(res["query"], "foo=bar");
     }
 
     #[serial]

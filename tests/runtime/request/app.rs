@@ -13,7 +13,7 @@ pub fn load_app() -> Result<App> {
         let content_type = req.headers().get("content-type").unwrap().to_str().unwrap();
         Ok(Response::teon(teon!({
             "path": req.path(),
-            "queryString": req.query().map(|s| s.to_string()),
+            "query": req.query().map(|s| s.to_string()),
             "contentTypeFromHeader": content_type,
             "contentType": req.content_type().unwrap().map(|s| s.to_string()),
             "method": req.method().to_string(),
