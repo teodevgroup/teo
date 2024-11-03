@@ -15,12 +15,12 @@ pub async fn hyper_response_from(request: Request, response: Response) -> Result
     let mut hyper_response = {
         match response.body().inner.as_ref() {
             BodyInner::Empty => {
-                let mut builder = hyper::Response::builder().status(response.code());
+                let builder = hyper::Response::builder().status(response.code());
                 let body_bytes = "".to_owned();
                 Ok(builder.body(Either::Left(body_bytes.into())).unwrap())
             },
             BodyInner::String(content) => {
-                let mut builder = hyper::Response::builder().status(response.code());
+                let builder = hyper::Response::builder().status(response.code());
                 let body_bytes = content.to_string();
                 Ok(builder.body(Either::Left(body_bytes.into())).unwrap())
             },
