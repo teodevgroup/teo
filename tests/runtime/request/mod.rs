@@ -64,7 +64,7 @@ mod tests {
         before_all().await;
         before_each().await;
         let req = TestRequest::new(Method::POST, "/?foo=bar")
-            .insert_header("content-type", "json")
+            .insert_header("content-type", "json").unwrap()
             .json_body(json!({}))
             .await.unwrap();
         let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
@@ -77,7 +77,7 @@ mod tests {
         before_all().await;
         before_each().await;
         let req = TestRequest::new(Method::POST, "/?foo=bar")
-            .insert_header("content-type", "json")
+            .insert_header("content-type", "json").unwrap()
             .json_body(json!({}))
             .await.unwrap();
         let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
@@ -90,7 +90,7 @@ mod tests {
         before_all().await;
         before_each().await;
         let req = TestRequest::new(Method::POST, "/?foo=bar")
-            .insert_header("content-type", "json")
+            .insert_header("content-type", "json").unwrap()
             .json_body(json!({}))
             .await.unwrap();
         let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
@@ -159,7 +159,7 @@ mod tests {
         before_all().await;
         before_each().await;
         let req = TestRequest::new(Method::POST, "/echo/cookie")
-            .append_header("Cookie", "a=b")
+            .append_header("Cookie", "a=b").unwrap()
             .json_body(json!({})).await.unwrap();
         let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
         assert_json!(res, matcher!({

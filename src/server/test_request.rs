@@ -22,18 +22,18 @@ impl TestRequest {
         }
     }
 
-    pub fn insert_header<K>(mut self, key: K, value: &str) -> Self where K: IntoHeaderName {
-        self.headers.insert::<K>(key.into(), HeaderValue::from_str(value).unwrap());
-        self
+    pub fn insert_header<K, V>(mut self, key: K, value: V) -> Result<Self> where K: IntoHeaderName, V: TryInto<HeaderValue>, V::Error: std::error::Error {
+        self.headers.insert::<K>(key.into(), value.try_into().map_err(|_| Error::internal_server_error_message("cannot read header value"))?);
+        Ok(self)
     }
 
-    pub fn append_header<K>(mut self, key: K, value: &str) -> Self where K: IntoHeaderName {
-        self.headers.append::<K>(key.into(), HeaderValue::from_str(value).unwrap());
-        self
+    pub fn append_header<K, V>(mut self, key: K, value: V) -> Result<Self> where K: IntoHeaderName, V: TryInto<HeaderValue>, V::Error: std::error::Error {
+        self.headers.append::<K>(key.into(), value.try_into().map_err(|_| Error::internal_server_error_message("cannot read header value"))?);
+        Ok(self)
     }
 
     pub async fn json_body(mut self, json: serde_json::Value) -> Result<Self> {
-        self = self.insert_header("content-type", "application/json");
+        self = self.insert_header("content-type", "application/json")?;
         let body = match serde_json::to_string(&json) {
             Ok(body) => body,
             Err(_) => return Err(Error::internal_server_error_message("cannot serialize json value"))
