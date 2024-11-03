@@ -32,12 +32,12 @@ pub fn load_app() -> Result<App> {
         Ok(Response::string(echo, "text/plain"))
     });
     app.main_namespace().define_handler("echoJsonBody", |req: Request| async move {
-        Ok(Response::teon(req.body_value().as_ref().clone()))
+        Ok(Response::teon(req.body_value()?.clone()))
     });
     app.main_namespace().define_handler("echoFormBody", |req: Request| async move {
-        let filepath = req.body_value().get("avatar").unwrap().as_file().unwrap().filepath.clone();
+        let filepath = req.body_value()?.get("avatar").unwrap().as_file().unwrap().filepath.clone();
         Ok(Response::teon(teon!({
-            "name": req.body_value().get("name").unwrap(),
+            "name": req.body_value()?.get("name").unwrap(),
             "avatar": filepath
         })))
     });
