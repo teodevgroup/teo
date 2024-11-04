@@ -898,16 +898,22 @@
 - Python: Separate memory management for generated classes **[DONE]**
 - Introduce `handler middleware` and `request middleware` **[DONE]**
 - Remove request ctx **[DONE]**
-- Rewrite HTTP server with Hyper **[IN PROGRESS]**
+- Rewrite HTTP server with Hyper **[DONE]**
 - Rewrite Rust unit tests with Hyper stack **[DONE]**
 - Node.js: setup unit tests **[DONE]**
-- Node.js: unit tests **[IN PROGRESS]**
+- Node.js: unit tests **[DONE]**
+- Node.js: unit test JSON matchers **[IN PROGRESS]**
 - Rename methods: `createObject`, `findManyObjects`, `findFirstObject` and `findUniqueObject` in entities
+- Rust: Fix broken items in generated entities
+- Node.js: Fix broken items in generated entities
+- Server: implement workers
 - Update official documentation
 
 ### 0.3.0-alpha.2
 - Python: setup unit tests
 - Python: unit tests
+- Python: unit test JSON matchers
+- Python: Fix broken items in generated entities
 
 ### 0.3.0-alpha.3
 - Debug logging SQL
