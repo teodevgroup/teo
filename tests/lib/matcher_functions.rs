@@ -5,7 +5,7 @@ use crate::lib::json::json_match;
 use crate::lib::matcher::Matcher;
 
 pub fn date_value(val: impl AsRef<str>) -> impl Fn(&Value) -> bool {
-    return move |v: &Value| {
+    move |v: &Value| {
         if !v.is_object() { return false }
         let obj = v.as_object().unwrap();
         if obj.len() != 1 { return false }
@@ -17,7 +17,7 @@ pub fn date_value(val: impl AsRef<str>) -> impl Fn(&Value) -> bool {
 }
 
 pub fn date_time_value(val: impl AsRef<str>) -> impl Fn(&Value) -> bool {
-    return move |v: &Value| {
+    move |v: &Value| {
         if !v.is_object() { return false }
         let obj = v.as_object().unwrap();
         if obj.len() != 1 { return false }
@@ -29,7 +29,7 @@ pub fn date_time_value(val: impl AsRef<str>) -> impl Fn(&Value) -> bool {
 }
 
 pub fn decimal_value(val: impl AsRef<str>) -> impl Fn(&Value) -> bool {
-    return move |v: &Value| {
+    move |v: &Value| {
         if !v.is_object() { return false }
         let obj = v.as_object().unwrap();
         if obj.len() != 1 { return false }
@@ -47,7 +47,7 @@ pub fn object_id_value(v: &Value) -> bool {
 }
 
 pub fn one_match(matcher: impl Borrow<Matcher>) -> impl Fn(&Value) -> bool {
-    return move |v: &Value| {
+    move |v: &Value| {
         if !v.is_array() { return false }
         let array = v.as_array().unwrap();
         for value in array {
@@ -57,5 +57,13 @@ pub fn one_match(matcher: impl Borrow<Matcher>) -> impl Fn(&Value) -> bool {
             }
         }
         false
+    }
+}
+
+pub fn string_ends_with(val: impl AsRef<str>) -> impl Fn(&Value) -> bool {
+    move |v: &Value| {
+        if !v.is_string() { return false }
+        let string = v.as_str().unwrap();
+        string.ends_with(val.as_ref())
     }
 }

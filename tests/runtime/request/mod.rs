@@ -5,13 +5,18 @@ mod tests {
     use std::cell::OnceCell;
     use teo::prelude::App;
     use std::file;
+    use std::path::Path;
+    use bytes::Bytes;
     use hyper::Method;
     use teo::test::schema_path::schema_path_args;
     use serde_json::{json, Value};
     use serial_test::serial;
     use teo::server::server::Server;
     use teo::server::test_request::TestRequest;
+    use form_data_builder::FormData;
+    use http_body_util::Full;
     use crate::{assert_json, matcher};
+    use crate::lib::matcher_functions::string_ends_with;
     use crate::runtime::request::app::load_app;
 
     static mut SERVER: OnceCell<Server> = OnceCell::new();
@@ -136,21 +141,24 @@ mod tests {
     #[serial]
     #[shared_tokio_runtime::runtime_test]
     async fn form_body() {
-        // TODO: complete this
-//         let app = make_app().await;
-//         let avatar = create_form_data_payload_and_headers("avatar", Some("a.jpg".to_owned()), None, Bytes::from_static(b"Lorem ipsum."));
-//         let name = create_form_data_payload_and_headers("name", None, None, Bytes::from_static(b"foo"));
-//         let req = test::TestRequest::default()
-//             .method(Method::PATCH)
-//             .uri("/echo/formBody")
-//             .
-// //            .set_payload(avatar.0 + name.0)
-//             .to_request();
-//         let res: Value = test::call_and_read_body_json(&app, req).await;
-//         assert_json!(res, matcher!({
-//             "name": "foo",
-//             "age": 1,
-//         }))
+        before_all().await;
+        before_each().await;
+        let path = Path::new(file!());
+        let source = path.parent().unwrap().join("mai.jpg");
+        let mut form = FormData::new(Vec::new());
+        form.write_path("avatar", source, "image/jpg").unwrap();
+        form.write_field("name", "Shiranui Mai").unwrap();
+        let header_value = form.content_type_header();
+        let body = form.finish().unwrap();
+        let bytes = Bytes::from(body);
+        let full = Full::new(bytes);
+        let req = TestRequest::new(Method::PATCH, "/echo/formBody")
+            .insert_header("content-type", header_value).unwrap().set_body(full).await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
+        assert_json!(res, matcher!({
+            "name": "Shiranui Mai",
+            "avatar": string_ends_with(".jpg"),
+        }))
     }
 
     #[serial]
