@@ -4,6 +4,7 @@ mod tests {
     use std::cell::OnceCell;
     use teo::prelude::App;
     use std::file;
+    use bytes::Bytes;
     use hyper::Method;
     use teo::test::schema_path::schema_path_args;
     use serde_json::{json, Value};
@@ -65,8 +66,9 @@ mod tests {
         before_all().await;
         before_each().await;
         let req = TestRequest::new(Method::GET, "/fileResponse");
-        let res = server().process_test_request(req).await.unwrap().body_as_string();
-        assert_eq!(res, "foo");
+        let res = server().process_test_request(req).await.unwrap();
+        let res_body = res.body();
+        assert_eq!(res_body, &Bytes::from("foo".to_owned()));
     }
 
     #[serial]
