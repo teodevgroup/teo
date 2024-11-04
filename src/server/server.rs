@@ -151,9 +151,9 @@ impl Server {
                     Ok::<Response, Error>(Response::empty())
                 }).await;
             }
-            let incoming_string = request.take_incoming_string_for_test();
+            let incoming_full_bytes = request.take_incoming_bytes_for_test();
             let incoming = request.take_incoming();
-            if incoming_string.is_none() && incoming.is_none() {
+            if incoming_full_bytes.is_none() && incoming.is_none() {
                 return Err(Error::internal_server_error_message("HTTP body is taken"))
             }
 
@@ -166,14 +166,14 @@ impl Server {
                     },
                     HandlerInputFormat::Form => parse_form_body(&request, incoming).await?,
                 }
-            } else if let Some(incoming_string) = incoming_string {
+            } else if let Some(incoming_full_bytes) = incoming_full_bytes {
                 match handler_found.handler_format() {
                     HandlerInputFormat::Json => if request.method() == Method::GET || request.method() == Method::DELETE {
                         JsonValue::Null
                     } else {
-                        parse_json_body(incoming_string).await?
+                        parse_json_body(incoming_full_bytes).await?
                     },
-                    HandlerInputFormat::Form => parse_form_body(&request, incoming_string).await?,
+                    HandlerInputFormat::Form => parse_form_body(&request, incoming_full_bytes).await?,
                 }
             } else {
                 unreachable!()
@@ -247,7 +247,7 @@ impl Server {
         self.process_test_request_with_hyper_request(test_request.to_hyper_request()).await
     }
 
-    pub async fn process_test_request_with_hyper_request(&self, test_hyper_request: hyper::Request<String>) -> Result<TestResponse> {
+    pub async fn process_test_request_with_hyper_request(&self, test_hyper_request: hyper::Request<Full<Bytes>>) -> Result<TestResponse> {
         match self.process_test_request_inner(test_hyper_request).await {
             Ok(res) => Ok(res),
             Err(err) => {
@@ -257,7 +257,7 @@ impl Server {
         }
     }
 
-    async fn process_test_request_inner(&self, hyper_request: hyper::Request<String>) -> Result<TestResponse> {
+    async fn process_test_request_inner(&self, hyper_request: hyper::Request<Full<Bytes>>) -> Result<TestResponse> {
         let main_namespace = self.app.compiled_main_namespace();
         let conn_ctx = connection::Ctx::from_namespace(main_namespace);
         let transaction_ctx = transaction::Ctx::new(conn_ctx);

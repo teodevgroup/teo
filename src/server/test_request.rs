@@ -1,4 +1,5 @@
-use http_body_util::BodyExt;
+use bytes::Bytes;
+use http_body_util::{BodyExt, Full};
 use hyper::{HeaderMap, Method};
 use hyper::body::Body;
 use hyper::header::{HeaderValue, IntoHeaderName};
@@ -9,7 +10,7 @@ pub struct TestRequest {
     method: Method,
     uri: String,
     headers: HeaderMap,
-    body: String,
+    body: Full<Bytes>,
 }
 
 impl TestRequest {
@@ -18,7 +19,7 @@ impl TestRequest {
             method,
             uri: uri.to_string(),
             headers: HeaderMap::new(),
-            body: String::new(),
+            body: Full::new(Bytes::new()),
         }
     }
 
@@ -46,9 +47,7 @@ impl TestRequest {
             Ok(body) => body,
             Err(_) => return Err(Error::internal_server_error_message("cannot set body data, please fire a bug at https://github.com/teodevgroup/teo/issues")),
         }.to_bytes();
-        let body = body.to_vec();
-        let body = unsafe { String::from_utf8_unchecked(body) };
-        self.body = body;
+        self.body = Full::new(body);
         Ok(self)
     }
 
@@ -64,7 +63,7 @@ impl TestRequest {
         &self.headers
     }
 
-    pub(crate) fn to_hyper_request(self) -> hyper::Request<String> {
+    pub(crate) fn to_hyper_request(self) -> hyper::Request<Full<Bytes>> {
         let mut request = hyper::Request::builder()
             .method(self.method)
             .uri(self.uri);
