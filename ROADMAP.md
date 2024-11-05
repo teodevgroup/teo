@@ -906,7 +906,6 @@
 - Rename methods: `createObject`, `findManyObjects`, `findFirstObject` and `findUniqueObject` in entities
 - Rust: Fix broken items in generated entities
 - Node.js: Fix broken items in generated entities
-- Server: implement workers
 - Update official documentation
 
 ### 0.3.0-alpha.2
