@@ -42,11 +42,11 @@ pub fn decimal_value(val: impl AsRef<str>) -> impl Fn(&Value) -> bool {
 
 pub fn object_id_value(v: &Value) -> bool {
     if !v.is_string() { return false }
-    let regex = Regex::new("[\\da-f]{24}").unwrap();
+    let regex = Regex::new("^[\\da-f]{24}$").unwrap();
     regex.is_match(v.as_str().unwrap())
 }
 
-pub fn one_match(matcher: impl Borrow<Matcher>) -> impl Fn(&Value) -> bool {
+pub fn one_matches(matcher: impl Borrow<Matcher>) -> impl Fn(&Value) -> bool {
     move |v: &Value| {
         if !v.is_array() { return false }
         let array = v.as_array().unwrap();

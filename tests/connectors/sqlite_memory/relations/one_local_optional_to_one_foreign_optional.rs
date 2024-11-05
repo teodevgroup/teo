@@ -8,7 +8,7 @@ mod tests {
     use serde_json::{json, Value};
     use crate::{assert_json, matcher};
     use serial_test::serial;
-    use crate::lib::matcher_functions::one_match;
+    use crate::lib::matcher_functions::one_matches;
     use teo::test::req::req;
     static mut SERVER: OnceCell<Server> = OnceCell::new();
     static mut BEFORE_ALL_EXECUTED: bool = false;
@@ -57,7 +57,7 @@ mod tests {
             }
         })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 3 }));
-        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
+        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_matches(matcher!({
             "id": ignore,
             "name": "Dan",
             "playerId": ignore,
@@ -89,7 +89,7 @@ mod tests {
             }
         })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 3 }));
-        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
+        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_matches(matcher!({
             "id": ignore,
             "name": "Dan",
             "playerId": ignore,
@@ -98,7 +98,7 @@ mod tests {
                 "name": "Justin Wong",
             },
         }))));
-        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
+        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_matches(matcher!({
             "id": ignore,
             "name": "Justin Wong plays KOF",
         }))));
@@ -127,7 +127,7 @@ mod tests {
             }
         })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 2 }));
-        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
+        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_matches(matcher!({
             "id": ignore,
             "name": "Laggia",
             "playerId": ignore,
@@ -161,7 +161,7 @@ mod tests {
             }
         })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 2 }));
-        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
+        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_matches(matcher!({
             "id": ignore,
             "name": "Laggia",
             "playerId": ignore,
@@ -170,7 +170,7 @@ mod tests {
                 "name": "Justin Wong",
             },
         }))));
-        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
+        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_matches(matcher!({
             "id": ignore,
             "name": "Justin Wong plays KOF",
         }))));
@@ -199,7 +199,7 @@ mod tests {
             }
         })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 2 }));
-        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
+        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_matches(matcher!({
             "id": ignore,
             "name": "Laggia",
             "playerId": ignore,
@@ -208,7 +208,7 @@ mod tests {
                 "name": "Justin Wong",
             },
         }))));
-        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
+        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_matches(matcher!({
             "id": ignore,
             "name": "Justin Wong plays KOF",
         }))));
@@ -235,11 +235,11 @@ mod tests {
             }
         })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 2 }));
-        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
+        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_matches(matcher!({
             "id": ignore,
             "name": "Laggia",
         }))));
-        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
+        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_matches(matcher!({
             "id": ignore,
             "name": "Justin Wong plays KOF",
             "playerId": ignore,
@@ -271,11 +271,11 @@ mod tests {
             }
         })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 2 }));
-        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
+        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_matches(matcher!({
             "id": ignore,
             "name": "Laggia",
         }))));
-        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
+        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_matches(matcher!({
             "id": ignore,
             "name": "Justin Wong plays KOF",
             "playerId": ignore,
@@ -309,7 +309,7 @@ mod tests {
             }
         })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 2 }));
-        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
+        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_matches(matcher!({
             "id": ignore,
             "name": "Justin Wong plays KOF",
             "playerId": ignore,
@@ -341,7 +341,7 @@ mod tests {
             }
         })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 2 }));
-        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
+        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_matches(matcher!({
             "id": ignore,
             "name": "Justin Wong plays KOF",
         }))));

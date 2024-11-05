@@ -9,7 +9,7 @@ mod tests {
     use crate::{assert_json, matcher};
     use serial_test::serial;
     use teo::server::server::Server;
-    use crate::lib::matcher_functions::one_match;
+    use crate::lib::matcher_functions::one_matches;
     use teo::test::req::req;
 
     static mut SERVER: OnceCell<Server> = OnceCell::new();
@@ -59,7 +59,7 @@ mod tests {
             }
         })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 6 }));
-        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
+        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_matches(matcher!({
             "id": ignore,
             "name": "Shampoo",
             "categoryId": ignore,
@@ -91,7 +91,7 @@ mod tests {
             }
         })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 6 }));
-        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
+        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_matches(matcher!({
             "id": ignore,
             "name": "Shampoo",
             "categoryId": ignore,
@@ -125,7 +125,7 @@ mod tests {
             }
         })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 5 }));
-        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
+        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_matches(matcher!({
             "id": ignore,
             "name": "Hair Jelly",
             "categoryId": ignore,
@@ -159,7 +159,7 @@ mod tests {
             }
         })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 5 }));
-        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
+        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_matches(matcher!({
             "id": ignore,
             "name": "Hair Jelly",
             "categoryId": ignore,
@@ -193,7 +193,7 @@ mod tests {
             }
         })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 5 }));
-        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
+        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_matches(matcher!({
             "id": ignore,
             "name": "Lipstick",
             "categoryId": ignore,
@@ -225,7 +225,7 @@ mod tests {
             }
         })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 5 }));
-        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
+        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_matches(matcher!({
             "id": ignore,
             "name": "Lipstick",
         }))));
@@ -252,7 +252,7 @@ mod tests {
             }
         })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 5 }));
-        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
+        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_matches(matcher!({
             "id": ignore,
             "name": "Lipstick",
         }))));
@@ -281,7 +281,7 @@ mod tests {
             }
         })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 5 }));
-        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
+        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_matches(matcher!({
             "id": ignore,
             "name": "Lipstick",
             "categoryId": ignore,
@@ -313,7 +313,7 @@ mod tests {
             }
         })).await;
         assert_json!(find_many_res.get("meta").unwrap(), matcher!({ "count": 5 }));
-        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_match(matcher!({
+        assert_json!(find_many_res.get("data").unwrap(), matcher!(one_matches(matcher!({
             "id": ignore,
             "name": "Lipstick",
         }))));
