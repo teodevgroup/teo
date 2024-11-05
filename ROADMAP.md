@@ -902,7 +902,8 @@
 - Rewrite Rust unit tests with Hyper stack **[DONE]**
 - Node.js: setup unit tests **[DONE]**
 - Node.js: unit tests **[DONE]**
-- Node.js: unit test JSON matchers **[IN PROGRESS]**
+- Node.js: unit test JSON matchers **[DONE]**
+- Node.js: Fix TSC test cases build bug
 - Rename methods: `createObject`, `findManyObjects`, `findFirstObject` and `findUniqueObject` in entities
 - Rust: Fix broken items in generated entities
 - Node.js: Fix broken items in generated entities
