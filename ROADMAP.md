@@ -926,6 +926,10 @@
 - Migration dry run
 
 ### 0.3.0-alpha.4
+- Rust unit testing tools
+- Documentation: unit testing guide
+
+### 0.3.0-alpha.4
 - Update official documentation
 
 ### 0.3.0
