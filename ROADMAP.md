@@ -907,6 +907,10 @@
 - Rename methods: `createObject`, `findManyObjects`, `findFirstObject` and `findUniqueObject` in entities
 - Rust: Fix broken items in generated entities
 - Node.js: Fix broken items in generated entities
+- Python: setup unit tests
+- Python: unit tests
+- Python: unit test JSON matchers
+- Python: Fix broken items in generated entities
 
 ### 0.3.0-alpha.2
 - Node.js local data and objects
@@ -916,10 +920,6 @@
 - Unit test: Rust request local objects
 - Unit test: Node.js local data
 - Unit test: Node.js local objects
-- Python: setup unit tests
-- Python: unit tests
-- Python: unit test JSON matchers
-- Python: Fix broken items in generated entities
 
 ### 0.3.0-alpha.3
 - Debug logging SQL
