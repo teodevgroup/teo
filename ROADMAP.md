@@ -903,13 +903,19 @@
 - Node.js: setup unit tests **[DONE]**
 - Node.js: unit tests **[DONE]**
 - Node.js: unit test JSON matchers **[DONE]**
-- Node.js: Fix TSC test cases build bug
+- Update middleware implementation in code **[IN PROGRESS]**
 - Rename methods: `createObject`, `findManyObjects`, `findFirstObject` and `findUniqueObject` in entities
 - Rust: Fix broken items in generated entities
 - Node.js: Fix broken items in generated entities
-- Update official documentation
 
 ### 0.3.0-alpha.2
+- Node.js local data and objects
+- Unit test: Rust middlewares
+- Unit test: Node.js middlewares
+- Unit test: Rust request local data
+- Unit test: Rust request local objects
+- Unit test: Node.js local data
+- Unit test: Node.js local objects
 - Python: setup unit tests
 - Python: unit tests
 - Python: unit test JSON matchers
@@ -919,8 +925,13 @@
 - Debug logging SQL
 - Migration dry run
 
+### 0.3.0-alpha.4
+- Update official documentation
+
 ### 0.3.0
 - Bug fixes
+- Unit test for pipeline items
+- Official documentation for pipeline items
 
 ### 0.3.1
 - Node.js: Support more linux systems
@@ -952,7 +963,6 @@
 - Remove paging information from `findMany`
 - Entity: Handlers call handlers
 - Maybe separate runtime and standard library
-- Unit test for pipeline items
 - Action transformers
 - Soft delete
 - Uploaders
