@@ -903,7 +903,7 @@
 - Node.js: setup unit tests **[DONE]**
 - Node.js: unit tests **[DONE]**
 - Node.js: unit test JSON matchers **[DONE]**
-- Update middleware implementation in code **[IN PROGRESS]**
+- Update middleware implementation in code **[DONE]**
 - Rename methods: `createObject`, `findManyObjects`, `findFirstObject` and `findUniqueObject` in entities
 - Rust: Fix broken items in generated entities
 - Node.js: Fix broken items in generated entities

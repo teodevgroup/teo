@@ -49,7 +49,7 @@ pub mod prelude {
     pub use teo_runtime::handler;
     pub use teo_runtime::pipeline::Pipeline;
     pub use teo_runtime::pipeline::ctx::extract::ExtractFromPipelineCtx;
-    pub use teo_runtime::middleware::middleware::middleware_wrap_fn;
+    pub use teo_runtime::middleware::middleware_impl::MiddlewareImpl;
     pub use teo_runtime::connection::transaction::ExtractFromTransactionCtx;
     pub use teo_runtime::arguments::Arguments;
     pub use teo_runtime::middleware::next::Next;
