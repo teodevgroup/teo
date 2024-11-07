@@ -14,19 +14,19 @@ pub struct DataSetRelation {
 impl DataSetRelation {
 
     /// Find many group records.
-    pub async fn find_many(query: impl Borrow<Value>, ctx: transaction::Ctx) -> Result<Vec<DataSetRelation>> {
+    pub async fn find_many_objects(query: impl Borrow<Value>, ctx: transaction::Ctx) -> Result<Vec<DataSetRelation>> {
         let model = ctx.namespace().model_at_path(&vec!["std".to_owned(), "DataSetRelation".to_owned()]).unwrap();
         Ok(ctx.find_many(model, query.borrow(), None, path![]).await?)
     }
 
     /// Find a unique group record.
-    pub async fn find_unique(query: impl Borrow<Value>, ctx: transaction::Ctx) -> Result<Option<DataSetRelation>> {
+    pub async fn find_unique_object(query: impl Borrow<Value>, ctx: transaction::Ctx) -> Result<Option<DataSetRelation>> {
         let model = ctx.namespace().model_at_path(&vec!["std".to_owned(), "DataSetRelation".to_owned()]).unwrap();
         Ok(ctx.find_unique(model, query.borrow(), None, path![]).await?)
     }
 
-    /// Find a non unique group record.
-    pub async fn find_first(query: impl Borrow<Value>, ctx: transaction::Ctx) -> Result<Option<DataSetRelation>> {
+    /// Find a non-unique group record.
+    pub async fn find_first_object(query: impl Borrow<Value>, ctx: transaction::Ctx) -> Result<Option<DataSetRelation>> {
         let model = ctx.namespace().model_at_path(&vec!["std".to_owned(), "DataSetRelation".to_owned()]).unwrap();
         Ok(ctx.find_first(model, query.borrow(), None, path![]).await?)
     }
