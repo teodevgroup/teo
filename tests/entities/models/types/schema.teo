@@ -1,0 +1,42 @@
+import "./data"
+
+connector {
+  provider: .postgres,
+  url: "postgres://127.0.0.1:5433/test_entities_types",
+}
+
+server {
+  bind: ("0.0.0.0", 4123),
+}
+
+// Data types
+
+enum Sex {
+  MALE
+  FEMALE
+}
+
+model Support {
+  @id @autoIncrement @readonly
+  id: Int
+  int32: Int?
+  int64: Int64?
+  float32: Float32?
+  float64: Float?
+  bool: Bool?
+  string: String?
+  date: Date?
+  dateTime: DateTime?
+  decimal: Decimal?
+  sex: Sex?
+  int32Array: Int[]?
+  int64Array: Int64[]?
+  float32Array: Float32[]?
+  float64Array: Float[]?
+  boolArray: Bool[]?
+  stringArray: String[]?
+  dateArray: Date[]?
+  dateTimeArray: DateTime[]?
+  decimalArray: Decimal[]?
+  sexesArray: Sex[]?
+}

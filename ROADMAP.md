@@ -904,13 +904,20 @@
 - Node.js: unit tests **[DONE]**
 - Node.js: unit test JSON matchers **[DONE]**
 - Update middleware implementation in code **[DONE]**
-- Rename methods: `createObject`, `findManyObjects`, `findFirstObject` and `findUniqueObject` in entities
+- Rust: Unit tests for generated entities
 - Rust: Fix broken items in generated entities
+- Parser: Fix enum value resolving error in data sets
+- Rust: Rename object methods in entities
+- Node.js: Rename object methods in entities
+- Node.js: Unit tests for generated entities
+- Rust: reorganize test files into 4 categories: 
+mutations, queries, relation mutations and relation queries **[IN PROGRESS]**
 - Node.js: Fix broken items in generated entities
 - Python: setup unit tests
 - Python: unit tests
 - Python: unit test JSON matchers
 - Python: Fix broken items in generated entities
+- Python: Rename object methods in entities
 
 ### 0.3.0-alpha.2
 - Node.js local data and objects
