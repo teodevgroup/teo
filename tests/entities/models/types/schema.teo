@@ -9,6 +9,11 @@ server {
   bind: ("0.0.0.0", 4123),
 }
 
+entity {
+  provider: .rust,
+  dest: "./entities"
+}
+
 // Data types
 
 enum Sex {
