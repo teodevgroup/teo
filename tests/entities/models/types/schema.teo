@@ -1,4 +1,4 @@
-import "./data"
+//import "./data"
 
 connector {
   provider: .postgres,
@@ -11,7 +11,7 @@ server {
 
 entity {
   provider: .rust,
-  dest: "./entities"
+  dest: "./tests/entities/models/types/entities" // temporarily write like this
 }
 
 // Data types
