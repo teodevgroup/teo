@@ -28,25 +28,25 @@ impl Sex {
     ///
     /// Returns true if value is male
     pub fn is_male(&self) -> bool {
-        self.inner.as_str() == "MALE"
+        self.inner.as_str() == "male"
     }
     /// ### Male
     ///
     /// This enum member doesn't have a description.
     pub fn male() -> Self {
-        Self { inner: "MALE".to_owned() }
+        Self { inner: "male".to_owned() }
     }
     /// ### Is Female
     ///
     /// Returns true if value is female
     pub fn is_female(&self) -> bool {
-        self.inner.as_str() == "FEMALE"
+        self.inner.as_str() == "female"
     }
     /// ### Female
     ///
     /// This enum member doesn't have a description.
     pub fn female() -> Self {
-        Self { inner: "FEMALE".to_owned() }
+        Self { inner: "female".to_owned() }
     }
 }
 
@@ -63,8 +63,8 @@ impl TryFrom<Value> for Sex {
     fn try_from(value: Value) -> std::result::Result<Self, Self::Error> {
         if let Some(enum_variant) = value.as_str() {
             Ok(match enum_variant {
-                "MALE" => Sex::male(),
-                "FEMALE" => Sex::female(),
+                "male" => Sex::male(),
+                "female" => Sex::female(),
                 _ => Err(Error::new("cannot convert value to Sex"))?
             })
         } else {
@@ -80,8 +80,8 @@ impl<'a> TryFrom<&'a Value> for &Sex {
     fn try_from(value: &Value) -> std::result::Result<Self, Self::Error> {
         if let Some(enum_variant) = value.as_str() {
             Ok(match enum_variant {
-                "MALE" => unsafe { &*(enum_variant as *const str as *const Self) },
-                "FEMALE" => unsafe { &*(enum_variant as *const str as *const Self) },
+                "male" => unsafe { &*(enum_variant as *const str as *const Self) },
+                "female" => unsafe { &*(enum_variant as *const str as *const Self) },
                 _ => Err(Error::new("cannot convert &Value to &Sex"))?
             })
         } else {
@@ -94,8 +94,8 @@ impl AsInterface for Sex {
     fn from_value(value: Value) -> Result<Self> {
         if let Some(enum_variant) = value.as_str() {
             Ok(match enum_variant {
-                "MALE" => Sex::male(),
-                "FEMALE" => Sex::female(),
+                "male" => Sex::male(),
+                "female" => Sex::female(),
                 _ => Err(Error::new("cannot convert value to Sex"))?
             })
         } else {
@@ -108,8 +108,8 @@ impl AsInterfaceRef for Sex {
     fn from_value_ref(value: &Value) -> Result<&Self> {
         if let Some(enum_variant) = value.as_str() {
             Ok(match enum_variant {
-                "MALE" => unsafe { &*(enum_variant as *const str as *const Self) },
-                "FEMALE" => unsafe { &*(enum_variant as *const str as *const Self) },
+                "male" => unsafe { &*(enum_variant as *const str as *const Self) },
+                "female" => unsafe { &*(enum_variant as *const str as *const Self) },
                 _ => Err(Error::new("cannot convert &Value to &Sex"))?
             })
         } else {
@@ -2066,9 +2066,15 @@ impl AsInterfaceRef for SupportSelect {
     }
 }
 
-impl ExtractFromRequest for SupportSelect {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportSelect {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportSelect {
+    fn extract(request: &'a Request) -> Self {
+        SupportSelect::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -2127,9 +2133,15 @@ impl AsInterfaceRef for SupportInclude {
     }
 }
 
-impl ExtractFromRequest for SupportInclude {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportInclude {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportInclude {
+    fn extract(request: &'a Request) -> Self {
+        SupportInclude::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -2668,9 +2680,15 @@ impl AsInterfaceRef for SupportWhereInput {
     }
 }
 
-impl ExtractFromRequest for SupportWhereInput {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportWhereInput {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportWhereInput {
+    fn extract(request: &'a Request) -> Self {
+        SupportWhereInput::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -2741,9 +2759,15 @@ impl AsInterfaceRef for SupportWhereUniqueInput {
     }
 }
 
-impl ExtractFromRequest for SupportWhereUniqueInput {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportWhereUniqueInput {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportWhereUniqueInput {
+    fn extract(request: &'a Request) -> Self {
+        SupportWhereUniqueInput::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -3282,9 +3306,15 @@ impl AsInterfaceRef for SupportScalarWhereWithAggregatesInput {
     }
 }
 
-impl ExtractFromRequest for SupportScalarWhereWithAggregatesInput {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportScalarWhereWithAggregatesInput {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportScalarWhereWithAggregatesInput {
+    fn extract(request: &'a Request) -> Self {
+        SupportScalarWhereWithAggregatesInput::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -3383,9 +3413,15 @@ impl AsInterfaceRef for SupportRelationFilter {
     }
 }
 
-impl ExtractFromRequest for SupportRelationFilter {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportRelationFilter {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportRelationFilter {
+    fn extract(request: &'a Request) -> Self {
+        SupportRelationFilter::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -3504,9 +3540,15 @@ impl AsInterfaceRef for SupportListRelationFilter {
     }
 }
 
-impl ExtractFromRequest for SupportListRelationFilter {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportListRelationFilter {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportListRelationFilter {
+    fn extract(request: &'a Request) -> Self {
+        SupportListRelationFilter::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -3985,9 +4027,15 @@ impl AsInterfaceRef for SupportOrderByInput {
     }
 }
 
-impl ExtractFromRequest for SupportOrderByInput {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportOrderByInput {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportOrderByInput {
+    fn extract(request: &'a Request) -> Self {
+        SupportOrderByInput::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -4486,9 +4534,15 @@ impl AsInterfaceRef for SupportCountAggregateInputType {
     }
 }
 
-impl ExtractFromRequest for SupportCountAggregateInputType {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportCountAggregateInputType {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportCountAggregateInputType {
+    fn extract(request: &'a Request) -> Self {
+        SupportCountAggregateInputType::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -4567,9 +4621,15 @@ impl AsInterfaceRef for SupportSumAggregateInputType {
     }
 }
 
-impl ExtractFromRequest for SupportSumAggregateInputType {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportSumAggregateInputType {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportSumAggregateInputType {
+    fn extract(request: &'a Request) -> Self {
+        SupportSumAggregateInputType::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -4648,9 +4708,15 @@ impl AsInterfaceRef for SupportAvgAggregateInputType {
     }
 }
 
-impl ExtractFromRequest for SupportAvgAggregateInputType {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportAvgAggregateInputType {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportAvgAggregateInputType {
+    fn extract(request: &'a Request) -> Self {
+        SupportAvgAggregateInputType::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -5129,9 +5195,15 @@ impl AsInterfaceRef for SupportMinAggregateInputType {
     }
 }
 
-impl ExtractFromRequest for SupportMinAggregateInputType {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportMinAggregateInputType {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportMinAggregateInputType {
+    fn extract(request: &'a Request) -> Self {
+        SupportMinAggregateInputType::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -5610,9 +5682,15 @@ impl AsInterfaceRef for SupportMaxAggregateInputType {
     }
 }
 
-impl ExtractFromRequest for SupportMaxAggregateInputType {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportMaxAggregateInputType {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportMaxAggregateInputType {
+    fn extract(request: &'a Request) -> Self {
+        SupportMaxAggregateInputType::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -6071,9 +6149,15 @@ impl AsInterfaceRef for SupportCreateInput {
     }
 }
 
-impl ExtractFromRequest for SupportCreateInput {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportCreateInput {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportCreateInput {
+    fn extract(request: &'a Request) -> Self {
+        SupportCreateInput::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -6532,9 +6616,15 @@ impl AsInterfaceRef for SupportUpdateInput {
     }
 }
 
-impl ExtractFromRequest for SupportUpdateInput {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportUpdateInput {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportUpdateInput {
+    fn extract(request: &'a Request) -> Self {
+        SupportUpdateInput::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -6653,9 +6743,15 @@ impl AsInterfaceRef for SupportCreateNestedOneInput {
     }
 }
 
-impl ExtractFromRequest for SupportCreateNestedOneInput {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportCreateNestedOneInput {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportCreateNestedOneInput {
+    fn extract(request: &'a Request) -> Self {
+        SupportCreateNestedOneInput::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -6774,9 +6870,15 @@ impl AsInterfaceRef for SupportCreateNestedManyInput {
     }
 }
 
-impl ExtractFromRequest for SupportCreateNestedManyInput {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportCreateNestedManyInput {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportCreateNestedManyInput {
+    fn extract(request: &'a Request) -> Self {
+        SupportCreateNestedManyInput::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -6995,9 +7097,15 @@ impl AsInterfaceRef for SupportUpdateNestedOneInput {
     }
 }
 
-impl ExtractFromRequest for SupportUpdateNestedOneInput {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportUpdateNestedOneInput {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportUpdateNestedOneInput {
+    fn extract(request: &'a Request) -> Self {
+        SupportUpdateNestedOneInput::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -7256,9 +7364,15 @@ impl AsInterfaceRef for SupportUpdateNestedManyInput {
     }
 }
 
-impl ExtractFromRequest for SupportUpdateNestedManyInput {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportUpdateNestedManyInput {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportUpdateNestedManyInput {
+    fn extract(request: &'a Request) -> Self {
+        SupportUpdateNestedManyInput::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -7341,9 +7455,15 @@ impl AsInterfaceRef for SupportConnectOrCreateInput {
     }
 }
 
-impl ExtractFromRequest for SupportConnectOrCreateInput {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportConnectOrCreateInput {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportConnectOrCreateInput {
+    fn extract(request: &'a Request) -> Self {
+        SupportConnectOrCreateInput::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -7426,9 +7546,15 @@ impl AsInterfaceRef for SupportUpdateWithWhereUniqueInput {
     }
 }
 
-impl ExtractFromRequest for SupportUpdateWithWhereUniqueInput {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportUpdateWithWhereUniqueInput {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportUpdateWithWhereUniqueInput {
+    fn extract(request: &'a Request) -> Self {
+        SupportUpdateWithWhereUniqueInput::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -7523,9 +7649,15 @@ impl AsInterfaceRef for SupportUpsertWithWhereUniqueInput {
     }
 }
 
-impl ExtractFromRequest for SupportUpsertWithWhereUniqueInput {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportUpsertWithWhereUniqueInput {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportUpsertWithWhereUniqueInput {
+    fn extract(request: &'a Request) -> Self {
+        SupportUpsertWithWhereUniqueInput::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -7608,9 +7740,15 @@ impl AsInterfaceRef for SupportUpdateManyWithWhereInput {
     }
 }
 
-impl ExtractFromRequest for SupportUpdateManyWithWhereInput {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportUpdateManyWithWhereInput {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportUpdateManyWithWhereInput {
+    fn extract(request: &'a Request) -> Self {
+        SupportUpdateManyWithWhereInput::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -8081,9 +8219,15 @@ impl AsInterfaceRef for SupportResult {
     }
 }
 
-impl ExtractFromRequest for SupportResult {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportResult {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportResult {
+    fn extract(request: &'a Request) -> Self {
+        SupportResult::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -8582,9 +8726,15 @@ impl AsInterfaceRef for SupportCountAggregateResult {
     }
 }
 
-impl ExtractFromRequest for SupportCountAggregateResult {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportCountAggregateResult {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportCountAggregateResult {
+    fn extract(request: &'a Request) -> Self {
+        SupportCountAggregateResult::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -8663,9 +8813,15 @@ impl AsInterfaceRef for SupportSumAggregateResult {
     }
 }
 
-impl ExtractFromRequest for SupportSumAggregateResult {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportSumAggregateResult {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportSumAggregateResult {
+    fn extract(request: &'a Request) -> Self {
+        SupportSumAggregateResult::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -8744,9 +8900,15 @@ impl AsInterfaceRef for SupportAvgAggregateResult {
     }
 }
 
-impl ExtractFromRequest for SupportAvgAggregateResult {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportAvgAggregateResult {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportAvgAggregateResult {
+    fn extract(request: &'a Request) -> Self {
+        SupportAvgAggregateResult::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -9225,9 +9387,15 @@ impl AsInterfaceRef for SupportMinAggregateResult {
     }
 }
 
-impl ExtractFromRequest for SupportMinAggregateResult {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportMinAggregateResult {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportMinAggregateResult {
+    fn extract(request: &'a Request) -> Self {
+        SupportMinAggregateResult::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -9706,9 +9874,15 @@ impl AsInterfaceRef for SupportMaxAggregateResult {
     }
 }
 
-impl ExtractFromRequest for SupportMaxAggregateResult {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportMaxAggregateResult {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportMaxAggregateResult {
+    fn extract(request: &'a Request) -> Self {
+        SupportMaxAggregateResult::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -9867,9 +10041,15 @@ impl AsInterfaceRef for SupportAggregateResult {
     }
 }
 
-impl ExtractFromRequest for SupportAggregateResult {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportAggregateResult {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportAggregateResult {
+    fn extract(request: &'a Request) -> Self {
+        SupportAggregateResult::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -10448,9 +10628,15 @@ impl AsInterfaceRef for SupportGroupByResult {
     }
 }
 
-impl ExtractFromRequest for SupportGroupByResult {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportGroupByResult {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportGroupByResult {
+    fn extract(request: &'a Request) -> Self {
+        SupportGroupByResult::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -10549,9 +10735,15 @@ impl AsInterfaceRef for SupportArgs {
     }
 }
 
-impl ExtractFromRequest for SupportArgs {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportArgs {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportArgs {
+    fn extract(request: &'a Request) -> Self {
+        SupportArgs::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -10810,9 +11002,15 @@ impl AsInterfaceRef for SupportFindManyArgs {
     }
 }
 
-impl ExtractFromRequest for SupportFindManyArgs {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportFindManyArgs {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportFindManyArgs {
+    fn extract(request: &'a Request) -> Self {
+        SupportFindManyArgs::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -11071,9 +11269,15 @@ impl AsInterfaceRef for SupportFindFirstArgs {
     }
 }
 
-impl ExtractFromRequest for SupportFindFirstArgs {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportFindFirstArgs {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportFindFirstArgs {
+    fn extract(request: &'a Request) -> Self {
+        SupportFindFirstArgs::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -11184,9 +11388,15 @@ impl AsInterfaceRef for SupportFindUniqueArgs {
     }
 }
 
-impl ExtractFromRequest for SupportFindUniqueArgs {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportFindUniqueArgs {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportFindUniqueArgs {
+    fn extract(request: &'a Request) -> Self {
+        SupportFindUniqueArgs::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -11297,9 +11507,15 @@ impl AsInterfaceRef for SupportCreateArgs {
     }
 }
 
-impl ExtractFromRequest for SupportCreateArgs {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportCreateArgs {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportCreateArgs {
+    fn extract(request: &'a Request) -> Self {
+        SupportCreateArgs::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -11422,9 +11638,15 @@ impl AsInterfaceRef for SupportUpdateArgs {
     }
 }
 
-impl ExtractFromRequest for SupportUpdateArgs {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportUpdateArgs {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportUpdateArgs {
+    fn extract(request: &'a Request) -> Self {
+        SupportUpdateArgs::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -11559,9 +11781,15 @@ impl AsInterfaceRef for SupportUpsertArgs {
     }
 }
 
-impl ExtractFromRequest for SupportUpsertArgs {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportUpsertArgs {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportUpsertArgs {
+    fn extract(request: &'a Request) -> Self {
+        SupportUpsertArgs::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -11684,9 +11912,15 @@ impl AsInterfaceRef for SupportCopyArgs {
     }
 }
 
-impl ExtractFromRequest for SupportCopyArgs {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportCopyArgs {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportCopyArgs {
+    fn extract(request: &'a Request) -> Self {
+        SupportCopyArgs::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -11797,9 +12031,15 @@ impl AsInterfaceRef for SupportDeleteArgs {
     }
 }
 
-impl ExtractFromRequest for SupportDeleteArgs {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportDeleteArgs {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportDeleteArgs {
+    fn extract(request: &'a Request) -> Self {
+        SupportDeleteArgs::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -11910,9 +12150,15 @@ impl AsInterfaceRef for SupportCreateManyArgs {
     }
 }
 
-impl ExtractFromRequest for SupportCreateManyArgs {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportCreateManyArgs {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportCreateManyArgs {
+    fn extract(request: &'a Request) -> Self {
+        SupportCreateManyArgs::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -12035,9 +12281,15 @@ impl AsInterfaceRef for SupportUpdateManyArgs {
     }
 }
 
-impl ExtractFromRequest for SupportUpdateManyArgs {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportUpdateManyArgs {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportUpdateManyArgs {
+    fn extract(request: &'a Request) -> Self {
+        SupportUpdateManyArgs::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -12148,9 +12400,15 @@ impl AsInterfaceRef for SupportDeleteManyArgs {
     }
 }
 
-impl ExtractFromRequest for SupportDeleteManyArgs {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportDeleteManyArgs {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportDeleteManyArgs {
+    fn extract(request: &'a Request) -> Self {
+        SupportDeleteManyArgs::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -12273,9 +12531,15 @@ impl AsInterfaceRef for SupportCopyManyArgs {
     }
 }
 
-impl ExtractFromRequest for SupportCopyManyArgs {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportCopyManyArgs {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportCopyManyArgs {
+    fn extract(request: &'a Request) -> Self {
+        SupportCopyManyArgs::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -12514,9 +12778,15 @@ impl AsInterfaceRef for SupportCountArgs {
     }
 }
 
-impl ExtractFromRequest for SupportCountArgs {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportCountArgs {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportCountArgs {
+    fn extract(request: &'a Request) -> Self {
+        SupportCountArgs::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -12835,9 +13105,15 @@ impl AsInterfaceRef for SupportAggregateArgs {
     }
 }
 
-impl ExtractFromRequest for SupportAggregateArgs {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportAggregateArgs {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportAggregateArgs {
+    fn extract(request: &'a Request) -> Self {
+        SupportAggregateArgs::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -13188,9 +13464,15 @@ impl AsInterfaceRef for SupportGroupByArgs {
     }
 }
 
-impl ExtractFromRequest for SupportGroupByArgs {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportGroupByArgs {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportGroupByArgs {
+    fn extract(request: &'a Request) -> Self {
+        SupportGroupByArgs::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -13669,9 +13951,15 @@ impl AsInterfaceRef for SupportScalarUpdateInput {
     }
 }
 
-impl ExtractFromRequest for SupportScalarUpdateInput {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportScalarUpdateInput {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportScalarUpdateInput {
+    fn extract(request: &'a Request) -> Self {
+        SupportScalarUpdateInput::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -13730,9 +14018,15 @@ impl AsInterfaceRef for SupportSignInCheckerIds {
     }
 }
 
-impl ExtractFromRequest for SupportSignInCheckerIds {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportSignInCheckerIds {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportSignInCheckerIds {
+    fn extract(request: &'a Request) -> Self {
+        SupportSignInCheckerIds::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -13791,9 +14085,15 @@ impl AsInterfaceRef for SupportSignInCheckerCompanions {
     }
 }
 
-impl ExtractFromRequest for SupportSignInCheckerCompanions {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportSignInCheckerCompanions {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportSignInCheckerCompanions {
+    fn extract(request: &'a Request) -> Self {
+        SupportSignInCheckerCompanions::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -13904,9 +14204,15 @@ impl AsInterfaceRef for SupportSignInInput {
     }
 }
 
-impl ExtractFromRequest for SupportSignInInput {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportSignInInput {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportSignInInput {
+    fn extract(request: &'a Request) -> Self {
+        SupportSignInInput::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -13965,9 +14271,15 @@ impl AsInterfaceRef for SupportSignInArgs {
     }
 }
 
-impl ExtractFromRequest for SupportSignInArgs {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for SupportSignInArgs {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a SupportSignInArgs {
+    fn extract(request: &'a Request) -> Self {
+        SupportSignInArgs::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -14004,8 +14316,8 @@ impl ExtractFromTransactionCtx for Teo {
     }
 }
 
-impl ExtractFromRequest for Teo {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for Teo {
+    fn extract(request: &'a Request) -> Self {
         Teo {
             ctx: request.transaction_ctx().clone(),
         }

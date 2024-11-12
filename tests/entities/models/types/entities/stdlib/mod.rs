@@ -289,9 +289,15 @@ impl AsInterfaceRef for Empty {
     }
 }
 
-impl ExtractFromRequest for Empty {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for Empty {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a Empty {
+    fn extract(request: &'a Request) -> Self {
+        Empty::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -362,9 +368,15 @@ impl<T> AsInterfaceRef for Data<T> where T: Into<Value> + AsInterface + AsInterf
     }
 }
 
-impl<T> ExtractFromRequest for Data<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
-    fn extract(request: &Request) -> Self {
+impl<'a, T> ExtractFromRequest<'a> for Data<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a, T> ExtractFromRequest<'a> for &'a Data<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
+        Data::<T>::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -447,9 +459,15 @@ impl<T, U> AsInterfaceRef for DataMeta<T, U> where T: Into<Value> + AsInterface 
     }
 }
 
-impl<T, U> ExtractFromRequest for DataMeta<T, U> where T: Into<Value> + AsInterface + AsInterfaceRef, U: Into<Value> + AsInterface + AsInterfaceRef {
-    fn extract(request: &Request) -> Self {
+impl<'a, T, U> ExtractFromRequest<'a> for DataMeta<T, U> where T: Into<Value> + AsInterface + AsInterfaceRef, U: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a, T, U> ExtractFromRequest<'a> for &'a DataMeta<T, U> where T: Into<Value> + AsInterface + AsInterfaceRef, U: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
+        DataMeta::<T, U>::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -540,9 +558,15 @@ impl AsInterfaceRef for PagingInfo {
     }
 }
 
-impl ExtractFromRequest for PagingInfo {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for PagingInfo {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a PagingInfo {
+    fn extract(request: &'a Request) -> Self {
+        PagingInfo::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -637,9 +661,15 @@ impl AsInterfaceRef for ResponseError {
     }
 }
 
-impl ExtractFromRequest for ResponseError {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for ResponseError {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a ResponseError {
+    fn extract(request: &'a Request) -> Self {
+        ResponseError::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -738,9 +768,15 @@ impl AsInterfaceRef for BoolFilter {
     }
 }
 
-impl ExtractFromRequest for BoolFilter {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for BoolFilter {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a BoolFilter {
+    fn extract(request: &'a Request) -> Self {
+        BoolFilter::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -839,9 +875,15 @@ impl AsInterfaceRef for BoolNullableFilter {
     }
 }
 
-impl ExtractFromRequest for BoolNullableFilter {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for BoolNullableFilter {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a BoolNullableFilter {
+    fn extract(request: &'a Request) -> Self {
+        BoolNullableFilter::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -1060,9 +1102,15 @@ impl<T> AsInterfaceRef for Filter<T> where T: Into<Value> + AsInterface + AsInte
     }
 }
 
-impl<T> ExtractFromRequest for Filter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
-    fn extract(request: &Request) -> Self {
+impl<'a, T> ExtractFromRequest<'a> for Filter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a, T> ExtractFromRequest<'a> for &'a Filter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
+        Filter::<T>::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -1281,9 +1329,15 @@ impl<T> AsInterfaceRef for NullableFilter<T> where T: Into<Value> + AsInterface 
     }
 }
 
-impl<T> ExtractFromRequest for NullableFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
-    fn extract(request: &Request) -> Self {
+impl<'a, T> ExtractFromRequest<'a> for NullableFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a, T> ExtractFromRequest<'a> for &'a NullableFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
+        NullableFilter::<T>::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -1602,9 +1656,15 @@ impl AsInterfaceRef for StringFilter {
     }
 }
 
-impl ExtractFromRequest for StringFilter {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for StringFilter {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a StringFilter {
+    fn extract(request: &'a Request) -> Self {
+        StringFilter::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -1923,9 +1983,15 @@ impl AsInterfaceRef for StringNullableFilter {
     }
 }
 
-impl ExtractFromRequest for StringNullableFilter {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for StringNullableFilter {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a StringNullableFilter {
+    fn extract(request: &'a Request) -> Self {
+        StringNullableFilter::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -2064,9 +2130,15 @@ impl<T> AsInterfaceRef for EnumFilter<T> where T: Into<Value> + AsInterface + As
     }
 }
 
-impl<T> ExtractFromRequest for EnumFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
-    fn extract(request: &Request) -> Self {
+impl<'a, T> ExtractFromRequest<'a> for EnumFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a, T> ExtractFromRequest<'a> for &'a EnumFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
+        EnumFilter::<T>::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -2205,9 +2277,15 @@ impl<T> AsInterfaceRef for EnumNullableFilter<T> where T: Into<Value> + AsInterf
     }
 }
 
-impl<T> ExtractFromRequest for EnumNullableFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
-    fn extract(request: &Request) -> Self {
+impl<'a, T> ExtractFromRequest<'a> for EnumNullableFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a, T> ExtractFromRequest<'a> for &'a EnumNullableFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
+        EnumNullableFilter::<T>::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -2386,9 +2464,15 @@ impl<T> AsInterfaceRef for ArrayFilter<T> where T: Into<Value> + AsInterface + A
     }
 }
 
-impl<T> ExtractFromRequest for ArrayFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
-    fn extract(request: &Request) -> Self {
+impl<'a, T> ExtractFromRequest<'a> for ArrayFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a, T> ExtractFromRequest<'a> for &'a ArrayFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
+        ArrayFilter::<T>::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -2567,9 +2651,15 @@ impl<T> AsInterfaceRef for ArrayNullableFilter<T> where T: Into<Value> + AsInter
     }
 }
 
-impl<T> ExtractFromRequest for ArrayNullableFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
-    fn extract(request: &Request) -> Self {
+impl<'a, T> ExtractFromRequest<'a> for ArrayNullableFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a, T> ExtractFromRequest<'a> for &'a ArrayNullableFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
+        ArrayNullableFilter::<T>::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -2690,9 +2780,15 @@ impl AsInterfaceRef for BoolWithAggregatesFilter {
     }
 }
 
-impl ExtractFromRequest for BoolWithAggregatesFilter {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for BoolWithAggregatesFilter {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a BoolWithAggregatesFilter {
+    fn extract(request: &'a Request) -> Self {
+        BoolWithAggregatesFilter::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -2813,9 +2909,15 @@ impl AsInterfaceRef for BoolNullableWithAggregatesFilter {
     }
 }
 
-impl ExtractFromRequest for BoolNullableWithAggregatesFilter {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for BoolNullableWithAggregatesFilter {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a BoolNullableWithAggregatesFilter {
+    fn extract(request: &'a Request) -> Self {
+        BoolNullableWithAggregatesFilter::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -2976,9 +3078,15 @@ impl<T> AsInterfaceRef for IntNumberWithAggregatesFilter<T> where T: Into<Value>
     }
 }
 
-impl<T> ExtractFromRequest for IntNumberWithAggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
-    fn extract(request: &Request) -> Self {
+impl<'a, T> ExtractFromRequest<'a> for IntNumberWithAggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a, T> ExtractFromRequest<'a> for &'a IntNumberWithAggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
+        IntNumberWithAggregatesFilter::<T>::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -3139,9 +3247,15 @@ impl<T> AsInterfaceRef for IntNumberNullableWithAggregatesFilter<T> where T: Int
     }
 }
 
-impl<T> ExtractFromRequest for IntNumberNullableWithAggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
-    fn extract(request: &Request) -> Self {
+impl<'a, T> ExtractFromRequest<'a> for IntNumberNullableWithAggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a, T> ExtractFromRequest<'a> for &'a IntNumberNullableWithAggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
+        IntNumberNullableWithAggregatesFilter::<T>::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -3302,9 +3416,15 @@ impl<T> AsInterfaceRef for FloatNumberWithAggregatesFilter<T> where T: Into<Valu
     }
 }
 
-impl<T> ExtractFromRequest for FloatNumberWithAggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
-    fn extract(request: &Request) -> Self {
+impl<'a, T> ExtractFromRequest<'a> for FloatNumberWithAggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a, T> ExtractFromRequest<'a> for &'a FloatNumberWithAggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
+        FloatNumberWithAggregatesFilter::<T>::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -3465,9 +3585,15 @@ impl<T> AsInterfaceRef for FloatNumberNullableWithAggregatesFilter<T> where T: I
     }
 }
 
-impl<T> ExtractFromRequest for FloatNumberNullableWithAggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
-    fn extract(request: &Request) -> Self {
+impl<'a, T> ExtractFromRequest<'a> for FloatNumberNullableWithAggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a, T> ExtractFromRequest<'a> for &'a FloatNumberNullableWithAggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
+        FloatNumberNullableWithAggregatesFilter::<T>::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -3628,9 +3754,15 @@ impl AsInterfaceRef for DecimalWithAggregatesFilter {
     }
 }
 
-impl ExtractFromRequest for DecimalWithAggregatesFilter {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for DecimalWithAggregatesFilter {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a DecimalWithAggregatesFilter {
+    fn extract(request: &'a Request) -> Self {
+        DecimalWithAggregatesFilter::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -3791,9 +3923,15 @@ impl<T> AsInterfaceRef for DecimalNullableWithAggregatesFilter<T> where T: Into<
     }
 }
 
-impl<T> ExtractFromRequest for DecimalNullableWithAggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
-    fn extract(request: &Request) -> Self {
+impl<'a, T> ExtractFromRequest<'a> for DecimalNullableWithAggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a, T> ExtractFromRequest<'a> for &'a DecimalNullableWithAggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
+        DecimalNullableWithAggregatesFilter::<T>::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -3914,9 +4052,15 @@ impl<T> AsInterfaceRef for AggregatesFilter<T> where T: Into<Value> + AsInterfac
     }
 }
 
-impl<T> ExtractFromRequest for AggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
-    fn extract(request: &Request) -> Self {
+impl<'a, T> ExtractFromRequest<'a> for AggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a, T> ExtractFromRequest<'a> for &'a AggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
+        AggregatesFilter::<T>::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -4037,9 +4181,15 @@ impl<T> AsInterfaceRef for NullableAggregatesFilter<T> where T: Into<Value> + As
     }
 }
 
-impl<T> ExtractFromRequest for NullableAggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
-    fn extract(request: &Request) -> Self {
+impl<'a, T> ExtractFromRequest<'a> for NullableAggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a, T> ExtractFromRequest<'a> for &'a NullableAggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
+        NullableAggregatesFilter::<T>::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -4160,9 +4310,15 @@ impl AsInterfaceRef for StringWithAggregatesFilter {
     }
 }
 
-impl ExtractFromRequest for StringWithAggregatesFilter {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for StringWithAggregatesFilter {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a StringWithAggregatesFilter {
+    fn extract(request: &'a Request) -> Self {
+        StringWithAggregatesFilter::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -4283,9 +4439,15 @@ impl AsInterfaceRef for StringNullableWithAggregatesFilter {
     }
 }
 
-impl ExtractFromRequest for StringNullableWithAggregatesFilter {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for StringNullableWithAggregatesFilter {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a StringNullableWithAggregatesFilter {
+    fn extract(request: &'a Request) -> Self {
+        StringNullableWithAggregatesFilter::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -4406,9 +4568,15 @@ impl<T> AsInterfaceRef for EnumWithAggregatesFilter<T> where T: Into<Value> + As
     }
 }
 
-impl<T> ExtractFromRequest for EnumWithAggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
-    fn extract(request: &Request) -> Self {
+impl<'a, T> ExtractFromRequest<'a> for EnumWithAggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a, T> ExtractFromRequest<'a> for &'a EnumWithAggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
+        EnumWithAggregatesFilter::<T>::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -4529,9 +4697,15 @@ impl<T> AsInterfaceRef for EnumNullableWithAggregatesFilter<T> where T: Into<Val
     }
 }
 
-impl<T> ExtractFromRequest for EnumNullableWithAggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
-    fn extract(request: &Request) -> Self {
+impl<'a, T> ExtractFromRequest<'a> for EnumNullableWithAggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a, T> ExtractFromRequest<'a> for &'a EnumNullableWithAggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
+        EnumNullableWithAggregatesFilter::<T>::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -4652,9 +4826,15 @@ impl<T> AsInterfaceRef for ArrayWithAggregatesFilter<T> where T: Into<Value> + A
     }
 }
 
-impl<T> ExtractFromRequest for ArrayWithAggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
-    fn extract(request: &Request) -> Self {
+impl<'a, T> ExtractFromRequest<'a> for ArrayWithAggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a, T> ExtractFromRequest<'a> for &'a ArrayWithAggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
+        ArrayWithAggregatesFilter::<T>::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -4775,9 +4955,15 @@ impl<T> AsInterfaceRef for ArrayNullableWithAggregatesFilter<T> where T: Into<Va
     }
 }
 
-impl<T> ExtractFromRequest for ArrayNullableWithAggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
-    fn extract(request: &Request) -> Self {
+impl<'a, T> ExtractFromRequest<'a> for ArrayNullableWithAggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a, T> ExtractFromRequest<'a> for &'a ArrayNullableWithAggregatesFilter<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
+        ArrayNullableWithAggregatesFilter::<T>::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -4916,9 +5102,15 @@ impl<T> AsInterfaceRef for NumberAtomicUpdateOperationInput<T> where T: Into<Val
     }
 }
 
-impl<T> ExtractFromRequest for NumberAtomicUpdateOperationInput<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
-    fn extract(request: &Request) -> Self {
+impl<'a, T> ExtractFromRequest<'a> for NumberAtomicUpdateOperationInput<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a, T> ExtractFromRequest<'a> for &'a NumberAtomicUpdateOperationInput<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
+        NumberAtomicUpdateOperationInput::<T>::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 
@@ -4997,9 +5189,15 @@ impl<T> AsInterfaceRef for ArrayAtomicUpdateOperationInput<T> where T: Into<Valu
     }
 }
 
-impl<T> ExtractFromRequest for ArrayAtomicUpdateOperationInput<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
-    fn extract(request: &Request) -> Self {
+impl<'a, T> ExtractFromRequest<'a> for ArrayAtomicUpdateOperationInput<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a, T> ExtractFromRequest<'a> for &'a ArrayAtomicUpdateOperationInput<T> where T: Into<Value> + AsInterface + AsInterfaceRef {
+    fn extract(request: &'a Request) -> Self {
+        ArrayAtomicUpdateOperationInput::<T>::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 

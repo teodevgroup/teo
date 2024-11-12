@@ -80,9 +80,15 @@ impl AsInterfaceRef for TokenInfo {
     }
 }
 
-impl ExtractFromRequest for TokenInfo {
-    fn extract(request: &Request) -> Self {
+impl<'a> ExtractFromRequest<'a> for TokenInfo {
+    fn extract(request: &'a Request) -> Self {
         Self::from_value(request.body_value().unwrap().clone()).unwrap()
+    }
+}
+
+impl<'a> ExtractFromRequest<'a> for &'a TokenInfo {
+    fn extract(request: &'a Request) -> Self {
+        TokenInfo::from_value_ref(request.body_value().unwrap()).unwrap()
     }
 }
 

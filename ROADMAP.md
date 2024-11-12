@@ -911,7 +911,7 @@
 - Parser: Fix parsing file path bug **[DONE]**
 - Rust: test files: mutations, queries, relation mutations and relation queries **[DONE]**
 - Parser: Add special constant `FILE` and `DIR` **[DONE]**
-- Runtime: `ExtractFromRequest`: should work with references
+- Extract references from `Request` **[DONE]**
 - Rust: Fix broken items in generated entities
 - Rust: Unit tests for generated entities
 - Node.js: Rename object methods in entities
@@ -942,7 +942,7 @@
 - Documentation: unit testing guide
 
 ### 0.3.0-alpha.5
-- Extract references from `Request`
+- Runtime: `ExtractFromRequest`: should work with references
 
 ### 0.3.0-alpha.6
 - Update official documentation
