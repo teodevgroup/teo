@@ -910,9 +910,9 @@
 - Parser: fix model handler `Self` keyword bug **[DONE]**
 - Parser: Fix parsing file path bug **[DONE]**
 - Rust: test files: mutations, queries, relation mutations and relation queries **[DONE]**
-- Rust: Fix broken items in generated entities
-- Parser: Add special variable `FILE` and `DIR`
+- Parser: Add special constant `FILE` and `DIR` **[DONE]**
 - Runtime: `ExtractFromRequest`: should accept errors
+- Rust: Fix broken items in generated entities
 - Rust: Unit tests for generated entities
 - Node.js: Rename object methods in entities
 - Node.js: Unit tests for generated entities
