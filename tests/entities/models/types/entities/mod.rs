@@ -1149,32 +1149,32 @@ impl AsInterfaceRef for SupportIndirectRelations {
 ///
 /// This model doesn't have a description.
 pub struct SupportModel {
-    pub ctx: model::Ctx,
+    ctx: model::Ctx,
 }
 
 impl SupportModel {
-    /// Find many supports.
-    pub async fn find_many(&self, query: impl Borrow<Value>) -> Result<Vec<Support>> {
+    /// Find many support objects.
+    pub async fn find_many_objects(&self, query: impl Borrow<Value>) -> Result<Vec<Support>> {
         Ok(self.ctx.find_many(query.borrow()).await?)
     }
 
-    /// Find a unique support.
-    pub async fn find_unique(&self, query: impl Borrow<Value>) -> Result<Option<Support>> {
+    /// Find a unique support object.
+    pub async fn find_unique_object(&self, query: impl Borrow<Value>) -> Result<Option<Support>> {
         Ok(self.ctx.find_unique(query.borrow()).await?)
     }
 
-    /// Find a support.
-    pub async fn find_first(&self, query: impl Borrow<Value>) -> Result<Option<Support>> {
+    /// Find a support object.
+    pub async fn find_first_object(&self, query: impl Borrow<Value>) -> Result<Option<Support>> {
         Ok(self.ctx.find_first(query.borrow()).await?)
     }
 
-    /// Create a new support.
-    pub async fn new(&self, values: impl Borrow<Value>) -> Result<Support> {
+    /// Create a new support object.
+    pub async fn create_object(&self, values: impl Borrow<Value>) -> Result<Support> {
         Ok(self.ctx.create_object::<Support>(values.borrow()).await?)
     }
 
-    /// Create an empty support.
-    pub async fn default(&self) -> Result<Support> {
+    /// Create an empty support object.
+    pub async fn create_default_object(&self) -> Result<Support> {
         Ok(self.ctx.create_object::<Support>(teon!({}).borrow()).await?)
     }
 
@@ -1213,7 +1213,7 @@ impl SupportModel {
 
 #[derive(Clone)]
 pub struct Support {
-    pub inner: model::Object,
+    inner: model::Object,
 }
 
 impl Support {

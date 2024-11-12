@@ -905,7 +905,8 @@
 - Node.js: unit test JSON matchers **[DONE]**
 - Update middleware implementation in code **[DONE]**
 - Fix Rust entity bug for optional enum values **[DONE]**
-- Rust entities: should return errors
+- Rust entities: should return errors **[DONE]**
+- Rust: Rename object methods in entities **[DONE]**
 - Rust: Fix broken items in generated entities
 - Rust: reorganize test files into 4 categories:
   mutations, queries, relation mutations and relation queries **[IN PROGRESS]**
@@ -914,7 +915,6 @@
 - Object methods: should return errors
 - Rust: Unit tests for generated entities
 - Parser: Fix enum value resolving error in data sets
-- Rust: Rename object methods in entities
 - Node.js: Rename object methods in entities
 - Node.js: Unit tests for generated entities
 
