@@ -912,8 +912,8 @@
 - Rust: test files: mutations, queries, relation mutations and relation queries **[DONE]**
 - Parser: Add special constant `FILE` and `DIR` **[DONE]**
 - Extract references from `Request` **[DONE]**
-- Rust: Fix broken items in generated entities
-- Rust: Unit tests for generated entities
+- Rust: Fix broken items in generated model entities **[DONE]**
+- Rust: Add some unit tests for generated model entities **[DONE]**
 - Node.js: Rename object methods in entities
 - Node.js: Unit tests for generated entities
 - Node.js: Fix broken items in generated entities
