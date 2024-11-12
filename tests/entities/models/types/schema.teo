@@ -11,7 +11,7 @@ server {
 
 entity {
   provider: .rust,
-  dest: "./tests/entities/models/types/entities" // temporarily write like this
+  dest: DIR + "entities2"
 }
 
 // Data types
