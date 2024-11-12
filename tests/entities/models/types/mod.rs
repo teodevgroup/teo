@@ -42,14 +42,12 @@ mod tests {
 
     #[serial]
     #[shared_tokio_runtime::runtime_test]
-    async fn int32() {
+    async fn create_object() {
         before_all().await;
         before_each().await;
         let req = TestRequest::new(Method::POST, "/Support/myCreate")
             .json_body(json!({
-                "create": {
-                    "int32": 1,
-                },
+                "int32": 1,
             }))
             .await.unwrap();
         let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
@@ -60,6 +58,8 @@ mod tests {
             }
         }))
     }
+
+    // int32
     //
     // #[serial]
     // #[shared_tokio_runtime::runtime_test]

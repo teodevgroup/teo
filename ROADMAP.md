@@ -907,6 +907,7 @@
 - Fix Rust entity bug for optional enum values **[DONE]**
 - Rust entities: should return errors **[DONE]**
 - Rust: Rename object methods in entities **[DONE]**
+- Parser: fix model handler `Self` keyword bug **[DONE]**
 - Rust: Fix broken items in generated entities
 - Rust: reorganize test files into 4 categories:
   mutations, queries, relation mutations and relation queries **[IN PROGRESS]**
