@@ -916,13 +916,13 @@
 - Rust: Add some unit tests for generated model entities **[DONE]**
 - Node.js: Rename object methods in entities **[DONE]**
 - Node.js: Unit tests for generated model entities **[DONE]**
-- Node.js: Fix broken items in generated model entities
 - Python: update dependencies and fix compiling
 - Python: setup unit tests
 - Python: unit tests
 - Python: unit test JSON matchers
 - Python: Rename object methods in entities
 - Python: Unit tests for generated model entities
+- Node.js: Fix broken items in generated model entities
 - Python: Fix broken items in generated model entities
 
 ### 0.3.0
