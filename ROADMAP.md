@@ -908,17 +908,14 @@
 - Rust entities: should return errors **[DONE]**
 - Rust: Rename object methods in entities **[DONE]**
 - Parser: fix model handler `Self` keyword bug **[DONE]**
+- Parser: Fix parsing file path bug **[DONE]**
+- Rust: test files: mutations, queries, relation mutations and relation queries **[IN PROGRESS]**
 - Rust: Fix broken items in generated entities
-- Rust: reorganize test files into 4 categories:
-  mutations, queries, relation mutations and relation queries **[IN PROGRESS]**
 - Parser: Add special variable `FILE` and `DIR`
-- ExtractFromRequest: should accept errors
-- Object methods: should return errors
+- Runtime: `ExtractFromRequest`: should accept errors
 - Rust: Unit tests for generated entities
-- Parser: Fix enum value resolving error in data sets
 - Node.js: Rename object methods in entities
 - Node.js: Unit tests for generated entities
-
 - Node.js: Fix broken items in generated entities
 - Python: setup unit tests
 - Python: unit tests
@@ -936,6 +933,7 @@
 - Unit test: Node.js local objects
 
 ### 0.3.0-alpha.3
+- Migrations should return errors
 - Debug logging SQL
 - Migration dry run
 

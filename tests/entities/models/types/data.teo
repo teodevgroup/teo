@@ -12,7 +12,7 @@ dataset default {
             date: Date("1970-01-01"),
             dateTime: DateTime("1970-01-01T00:00:00.000Z"),
             decimal: Decimal("0"),
-            //sex: .male,
+            sex: .male,
             int32Array: [1],
             int64Array: [1],
             float32Array: [1],
@@ -22,7 +22,7 @@ dataset default {
             dateArray: [Date("2024-11-07")],
             dateTimeArray: [DateTime("2024-11-07T00:00:00.000Z")],
             decimalArray: [Decimal("1")],
-            //sexesArray: [.male, .female]
+            sexesArray: [.male, .female]
         }
     }
 }

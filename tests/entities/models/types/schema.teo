@@ -17,8 +17,8 @@ entity {
 // Data types
 
 enum Sex {
-  MALE
-  FEMALE
+  male
+  female
 }
 
 model Support {
