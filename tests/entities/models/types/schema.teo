@@ -44,4 +44,6 @@ model Support {
   dateTimeArray: DateTime[]?
   decimalArray: Decimal[]?
   sexesArray: Sex[]?
+
+  declare json handler myCreate(CreateInput<Self>): Data<Result<Self>>
 }
