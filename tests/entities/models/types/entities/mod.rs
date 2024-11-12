@@ -1388,14 +1388,21 @@ impl Support {
     ///
     /// This field doesn't have a description.
     pub fn sex(&self) -> Option<Sex> {
-        self.inner.get("sex").unwrap()
+        let value: Value = self.inner.get_value("sex").unwrap();
+        match value {
+            Value::Null => None,
+            _ => Some(value.try_into().unwrap()),
+        }
     }
 
     /// ## Sex
     ///
     /// This field doesn't have a description.
     pub fn set_sex(&self, new_value: Option<Sex>) {
-        self.inner.set("sex", new_value).unwrap();
+        self.inner.set("sex", match new_value {
+            None => Value::Null,
+            Some(new_value) => Value::from(new_value),
+        }).unwrap();
     }
     /// ## Int32 array
     ///
