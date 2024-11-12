@@ -941,15 +941,20 @@
 - Rust unit testing tools
 - Documentation: unit testing guide
 
-### 0.3.0-alpha.4
+### 0.3.0-alpha.5
+- Extract references from `Request`
+
+### 0.3.0-alpha.6
 - Update official documentation
 
 ### 0.3.0
 - Bug fixes
+
+### 0.3.1
 - Unit test for pipeline items
 - Official documentation for pipeline items
 
-### 0.3.1
+### 0.3.2
 - Node.js: Support more linux systems
 
 ### 0.4.0
