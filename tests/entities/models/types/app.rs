@@ -12,7 +12,7 @@ pub fn load_app() -> Result<App> {
         schema_path_args(file!(), "schema.teo")
     )?;
     app.main_namespace().define_model_handler_group("Support", |group| {
-        group.define_handler("myCreate", |input: SupportCreateInput, teo: Teo| async move {
+        group.define_handler("myCreateObject", |input: SupportCreateInput, teo: Teo| async move {
             let object = teo.support().create_object(input).await?;
             object.save().await?;
             Ok(Response::data(object.to_teon().await?))

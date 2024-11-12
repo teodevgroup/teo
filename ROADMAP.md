@@ -915,46 +915,51 @@
 - Rust: Fix broken items in generated model entities **[DONE]**
 - Rust: Add some unit tests for generated model entities **[DONE]**
 - Node.js: Rename object methods in entities **[DONE]**
-- Node.js: Unit tests for generated entities
-- Node.js: Fix broken items in generated entities
+- Node.js: Unit tests for generated model entities **[DONE]**
+- Node.js: Fix broken items in generated model entities
+- Python: update dependencies and fix compiling
 - Python: setup unit tests
 - Python: unit tests
 - Python: unit test JSON matchers
-- Python: Fix broken items in generated entities
 - Python: Rename object methods in entities
+- Python: Unit tests for generated model entities
+- Python: Fix broken items in generated model entities
 
-### 0.3.0-alpha.2
+### 0.3.0
 - Node.js local data and objects
+- Python local data and objects
 - Unit test: Rust middlewares
 - Unit test: Node.js middlewares
 - Unit test: Rust request local data
 - Unit test: Rust request local objects
 - Unit test: Node.js local data
 - Unit test: Node.js local objects
+- Unit test: Python local data
+- Unit test: Python local objects
 
-### 0.3.0-alpha.3
+### 0.3.1
 - Migrations should return errors
 - Debug logging SQL
 - Migration dry run
 
-### 0.3.0-alpha.4
+### 0.3.2
 - Rust unit testing tools
 - Documentation: unit testing guide
 
-### 0.3.0-alpha.5
+### 0.3.3
 - Runtime: `ExtractFromRequest`: should work with references
 
-### 0.3.0-alpha.6
+### 0.3.4
 - Update official documentation
 
-### 0.3.0
+### 0.3.5
 - Bug fixes
 
-### 0.3.1
+### 0.3.6
 - Unit test for pipeline items
 - Official documentation for pipeline items
 
-### 0.3.2
+### 0.3.7
 - Node.js: Support more linux systems
 - Finish adding missing tests
 
