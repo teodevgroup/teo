@@ -914,7 +914,7 @@
 - Extract references from `Request` **[DONE]**
 - Rust: Fix broken items in generated model entities **[DONE]**
 - Rust: Add some unit tests for generated model entities **[DONE]**
-- Node.js: Rename object methods in entities
+- Node.js: Rename object methods in entities **[DONE]**
 - Node.js: Unit tests for generated entities
 - Node.js: Fix broken items in generated entities
 - Python: setup unit tests
