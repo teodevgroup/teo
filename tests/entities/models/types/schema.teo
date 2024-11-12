@@ -1,4 +1,4 @@
-//import "./data"
+import "./data"
 
 connector {
   provider: .postgres,
@@ -45,5 +45,6 @@ model Support {
   decimalArray: Decimal[]?
   sexesArray: Sex[]?
 
-  declare json handler myCreate(CreateInput<Self>): Data<Result<Self>>
+  declare json handler myCreateObject(CreateInput<Self>): Data<Result<Self>>
+  declare json handler myFindManyObjects(FindManyArgs<Self>): Data<Result<Self>[]>
 }
