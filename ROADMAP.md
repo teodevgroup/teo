@@ -905,18 +905,19 @@
 - Node.js: unit test JSON matchers **[DONE]**
 - Update middleware implementation in code **[DONE]**
 - Fix Rust entity bug for optional enum values **[DONE]**
+- Rust entities: should return errors
 - Rust: Fix broken items in generated entities
+- Rust: reorganize test files into 4 categories:
+  mutations, queries, relation mutations and relation queries **[IN PROGRESS]**
 - Parser: Add special variable `FILE` and `DIR`
 - ExtractFromRequest: should accept errors
 - Object methods: should return errors
-- Rust entities: should return errors
 - Rust: Unit tests for generated entities
 - Parser: Fix enum value resolving error in data sets
 - Rust: Rename object methods in entities
 - Node.js: Rename object methods in entities
 - Node.js: Unit tests for generated entities
-- Rust: reorganize test files into 4 categories: 
-mutations, queries, relation mutations and relation queries **[IN PROGRESS]**
+
 - Node.js: Fix broken items in generated entities
 - Python: setup unit tests
 - Python: unit tests

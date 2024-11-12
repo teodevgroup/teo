@@ -1257,282 +1257,282 @@ impl Support {
     /// ## Id
     ///
     /// This field doesn't have a description.
-    pub fn id(&self) -> i32 {
-        self.inner.get("id").unwrap()
+    pub fn id(&self) -> Result<i32> {
+        self.inner.get("id")
     }
 
     /// ## Id
     ///
     /// This field doesn't have a description.
-    pub fn set_id(&self, new_value: i32) {
-        self.inner.set("id", new_value).unwrap();
+    pub fn set_id(&self, new_value: i32) -> Result<()> {
+        self.inner.set("id", new_value)
     }
     /// ## Int32
     ///
     /// This field doesn't have a description.
-    pub fn int_32(&self) -> Option<i32> {
-        self.inner.get("int32").unwrap()
+    pub fn int_32(&self) -> Result<Option<i32>> {
+        self.inner.get("int32")
     }
 
     /// ## Int32
     ///
     /// This field doesn't have a description.
-    pub fn set_int_32(&self, new_value: Option<i32>) {
-        self.inner.set("int32", new_value).unwrap();
+    pub fn set_int_32(&self, new_value: Option<i32>) -> Result<()> {
+        self.inner.set("int32", new_value)
     }
     /// ## Int64
     ///
     /// This field doesn't have a description.
-    pub fn int_64(&self) -> Option<i64> {
-        self.inner.get("int64").unwrap()
+    pub fn int_64(&self) -> Result<Option<i64>> {
+        self.inner.get("int64")
     }
 
     /// ## Int64
     ///
     /// This field doesn't have a description.
-    pub fn set_int_64(&self, new_value: Option<i64>) {
-        self.inner.set("int64", new_value).unwrap();
+    pub fn set_int_64(&self, new_value: Option<i64>) -> Result<()> {
+        self.inner.set("int64", new_value)
     }
     /// ## Float32
     ///
     /// This field doesn't have a description.
-    pub fn float_32(&self) -> Option<f32> {
-        self.inner.get("float32").unwrap()
+    pub fn float_32(&self) -> Result<Option<f32>> {
+        self.inner.get("float32")
     }
 
     /// ## Float32
     ///
     /// This field doesn't have a description.
-    pub fn set_float_32(&self, new_value: Option<f32>) {
-        self.inner.set("float32", new_value).unwrap();
+    pub fn set_float_32(&self, new_value: Option<f32>) -> Result<()> {
+        self.inner.set("float32", new_value)
     }
     /// ## Float64
     ///
     /// This field doesn't have a description.
-    pub fn float_64(&self) -> Option<f64> {
-        self.inner.get("float64").unwrap()
+    pub fn float_64(&self) -> Result<Option<f64>> {
+        self.inner.get("float64")
     }
 
     /// ## Float64
     ///
     /// This field doesn't have a description.
-    pub fn set_float_64(&self, new_value: Option<f64>) {
-        self.inner.set("float64", new_value).unwrap();
+    pub fn set_float_64(&self, new_value: Option<f64>) -> Result<()> {
+        self.inner.set("float64", new_value)
     }
     /// ## Bool
     ///
     /// This field doesn't have a description.
-    pub fn bool(&self) -> Option<bool> {
-        self.inner.get("bool").unwrap()
+    pub fn bool(&self) -> Result<Option<bool>> {
+        self.inner.get("bool")
     }
 
     /// ## Bool
     ///
     /// This field doesn't have a description.
-    pub fn set_bool(&self, new_value: Option<bool>) {
-        self.inner.set("bool", new_value).unwrap();
+    pub fn set_bool(&self, new_value: Option<bool>) -> Result<()> {
+        self.inner.set("bool", new_value)
     }
     /// ## String
     ///
     /// This field doesn't have a description.
-    pub fn string(&self) -> Option<String> {
-        self.inner.get("string").unwrap()
+    pub fn string(&self) -> Result<Option<String>> {
+        self.inner.get("string")
     }
 
     /// ## String
     ///
     /// This field doesn't have a description.
-    pub fn set_string(&self, new_value: Option<String>) {
-        self.inner.set("string", new_value).unwrap();
+    pub fn set_string(&self, new_value: Option<String>) -> Result<()> {
+        self.inner.set("string", new_value)
     }
     /// ## Date
     ///
     /// This field doesn't have a description.
-    pub fn date(&self) -> Option<NaiveDate> {
-        self.inner.get("date").unwrap()
+    pub fn date(&self) -> Result<Option<NaiveDate>> {
+        self.inner.get("date")
     }
 
     /// ## Date
     ///
     /// This field doesn't have a description.
-    pub fn set_date(&self, new_value: Option<NaiveDate>) {
-        self.inner.set("date", new_value).unwrap();
+    pub fn set_date(&self, new_value: Option<NaiveDate>) -> Result<()> {
+        self.inner.set("date", new_value)
     }
     /// ## Date time
     ///
     /// This field doesn't have a description.
-    pub fn date_time(&self) -> Option<DateTime<Utc>> {
-        self.inner.get("dateTime").unwrap()
+    pub fn date_time(&self) -> Result<Option<DateTime<Utc>>> {
+        self.inner.get("dateTime")
     }
 
     /// ## Date time
     ///
     /// This field doesn't have a description.
-    pub fn set_date_time(&self, new_value: Option<DateTime<Utc>>) {
-        self.inner.set("dateTime", new_value).unwrap();
+    pub fn set_date_time(&self, new_value: Option<DateTime<Utc>>) -> Result<()> {
+        self.inner.set("dateTime", new_value)
     }
     /// ## Decimal
     ///
     /// This field doesn't have a description.
-    pub fn decimal(&self) -> Option<BigDecimal> {
-        self.inner.get("decimal").unwrap()
+    pub fn decimal(&self) -> Result<Option<BigDecimal>> {
+        self.inner.get("decimal")
     }
 
     /// ## Decimal
     ///
     /// This field doesn't have a description.
-    pub fn set_decimal(&self, new_value: Option<BigDecimal>) {
-        self.inner.set("decimal", new_value).unwrap();
+    pub fn set_decimal(&self, new_value: Option<BigDecimal>) -> Result<()> {
+        self.inner.set("decimal", new_value)
     }
     /// ## Sex
     ///
     /// This field doesn't have a description.
-    pub fn sex(&self) -> Option<Sex> {
-        let value: Value = self.inner.get_value("sex").unwrap();
-        match value {
+    pub fn sex(&self) -> Result<Option<Sex>> {
+        let value: Value = self.inner.get("sex").unwrap();
+        Ok(match value {
             Value::Null => None,
-            _ => Some(value.try_into().unwrap()),
-        }
+            _ => Some(value.try_into()?),
+        })
     }
 
     /// ## Sex
     ///
     /// This field doesn't have a description.
-    pub fn set_sex(&self, new_value: Option<Sex>) {
+    pub fn set_sex(&self, new_value: Option<Sex>) -> Result<()> {
         self.inner.set("sex", match new_value {
             None => Value::Null,
             Some(new_value) => Value::from(new_value),
-        }).unwrap();
+        })
     }
     /// ## Int32 array
     ///
     /// This field doesn't have a description.
-    pub fn int_32_array(&self) -> Option<Vec<i32>> {
-        self.inner.get("int32Array").unwrap()
+    pub fn int_32_array(&self) -> Result<Option<Vec<i32>>> {
+        self.inner.get("int32Array")
     }
 
     /// ## Int32 array
     ///
     /// This field doesn't have a description.
-    pub fn set_int_32_array(&self, new_value: Option<Vec<i32>>) {
-        self.inner.set("int32Array", new_value).unwrap();
+    pub fn set_int_32_array(&self, new_value: Option<Vec<i32>>) -> Result<()> {
+        self.inner.set("int32Array", new_value)
     }
     /// ## Int64 array
     ///
     /// This field doesn't have a description.
-    pub fn int_64_array(&self) -> Option<Vec<i64>> {
-        self.inner.get("int64Array").unwrap()
+    pub fn int_64_array(&self) -> Result<Option<Vec<i64>>> {
+        self.inner.get("int64Array")
     }
 
     /// ## Int64 array
     ///
     /// This field doesn't have a description.
-    pub fn set_int_64_array(&self, new_value: Option<Vec<i64>>) {
-        self.inner.set("int64Array", new_value).unwrap();
+    pub fn set_int_64_array(&self, new_value: Option<Vec<i64>>) -> Result<()> {
+        self.inner.set("int64Array", new_value)
     }
     /// ## Float32 array
     ///
     /// This field doesn't have a description.
-    pub fn float_32_array(&self) -> Option<Vec<f32>> {
-        self.inner.get("float32Array").unwrap()
+    pub fn float_32_array(&self) -> Result<Option<Vec<f32>>> {
+        self.inner.get("float32Array")
     }
 
     /// ## Float32 array
     ///
     /// This field doesn't have a description.
-    pub fn set_float_32_array(&self, new_value: Option<Vec<f32>>) {
-        self.inner.set("float32Array", new_value).unwrap();
+    pub fn set_float_32_array(&self, new_value: Option<Vec<f32>>) -> Result<()> {
+        self.inner.set("float32Array", new_value)
     }
     /// ## Float64 array
     ///
     /// This field doesn't have a description.
-    pub fn float_64_array(&self) -> Option<Vec<f64>> {
-        self.inner.get("float64Array").unwrap()
+    pub fn float_64_array(&self) -> Result<Option<Vec<f64>>> {
+        self.inner.get("float64Array")
     }
 
     /// ## Float64 array
     ///
     /// This field doesn't have a description.
-    pub fn set_float_64_array(&self, new_value: Option<Vec<f64>>) {
-        self.inner.set("float64Array", new_value).unwrap();
+    pub fn set_float_64_array(&self, new_value: Option<Vec<f64>>) -> Result<()> {
+        self.inner.set("float64Array", new_value)
     }
     /// ## Bool array
     ///
     /// This field doesn't have a description.
-    pub fn bool_array(&self) -> Option<Vec<bool>> {
-        self.inner.get("boolArray").unwrap()
+    pub fn bool_array(&self) -> Result<Option<Vec<bool>>> {
+        self.inner.get("boolArray")
     }
 
     /// ## Bool array
     ///
     /// This field doesn't have a description.
-    pub fn set_bool_array(&self, new_value: Option<Vec<bool>>) {
-        self.inner.set("boolArray", new_value).unwrap();
+    pub fn set_bool_array(&self, new_value: Option<Vec<bool>>) -> Result<()> {
+        self.inner.set("boolArray", new_value)
     }
     /// ## String array
     ///
     /// This field doesn't have a description.
-    pub fn string_array(&self) -> Option<Vec<String>> {
-        self.inner.get("stringArray").unwrap()
+    pub fn string_array(&self) -> Result<Option<Vec<String>>> {
+        self.inner.get("stringArray")
     }
 
     /// ## String array
     ///
     /// This field doesn't have a description.
-    pub fn set_string_array(&self, new_value: Option<Vec<String>>) {
-        self.inner.set("stringArray", new_value).unwrap();
+    pub fn set_string_array(&self, new_value: Option<Vec<String>>) -> Result<()> {
+        self.inner.set("stringArray", new_value)
     }
     /// ## Date array
     ///
     /// This field doesn't have a description.
-    pub fn date_array(&self) -> Option<Vec<NaiveDate>> {
-        self.inner.get("dateArray").unwrap()
+    pub fn date_array(&self) -> Result<Option<Vec<NaiveDate>>> {
+        self.inner.get("dateArray")
     }
 
     /// ## Date array
     ///
     /// This field doesn't have a description.
-    pub fn set_date_array(&self, new_value: Option<Vec<NaiveDate>>) {
-        self.inner.set("dateArray", new_value).unwrap();
+    pub fn set_date_array(&self, new_value: Option<Vec<NaiveDate>>) -> Result<()> {
+        self.inner.set("dateArray", new_value)
     }
     /// ## Date time array
     ///
     /// This field doesn't have a description.
-    pub fn date_time_array(&self) -> Option<Vec<DateTime<Utc>>> {
-        self.inner.get("dateTimeArray").unwrap()
+    pub fn date_time_array(&self) -> Result<Option<Vec<DateTime<Utc>>>> {
+        self.inner.get("dateTimeArray")
     }
 
     /// ## Date time array
     ///
     /// This field doesn't have a description.
-    pub fn set_date_time_array(&self, new_value: Option<Vec<DateTime<Utc>>>) {
-        self.inner.set("dateTimeArray", new_value).unwrap();
+    pub fn set_date_time_array(&self, new_value: Option<Vec<DateTime<Utc>>>) -> Result<()> {
+        self.inner.set("dateTimeArray", new_value)
     }
     /// ## Decimal array
     ///
     /// This field doesn't have a description.
-    pub fn decimal_array(&self) -> Option<Vec<BigDecimal>> {
-        self.inner.get("decimalArray").unwrap()
+    pub fn decimal_array(&self) -> Result<Option<Vec<BigDecimal>>> {
+        self.inner.get("decimalArray")
     }
 
     /// ## Decimal array
     ///
     /// This field doesn't have a description.
-    pub fn set_decimal_array(&self, new_value: Option<Vec<BigDecimal>>) {
-        self.inner.set("decimalArray", new_value).unwrap();
+    pub fn set_decimal_array(&self, new_value: Option<Vec<BigDecimal>>) -> Result<()> {
+        self.inner.set("decimalArray", new_value)
     }
     /// ## Sexes array
     ///
     /// This field doesn't have a description.
-    pub fn sexes_array(&self) -> Option<Vec<Sex>> {
-        self.inner.get("sexesArray").unwrap()
+    pub fn sexes_array(&self) -> Result<Option<Vec<Sex>>> {
+        self.inner.get("sexesArray")
     }
 
     /// ## Sexes array
     ///
     /// This field doesn't have a description.
-    pub fn set_sexes_array(&self, new_value: Option<Vec<Sex>>) {
-        self.inner.set("sexesArray", new_value).unwrap();
+    pub fn set_sexes_array(&self, new_value: Option<Vec<Sex>>) -> Result<()> {
+        self.inner.set("sexesArray", new_value)
     }
 }
 
