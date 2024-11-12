@@ -911,7 +911,7 @@
 - Parser: Fix parsing file path bug **[DONE]**
 - Rust: test files: mutations, queries, relation mutations and relation queries **[DONE]**
 - Parser: Add special constant `FILE` and `DIR` **[DONE]**
-- Runtime: `ExtractFromRequest`: should accept errors
+- Runtime: `ExtractFromRequest`: should work with references
 - Rust: Fix broken items in generated entities
 - Rust: Unit tests for generated entities
 - Node.js: Rename object methods in entities
@@ -956,6 +956,7 @@
 
 ### 0.3.2
 - Node.js: Support more linux systems
+- Finish adding missing tests
 
 ### 0.4.0
 - MongoDB migration
