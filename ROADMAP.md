@@ -909,7 +909,7 @@
 - Rust: Rename object methods in entities **[DONE]**
 - Parser: fix model handler `Self` keyword bug **[DONE]**
 - Parser: Fix parsing file path bug **[DONE]**
-- Rust: test files: mutations, queries, relation mutations and relation queries **[IN PROGRESS]**
+- Rust: test files: mutations, queries, relation mutations and relation queries **[DONE]**
 - Rust: Fix broken items in generated entities
 - Parser: Add special variable `FILE` and `DIR`
 - Runtime: `ExtractFromRequest`: should accept errors
