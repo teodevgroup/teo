@@ -916,7 +916,8 @@
 - Rust: Add some unit tests for generated model entities **[DONE]**
 - Node.js: Rename object methods in entities **[DONE]**
 - Node.js: Unit tests for generated model entities **[DONE]**
-- Python: update dependencies and fix compiling
+- Python: update to Pyo3 0.22 **[DONE]**
+- Python: new request API **[DONE]**
 - Python: setup unit tests
 - Python: unit tests
 - Python: unit test JSON matchers
