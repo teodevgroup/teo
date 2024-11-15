@@ -920,9 +920,9 @@
 - Python: new request API **[DONE]**
 - Python: setup unit tests **[DONE]**
 - Python: unit tests **[DONE]**
-- Python: unit test JSON matchers **[IN PROGRESS]**
-- Python: Rename object methods in entities
-- Python: Unit tests for generated model entities
+- Python: unit test JSON matchers **[DONE]**
+- Python: Rename object methods in entities **[DONE]**
+- Python: Unit tests for generated model entities **[IN PROGRESS]**
 - Node.js: Fix broken items in generated model entities
 - Python: Fix broken items in generated model entities
 
