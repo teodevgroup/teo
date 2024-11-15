@@ -937,6 +937,7 @@
 - Unit test: Node.js local objects
 - Unit test: Python local data
 - Unit test: Python local objects
+- Fix admin dashboard broken things
 
 ### 0.3.1
 - Migrations should return errors
@@ -948,23 +949,26 @@
 - Documentation: unit testing guide
 
 ### 0.3.3
-- Runtime: `ExtractFromRequest`: should work with references
-
-### 0.3.4
 - Update official documentation
 
-### 0.3.5
-- Bug fixes
-
-### 0.3.6
+### 0.3.4
 - Unit test for pipeline items
 - Official documentation for pipeline items
 
-### 0.3.7
+### 0.3.5
 - Node.js: Support more linux systems
 - Finish adding missing tests
 
+### 0.3.6
+- Uploaders
+- Amazon S3 uploader
+- Azure storage uploader
+- GCP uploader
+- Local file directory uploader
+- multipart/json: Create and update with form data
+
 ### 0.4.0
+- Runtime: `ExtractFromRequest`: should work with references
 - MongoDB migration
 - MongoDB `$queryRaw`
 - MongoDB: root skip take and distinct bug
@@ -993,12 +997,6 @@
 - Maybe separate runtime and standard library
 - Action transformers
 - Soft delete
-- Uploaders
-- Amazon S3 uploader
-- Azure storage uploader
-- GCP uploader
-- Local file directory uploader
-- multipart/json: Create and update with form data
 
 ### 0.7.0 (Revamped admin dashboard)
 - Admin dashboard: Filters
