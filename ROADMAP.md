@@ -922,7 +922,7 @@
 - Python: unit tests **[DONE]**
 - Python: unit test JSON matchers **[DONE]**
 - Python: Rename object methods in entities **[DONE]**
-- Python: Unit tests for generated model entities **[IN PROGRESS]**
+- Python: Unit tests for generated model entities **[DONE]**
 - Node.js: Fix broken items in generated model entities
 - Python: Fix broken items in generated model entities
 
