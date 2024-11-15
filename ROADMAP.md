@@ -918,9 +918,9 @@
 - Node.js: Unit tests for generated model entities **[DONE]**
 - Python: update to Pyo3 0.22 **[DONE]**
 - Python: new request API **[DONE]**
-- Python: setup unit tests
-- Python: unit tests
-- Python: unit test JSON matchers
+- Python: setup unit tests **[DONE]**
+- Python: unit tests **[DONE]**
+- Python: unit test JSON matchers **[IN PROGRESS]**
 - Python: Rename object methods in entities
 - Python: Unit tests for generated model entities
 - Node.js: Fix broken items in generated model entities
