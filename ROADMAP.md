@@ -924,7 +924,7 @@
 - Python: Rename object methods in entities **[DONE]**
 - Python: Unit tests for generated model entities **[DONE]**
 - Node.js: Fix unit test for generated model entities **[DONE]**
-- Node.js: Fix bug: when test server resets, data is not cleared **[IN PROGRESS]**
+- Node.js: Use serial tests **[DONE]**
 - Python: Fix broken items in generated model entities
 
 ### 0.3.0
