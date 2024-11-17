@@ -923,9 +923,9 @@
 - Python: unit test JSON matchers **[DONE]**
 - Python: Rename object methods in entities **[DONE]**
 - Python: Unit tests for generated model entities **[DONE]**
-- Node.js: Fix unit test for generated model entities **[DONE]**
+- Node.js: Generate dynamic classes when unit testing **[DONE]**
 - Node.js: Use serial tests **[DONE]**
-- Python: Fix broken items in generated model entities
+- Python: Generate dynamic classes when unit testing **[IN PROGRESS]**
 
 ### 0.3.0
 - Node.js local data and objects
