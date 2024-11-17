@@ -40,7 +40,7 @@ use crate::server::utils::remove_path_prefix;
 
 #[derive(Clone, Debug)]
 pub struct Server {
-    app: App,
+    pub app: App,
 }
 
 impl Server {
