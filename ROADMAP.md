@@ -929,10 +929,12 @@
 - Python: Fix thread local code bugs **[DONE]**
 
 ### 0.3.0
+- Rename Node.js packages **[DONE]**
 - Node.js local data and objects
 - Python local data and objects
 - Unit test: Rust middlewares
 - Unit test: Node.js middlewares
+- Unit test: Python middlewares
 - Unit test: Rust request local data
 - Unit test: Rust request local objects
 - Unit test: Node.js local data
