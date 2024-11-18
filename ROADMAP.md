@@ -926,8 +926,7 @@
 - Node.js: Generate dynamic classes when unit testing **[DONE]**
 - Node.js: Use serial tests **[DONE]**
 - Python: Generate dynamic classes when unit testing **[DONE]**
-- Python: Update async code for defining handlers
-- Python: Update async code for defining middlewares
+- Python: Fix thread local code bugs **[DONE]**
 
 ### 0.3.0
 - Node.js local data and objects
