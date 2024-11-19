@@ -930,16 +930,17 @@
 
 ### 0.3.0
 - Rename Node.js packages **[DONE]**
-- Node.js local data and objects
-- Python local data and objects
+- Rust: update local values and objects API **[DONE]**
 - Unit test: Rust middlewares
-- Unit test: Node.js middlewares
-- Unit test: Python middlewares
-- Unit test: Rust request local data
+- Unit test: Rust request local values
 - Unit test: Rust request local objects
-- Unit test: Node.js local data
+- Node.js: local values and objects
+- Unit test: Node.js middlewares
+- Unit test: Node.js local values
 - Unit test: Node.js local objects
-- Unit test: Python local data
+- Python: local values and objects
+- Unit test: Python middlewares
+- Unit test: Python local values
 - Unit test: Python local objects
 - Fix admin dashboard broken things
 
