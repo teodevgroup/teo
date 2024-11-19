@@ -1,0 +1,14 @@
+server {
+  bind: ("0.0.0.0", 4018)
+}
+
+@map(.post, "/")
+declare handler inspect(Any): Any
+
+declare request middleware requestOuter
+declare request middleware requestMiddle
+declare request middleware requestInner
+
+declare handler middleware handlerOuter
+declare handler middleware handlerMiddle
+declare handler middleware handlerInner
