@@ -937,12 +937,11 @@
 - Node.js: local values and objects **[DONE]**
 - Unit test: Node.js middlewares **[DONE]**
 - Unit test: Node.js local values **[DONE]**
-- Unit test: Node.js local objects **[IN PROGRESS]**
+- Unit test: Node.js local objects **[DONE]**
 - Python: local values and objects **[DONE]**
 - Unit test: Python middlewares **[DONE]**
 - Unit test: Python local values **[DONE]**
 - Unit test: Python local objects **[DONE]**
-- Fix admin dashboard broken things
 
 ### 0.3.1
 - Migrations should return errors
