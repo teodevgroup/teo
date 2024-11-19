@@ -17,11 +17,10 @@ pub fn load_app() -> Result<App> {
     )?;
     app.main_namespace().define_handler("inspect", |req: Request| async move {
         let number_from_values: i32 = req.local_values().get("number")?;
-        let binding = req.local_objects();
-        let number_from_objects: &NumberContainer = binding.get("number").unwrap();
+        let number_from_objects: &NumberContainer = req.local_objects().get("number").unwrap();
         Ok(Response::teon(teon!({
             "numberFromValues": number_from_values,
-            "number_from_objects": number_from_objects.number,
+            "numberFromObjects": number_from_objects.number,
         })))
     });
     app.main_namespace().define_request_middleware("requestOuter", |arguments: Arguments| async move {
@@ -44,20 +43,20 @@ pub fn load_app() -> Result<App> {
             Ok(next.call(req).await?)
         }))
     });
-    app.main_namespace().define_request_middleware("handlerOuter", |arguments: Arguments| async move {
+    app.main_namespace().define_handler_middleware("handlerOuter", |arguments: Arguments| async move {
         Ok(MiddlewareImpl::new(|req: Request, next: &'static dyn Next| async move {
             req.local_objects().insert("number", NumberContainer { number: 24 });
             Ok(next.call(req).await?)
         }))
     });
-    app.main_namespace().define_request_middleware("handlerMiddle", |arguments: Arguments| async move {
+    app.main_namespace().define_handler_middleware("handlerMiddle", |arguments: Arguments| async move {
         Ok(MiddlewareImpl::new(|req: Request, next: &'static dyn Next| async move {
             let number: &mut NumberContainer = req.local_objects().get_mut("number").unwrap();
             number.number *= 4;
             Ok(next.call(req).await?)
         }))
     });
-    app.main_namespace().define_request_middleware("handlerInner", |arguments: Arguments| async move {
+    app.main_namespace().define_handler_middleware("handlerInner", |arguments: Arguments| async move {
         Ok(MiddlewareImpl::new(|req: Request, next: &'static dyn Next| async move {
             let number: &mut NumberContainer = req.local_objects().get_mut("number").unwrap();
             number.number += 4;

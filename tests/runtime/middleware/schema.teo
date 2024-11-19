@@ -12,3 +12,6 @@ declare request middleware requestInner
 declare handler middleware handlerOuter
 declare handler middleware handlerMiddle
 declare handler middleware handlerInner
+
+request middlewares [requestOuter, requestMiddle, requestInner]
+handler middlewares [handlerOuter, handlerMiddle, handlerInner]
