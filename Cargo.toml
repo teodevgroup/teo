@@ -1,6 +1,6 @@
 [package]
 name = "teo"
-version = "0.3.0-alpha.1"
+version = "0.3.0"
 edition = "2021"
 rust-version = "1.82"
 description = "Schema-driven web server framework."
@@ -11,12 +11,12 @@ documentation = "https://docs.teodev.io"
 repository = "https://github.com/teodevgroup/teo"
 
 [dependencies]
-teo-result = { version = "0.3.0-alpha.1", path = "../teo-result", features = ["multer"] }
-teo-parser = { version = "0.3.0-alpha.1", path = "../teo-parser" }
-teo-runtime = { version = "0.3.0-alpha.1", path = "../teo-runtime" }
-teo-sql-connector = { version = "0.3.0-alpha.1", path = "../teo-sql-connector" }
-teo-mongodb-connector = { version = "0.3.0-alpha.1", path = "../teo-mongodb-connector" }
-teo-generator = { version = "0.3.0-alpha.1", path = "../teo-generator" }
+teo-result = { version = "0.3.0", path = "../teo-result", features = ["multer"] }
+teo-parser = { version = "0.3.0", path = "../teo-parser" }
+teo-runtime = { version = "0.3.0", path = "../teo-runtime" }
+teo-sql-connector = { version = "0.3.0", path = "../teo-sql-connector" }
+teo-mongodb-connector = { version = "0.3.0", path = "../teo-mongodb-connector" }
+teo-generator = { version = "0.3.0", path = "../teo-generator" }
 hyper = { version = "1.5.0", features = ["full"] }
 hyper-util = { version = "0.1.9", features = ["full"] }
 http-body-util = "0.1"
