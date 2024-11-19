@@ -934,9 +934,9 @@
 - Unit test: Rust middlewares **[DONE]**
 - Unit test: Rust request local values **[DONE]**
 - Unit test: Rust request local objects **[DONE]**
-- Node.js: local values and objects **[IN PROGRESS]**
-- Unit test: Node.js middlewares **[IN PROGRESS]**
-- Unit test: Node.js local values **[IN PROGRESS]**
+- Node.js: local values and objects **[DONE]**
+- Unit test: Node.js middlewares **[DONE]**
+- Unit test: Node.js local values **[DONE]**
 - Unit test: Node.js local objects **[IN PROGRESS]**
 - Python: local values and objects
 - Unit test: Python middlewares
