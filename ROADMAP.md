@@ -938,10 +938,10 @@
 - Unit test: Node.js middlewares **[DONE]**
 - Unit test: Node.js local values **[DONE]**
 - Unit test: Node.js local objects **[IN PROGRESS]**
-- Python: local values and objects
-- Unit test: Python middlewares
-- Unit test: Python local values
-- Unit test: Python local objects
+- Python: local values and objects **[DONE]**
+- Unit test: Python middlewares **[DONE]**
+- Unit test: Python local values **[DONE]**
+- Unit test: Python local objects **[DONE]**
 - Fix admin dashboard broken things
 
 ### 0.3.1
