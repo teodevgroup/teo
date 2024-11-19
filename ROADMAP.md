@@ -930,14 +930,14 @@
 
 ### 0.3.0
 - Rename Node.js packages **[DONE]**
-- Rust: update local values and objects API **[IN PROGRESS]**
-- Unit test: Rust middlewares **[IN PROGRESS]**
-- Unit test: Rust request local values **[IN PROGRESS]**
-- Unit test: Rust request local objects **[IN PROGRESS]**
-- Node.js: local values and objects
-- Unit test: Node.js middlewares
-- Unit test: Node.js local values
-- Unit test: Node.js local objects
+- Rust: update local values and objects API **[DONE]**
+- Unit test: Rust middlewares **[DONE]**
+- Unit test: Rust request local values **[DONE]**
+- Unit test: Rust request local objects **[DONE]**
+- Node.js: local values and objects **[IN PROGRESS]**
+- Unit test: Node.js middlewares **[IN PROGRESS]**
+- Unit test: Node.js local values **[IN PROGRESS]**
+- Unit test: Node.js local objects **[IN PROGRESS]**
 - Python: local values and objects
 - Unit test: Python middlewares
 - Unit test: Python local values
