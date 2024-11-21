@@ -1,6 +1,6 @@
 [package]
 name = "teo"
-version = "0.3.1"
+version = "0.3.2"
 edition = "2021"
 rust-version = "1.82"
 description = "Schema-driven web server framework."
@@ -16,7 +16,7 @@ teo-parser = { version = "0.3.0", path = "../teo-parser" }
 teo-runtime = { version = "0.3.1", path = "../teo-runtime" }
 teo-sql-connector = { version = "0.3.0", path = "../teo-sql-connector" }
 teo-mongodb-connector = { version = "0.3.0", path = "../teo-mongodb-connector" }
-teo-generator = { version = "0.3.0", path = "../teo-generator" }
+teo-generator = { version = "0.3.2", path = "../teo-generator" }
 hyper = { version = "1.5.0", features = ["full"] }
 hyper-util = { version = "0.1.9", features = ["full"] }
 http-body-util = "0.1"
