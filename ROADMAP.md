@@ -954,26 +954,29 @@
 - Python: Add send file to response **[DONE]**
 
 ### 0.3.3
+- Python: fix server no running loop error **[IN PROGRESS]**
+
+### 0.3.4
 - Migrations should return errors
 - Debug logging SQL
 - Migration dry run
 
-### 0.3.4
+### 0.3.5
 - Rust unit testing tools
 - Documentation: unit testing guide
 
-### 0.3.5
+### 0.3.6
 - Update official documentation
 
-### 0.3.6
+### 0.3.7
 - Unit test for pipeline items
 - Official documentation for pipeline items
 
-### 0.3.7
+### 0.3.8
 - Node.js: Support more linux systems
 - Finish adding missing tests
 
-### 0.3.8
+### 0.3.9
 - Uploaders
 - Amazon S3 uploader
 - Azure storage uploader
