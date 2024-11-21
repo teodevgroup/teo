@@ -954,29 +954,41 @@
 - Python: Add send file to response **[DONE]**
 
 ### 0.3.3
-- Python: fix server no running loop error **[IN PROGRESS]**
+- Python: fix server no running loop error **[DONE]**
 
 ### 0.3.4
+- Fix bug: Wrong Node.js error message: error wrap error
+- Fix bug: create date time earlier than 1970 causes crash
+
+### 0.3.5
+- Improve Python API syntax to be Pythonic
+
+### 0.3.6
+- Improve Node.js API to use decorators and TypeScript reflections 
+
+### 0.3.7
+- Rust unit testing tools
+
+### 0.3.8
+- Documentation: unit testing guide
+
+### 0.3.9
 - Migrations should return errors
 - Debug logging SQL
 - Migration dry run
 
-### 0.3.5
-- Rust unit testing tools
-- Documentation: unit testing guide
-
-### 0.3.6
+### 0.3.10
 - Update official documentation
 
-### 0.3.7
+### 0.3.11
 - Unit test for pipeline items
 - Official documentation for pipeline items
 
-### 0.3.8
+### 0.3.12
 - Node.js: Support more linux systems
 - Finish adding missing tests
 
-### 0.3.9
+### 0.3.13
 - Uploaders
 - Amazon S3 uploader
 - Azure storage uploader
