@@ -944,26 +944,29 @@
 - Unit test: Python local objects **[DONE]**
 
 ### 0.3.1
+- Client generator: Fix generating client panics bug **[IN PROGRESS]**
+
+### 0.3.2
 - Migrations should return errors
 - Debug logging SQL
 - Migration dry run
 
-### 0.3.2
+### 0.3.3
 - Rust unit testing tools
 - Documentation: unit testing guide
 
-### 0.3.3
+### 0.3.4
 - Update official documentation
 
-### 0.3.4
+### 0.3.5
 - Unit test for pipeline items
 - Official documentation for pipeline items
 
-### 0.3.5
+### 0.3.6
 - Node.js: Support more linux systems
 - Finish adding missing tests
 
-### 0.3.6
+### 0.3.7
 - Uploaders
 - Amazon S3 uploader
 - Azure storage uploader
