@@ -949,6 +949,9 @@
 
 ### 0.3.2
 - Fix wrong declaration for path captures entity class **[DONE]**
+- Node.js: update TypeScript return type of `captures` **[DONE]**
+- Node.js: Add send file to response **[DONE]**
+- Python: Add send file to response **[DONE]**
 
 ### 0.3.3
 - Migrations should return errors
