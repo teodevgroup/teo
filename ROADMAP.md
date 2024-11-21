@@ -944,7 +944,7 @@
 - Unit test: Python local objects **[DONE]**
 
 ### 0.3.1
-- Client generator: Fix generating client panics bug **[IN PROGRESS]**
+- Client generator: Fix generating client panics bug **[DONE]**
 
 ### 0.3.2
 - Migrations should return errors
