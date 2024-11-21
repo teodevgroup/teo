@@ -945,6 +945,7 @@
 
 ### 0.3.1
 - Client generator: Fix generating client panics bug **[DONE]**
+- Fix resonse error object format bug **[DONE]**
 
 ### 0.3.2
 - Migrations should return errors

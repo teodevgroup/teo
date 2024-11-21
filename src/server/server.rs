@@ -123,7 +123,10 @@ impl Server {
         if error.errors.is_some() {
             result_value["errors"] = ErrorSerializable::from_error(&error).errors;
         }
-        let error_string = serde_json::to_string(&result_value).unwrap();
+        let wrapped = json!({
+            "error": result_value
+        });
+        let error_string = serde_json::to_string(&wrapped).unwrap();
         hyper::Response::builder().status(error.code).header(CONTENT_TYPE, "application/json").body(Either::Left(error_string.into())).unwrap()
     }
 
