@@ -961,8 +961,7 @@
 - Node.js: Fix bug: create date time earlier than 1970 causes crash **[DONE]**
 
 ### 0.3.5
-- Support datetime BC
-- Support date BC
+- Accept object syntax for datetime, date and decimal
 
 ### 0.3.6
 - Improve Python API syntax to be Pythonic
@@ -1002,6 +1001,10 @@
 
 ### 0.3.15
 - Node.js: Support more linux systems
+
+### 0.3.16
+- Support datetime BC
+- Support date BC
 
 ### 0.4.0
 - Runtime: `ExtractFromRequest`: should work with references
