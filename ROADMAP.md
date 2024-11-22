@@ -958,7 +958,7 @@
 
 ### 0.3.4
 - Fix bug: Wrong Node.js error message: error wrap error **[DONE]**
-- Node.js: Fix bug: create date time earlier than 1970 causes crash
+- Node.js: Fix bug: create date time earlier than 1970 causes crash **[DONE]**
 
 ### 0.3.5
 - How to represent BC years
