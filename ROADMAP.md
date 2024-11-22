@@ -948,7 +948,7 @@
 - Fix response error object format bug **[DONE]**
 
 ### 0.3.2
-- Fix wrong declaration for path captures entity class **[DONE]**
+- Rust: Fix wrong declaration for path captures entity class **[DONE]**
 - Node.js: update TypeScript return type of `captures` **[DONE]**
 - Node.js: Add send file to response **[DONE]**
 - Python: Add send file to response **[DONE]**
@@ -958,9 +958,10 @@
 
 ### 0.3.4
 - Fix bug: Wrong Node.js error message: error wrap error **[DONE]**
-- Fix bug: create date time earlier than 1970 causes crash
+- Node.js: Fix bug: create date time earlier than 1970 causes crash
 
 ### 0.3.5
+- How to represent BC years
 - Improve Python API syntax to be Pythonic
 
 ### 0.3.6
