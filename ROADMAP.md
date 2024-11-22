@@ -957,7 +957,7 @@
 - Python: fix server no running loop error **[DONE]**
 
 ### 0.3.4
-- Fix bug: Wrong Node.js error message: error wrap error
+- Fix bug: Wrong Node.js error message: error wrap error **[DONE]**
 - Fix bug: create date time earlier than 1970 causes crash
 
 ### 0.3.5
