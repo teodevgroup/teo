@@ -961,41 +961,47 @@
 - Node.js: Fix bug: create date time earlier than 1970 causes crash **[DONE]**
 
 ### 0.3.5
-- How to represent BC years
-- Improve Python API syntax to be Pythonic
+- Support datetime BC
+- Support date BC
 
 ### 0.3.6
-- Improve Node.js API to use decorators and TypeScript reflections 
+- Improve Python API syntax to be Pythonic
 
 ### 0.3.7
-- Rust unit testing tools
+- Improve Node.js API to use decorators and TypeScript reflections 
 
 ### 0.3.8
-- Documentation: unit testing guide
+- Rust unit testing tools
 
 ### 0.3.9
+- Documentation: unit testing guide
+
+### 0.3.10
 - Migrations should return errors
 - Debug logging SQL
 - Migration dry run
 
-### 0.3.10
+### 0.3.11
 - Update official documentation
 
-### 0.3.11
+### 0.3.12
+- Pipeline item creation should be like middlewares
 - Unit test for pipeline items
 - Official documentation for pipeline items
 
-### 0.3.12
-- Node.js: Support more linux systems
+### 0.3.13
 - Finish adding missing tests
 
-### 0.3.13
+### 0.3.14
 - Uploaders
 - Amazon S3 uploader
 - Azure storage uploader
 - GCP uploader
 - Local file directory uploader
 - multipart/json: Create and update with form data
+
+### 0.3.15
+- Node.js: Support more linux systems
 
 ### 0.4.0
 - Runtime: `ExtractFromRequest`: should work with references
