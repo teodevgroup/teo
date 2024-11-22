@@ -961,7 +961,7 @@
 - Node.js: Fix bug: create date time earlier than 1970 causes crash **[DONE]**
 
 ### 0.3.5
-- Accept object syntax for datetime, date and decimal
+- Accept object syntax for datetime, date and decimal **[DONE]**
 
 ### 0.3.6
 - Improve Python API syntax to be Pythonic
