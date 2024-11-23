@@ -966,6 +966,11 @@
 - Python: Decorated handlers **[DONE]**
 - Python: decorated handler groups **[DONE]**
 - Python: decorated child namespaces **[DONE]**
+- Python: decorated middlewares and extracted arguments
+- Python: decorated pipeline items and extracted arguments
+- Python: ignore linting generated entity **[DONE]**
+- Rust: ignore linting generated entity **[DONE]**
+- Node.js: ignore linting generated entity **[DONE]**
 
 ### 0.3.6
 - Node.js: Propagate errors correctly in Node.js API
