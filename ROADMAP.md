@@ -965,7 +965,7 @@
 - Python: Extract handler arguments **[DONE]**
 - Python: Decorated handlers **[DONE]**
 - Python: decorated handler groups **[DONE]**
-- Python: decorated child namespaces
+- Python: decorated child namespaces **[DONE]**
 
 ### 0.3.6
 - Node.js: Propagate errors correctly in Node.js API
