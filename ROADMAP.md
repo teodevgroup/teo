@@ -962,36 +962,38 @@
 
 ### 0.3.5
 - Accept object syntax for datetime, date and decimal **[DONE]**
+- Python: Extract handler arguments **[DONE]**
+- Python: Decorated handlers **[DONE]**
+- Python: decorated handler groups **[DONE]**
+- Python: decorated child namespaces
 
 ### 0.3.6
-- Improve Python API syntax to be Pythonic
-
-### 0.3.7
+- Node.js: Propagate errors correctly in Node.js API
 - Improve Node.js API to use decorators and TypeScript reflections 
 
-### 0.3.8
+### 0.3.7
 - Rust unit testing tools
 
-### 0.3.9
+### 0.3.8
 - Documentation: unit testing guide
 
-### 0.3.10
+### 0.3.9
 - Migrations should return errors
 - Debug logging SQL
 - Migration dry run
 
-### 0.3.11
+### 0.3.10
 - Update official documentation
 
-### 0.3.12
+### 0.3.11
 - Pipeline item creation should be like middlewares
 - Unit test for pipeline items
 - Official documentation for pipeline items
 
-### 0.3.13
+### 0.3.12
 - Finish adding missing tests
 
-### 0.3.14
+### 0.3.13
 - Uploaders
 - Amazon S3 uploader
 - Azure storage uploader
@@ -999,10 +1001,10 @@
 - Local file directory uploader
 - multipart/json: Create and update with form data
 
-### 0.3.15
+### 0.3.14
 - Node.js: Support more linux systems
 
-### 0.3.16
+### 0.3.15
 - Support datetime BC
 - Support date BC
 
