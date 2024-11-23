@@ -1014,9 +1014,33 @@
 - Support date BC
 
 ### 0.4.0
-- Runtime: `ExtractFromRequest`: should work with references
+- `@onSet!()` and `@onSet?()`
+- `$get!()` and `$get?()`
+- Language: Default argument for argument list and config declaration
+- Combined request in HTTP clients
+- Remove paging information from `findMany`
+- Entity: Handlers call handlers
+- Action transformers
+- Soft delete
 - MongoDB migration
 - MongoDB `$queryRaw`
+- Update C# client with new namespace API
+- C# client: capitalized names and names with underscore
+- Revamp all client APIs
+- Run custom MongoDB query
+- JSON type
+- PostgreSQL: Enum types
+- Extended database type mapping
+- Admin dashboard: Filters
+- Admin dashboard: Sort
+- Admin dashboard: Redesigned date time controls
+- Admin dashboard: Load records on scroll
+- Admin dashboard: Embedded forms
+- Admin dashboard: dashboards
+
+### 0.5.0
+- Runtime: `ExtractFromRequest`: should work with references
+- MongoDB: Upgrade to MongoDB Rust driver 3.0
 - MongoDB: root skip take and distinct bug
 - MongoDB: nested skip take and distinct bug
 - MongoDB: if cursor key is not orderBy key, result is wrong
@@ -1026,54 +1050,24 @@
 
 ## Future Stage
 
-### 0.5.0 (Revamped language & parser)
+### 0.6.0 (Revamped language & parser)
 - Rewrite parser with nom
 - Increase VSCode plugin speed
 
-### 0.5.1
-- `@onSet!()` and `@onSet?()`
-- `$get!()` and `$get?()`
+### 0.6.1
 - Add `@example` to comment
-- Language: Default argument for argument list and config declaration
-
-### 0.6.0 (Revamped runtime & integration)
-- Combined request in HTTP clients
-- Remove paging information from `findMany`
-- Entity: Handlers call handlers
-- Maybe separate runtime and standard library
-- Action transformers
-- Soft delete
-
-### 0.7.0 (Revamped admin dashboard)
-- Admin dashboard: Filters
-- Admin dashboard: Sort
-- Admin dashboard: Redesigned date time controls
-- Admin dashboard: Load records on scroll
-- Admin dashboard: Embedded forms
-- Admin dashboard: dashboards
-
-### 0.8.0 (Revamped databases)
-- Run custom MongoDB query
-- JSON type
-- PostgreSQL: Enum types
-- Extended database type mapping
-
-### 0.9.0 (Revamped generators)
-- Update C# client with new namespace API
-- C# client: capitalized names and names with underscore
-- Revamp all client APIs
 
 ### 1.0.0
 - First stable major version
 
 ### 1.1.0
-- Teo Studio for macOS
+- Teo Studio for macOS (SwiftUI)
 
 ### 1.2.0
-- Teo Studio for Windows
+- Teo Studio for Windows (WinUI3)
 
 ### 1.3.0
-- Teo Studio for Linux (Electron)
+- Teo Studio for Linux (Qt)
 
 ### 1.4.0
 - Support MSSQL
