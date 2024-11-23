@@ -964,41 +964,41 @@
 - Accept object syntax for datetime, date and decimal **[DONE]**
 - Python: Extract handler arguments **[DONE]**
 - Python: Decorated handlers **[DONE]**
-- Python: decorated handler groups **[DONE]**
-- Python: decorated child namespaces **[DONE]**
-- Python: decorated middlewares and extracted arguments
-- Python: decorated pipeline items and extracted arguments
+- Python: Decorated handler groups **[DONE]**
+- Python: Decorated child namespaces **[DONE]**
+- Python: Decorated middlewares and extracted arguments **[DONE]**
 - Python: ignore linting generated entity **[DONE]**
 - Rust: ignore linting generated entity **[DONE]**
 - Node.js: ignore linting generated entity **[DONE]**
+- Node.js: Propagate errors correctly in Node.js API
+- Node.js: Decorated handlers
+- Node.js: Decorated handler groups
+- Node.js: Decorated child namespaces
+- Node.js: Decorated middlewares and extracted arguments
+- Pipeline item creation should be like middlewares
+- Python: decorated pipeline items and extracted arguments
+- Node.js: decorated pipeline items and extracted arguments
 
 ### 0.3.6
-- Node.js: Propagate errors correctly in Node.js API
-- Improve Node.js API to use decorators and TypeScript reflections 
-
-### 0.3.7
 - Rust unit testing tools
-
-### 0.3.8
 - Documentation: unit testing guide
 
-### 0.3.9
+### 0.3.7
 - Migrations should return errors
 - Debug logging SQL
 - Migration dry run
 
-### 0.3.10
+### 0.3.8
 - Update official documentation
 
-### 0.3.11
-- Pipeline item creation should be like middlewares
+### 0.3.9
 - Unit test for pipeline items
 - Official documentation for pipeline items
 
-### 0.3.12
+### 0.3.10
 - Finish adding missing tests
 
-### 0.3.13
+### 0.3.11
 - Uploaders
 - Amazon S3 uploader
 - Azure storage uploader
@@ -1006,10 +1006,10 @@
 - Local file directory uploader
 - multipart/json: Create and update with form data
 
-### 0.3.14
+### 0.3.12
 - Node.js: Support more linux systems
 
-### 0.3.15
+### 0.3.13
 - Support datetime BC
 - Support date BC
 
