@@ -127,7 +127,7 @@ Implement the handler with program code.
 
 ```ts
 import { App, Response, Request } from '@teodevgroup/teo'
-import { EchoPathArguments } from './entities'
+import { EchoCaptures } from './entities'
  
 const app = new App()
 app.mainNamespace().defineHandler("echo", (request: Request) => {
