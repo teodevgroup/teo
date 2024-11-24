@@ -982,6 +982,7 @@
 ### 0.3.6
 - Rust unit testing tools
 - Documentation: unit testing guide
+- Python: Upgrade pyo3 and pyo3-async-runtimes to 0.23
 
 ### 0.3.7
 - Migrations should return errors
