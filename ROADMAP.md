@@ -970,7 +970,7 @@
 - Python: ignore linting generated entity **[DONE]**
 - Rust: ignore linting generated entity **[DONE]**
 - Node.js: ignore linting generated entity **[DONE]**
-- Pipeline item creation should be like middlewares
+- Pipeline item creation should be like middlewares **[IN PROGRESS]**
 - Node.js: Propagate errors correctly in Node.js API
 - Python: decorated pipeline items and extracted arguments
 
