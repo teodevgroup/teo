@@ -973,6 +973,7 @@
 - Pipeline item creation should be like middlewares **[IN PROGRESS]**
 - Node.js: Propagate errors correctly in Node.js API
 - Python: decorated pipeline items and extracted arguments
+- Node.js: Updated pipeline API
 
 ### 0.3.6
 - Rust unit testing tools
