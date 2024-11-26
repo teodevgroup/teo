@@ -1584,7 +1584,7 @@ impl Display for Support {
 }
 
 impl ExtractFromPipelineCtx for Support {
-    fn extract(_: &Arguments, ctx: &pipeline::Ctx) -> Self {
+    fn extract(ctx: &pipeline::Ctx) -> Self {
         Support {
             inner: ctx.object().clone(),
         }
@@ -14325,7 +14325,7 @@ impl<'a> ExtractFromRequest<'a> for Teo {
 }
 
 impl ExtractFromPipelineCtx for Teo {
-    fn extract(_: &Arguments, ctx: &pipeline::Ctx) -> Self {
+    fn extract(ctx: &pipeline::Ctx) -> Self {
         Teo {
             ctx: ctx.transaction_ctx().clone(),
         }

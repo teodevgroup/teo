@@ -970,10 +970,11 @@
 - Python: ignore linting generated entity **[DONE]**
 - Rust: ignore linting generated entity **[DONE]**
 - Node.js: ignore linting generated entity **[DONE]**
-- Pipeline item creation should be like middlewares **[IN PROGRESS]**
-- Node.js: Propagate errors correctly in Node.js API
+- Pipeline item creation should be like middlewares **[DONE]**
+- Python: update pipeline API
 - Python: decorated pipeline items and extracted arguments
 - Node.js: Updated pipeline API
+- Node.js: Propagate errors correctly in Node.js API
 
 ### 0.3.6
 - Rust unit testing tools
