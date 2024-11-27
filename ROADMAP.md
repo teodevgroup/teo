@@ -971,7 +971,7 @@
 - Rust: ignore linting generated entity **[DONE]**
 - Node.js: ignore linting generated entity **[DONE]**
 - Pipeline item creation should be like middlewares **[DONE]**
-- Python: Upgrade pyo3 and pyo3-async-runtimes to 0.23 **[IN PROGRESS]**
+- Python: Upgrade pyo3 and pyo3-async-runtimes to 0.23 **[DONE]**
 - Python: update pipeline API **[IN PROGRESS]**
 - Python: decorated pipeline items and extracted arguments
 - Node.js: Updated pipeline API
