@@ -86,7 +86,7 @@ impl Server {
         Ok(())
     }
 
-    pub async fn serve(&'static self, silent: bool) -> Result<()> {
+    pub async fn serve(&self, silent: bool) -> Result<()> {
         let bind = &self.app.compiled_main_namespace().server().unwrap().bind;
         let addr: SocketAddr = match format!("{}:{}", bind.0, bind.1).parse() {
             Ok(addr) => addr,
@@ -103,16 +103,19 @@ impl Server {
             let io = TokioIo::new(stream);
 
             // Spawn a tokio task to serve multiple connections concurrently
-            tokio::task::spawn(async move {
-                // Finally, we bind the incoming connection to our `hello` service
-                if let Err(err) = http1::Builder::new()
-                    // `service_fn` converts our function in a `Service`
-                    .serve_connection(io, self)
-                    .await
-                {
-                    eprintln!("Error serving connection: {:?}", err);
-                }
-            });
+            {
+                let server = self.clone();
+                tokio::task::spawn(async move {
+                    // Finally, we bind the incoming connection to our `hello` service
+                    if let Err(err) = http1::Builder::new()
+                        // `service_fn` converts our function in a `Service`
+                        .serve_connection(io, server)
+                        .await
+                    {
+                        eprintln!("Error serving connection: {:?}", err);
+                    }
+                });
+            }
         }
     }
 

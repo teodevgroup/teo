@@ -35,9 +35,8 @@ pub async fn run(app: &App) -> Result<()> {
                 setup.call(transaction_ctx).await?;
             }
             // start server
-            let server = Box::leak(Box::new(Server::new(app.clone())));
+            let server = Server::new(app.clone());
             server.serve(cli.silent).await
-            //serve(conn_ctx.namespace(), conn_ctx.namespace().server().as_ref().unwrap(), app.runtime_version(), app.entrance(), cli.silent).await
         }
         CLICommand::Generate(generate_command) => {
             match generate_command {

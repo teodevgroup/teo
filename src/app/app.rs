@@ -93,10 +93,13 @@ impl App {
         })
     }
 
-    pub fn setup<A, F>(&self, f: F) where F: AsyncCallbackArgument<A> + 'static {
-        let wrap_call = Box::leak(Box::new(f));
-        *self.inner.setup.lock().unwrap() = Some(Arc::new(|ctx: transaction::Ctx| async {
-            wrap_call.call(ctx).await
+    pub fn setup<A, F>(&self, body: F) where F: AsyncCallbackArgument<A> + 'static {
+        let body = Arc::new(body);
+        *self.inner.setup.lock().unwrap() = Some(Arc::new(move |ctx: transaction::Ctx| {
+            let body = body.clone();
+            async move {
+                body.call(ctx).await
+            }
         }));
     }
 
@@ -104,10 +107,13 @@ impl App {
         self.inner.setup.lock().unwrap().clone()
     }
 
-    pub fn program<A, T, F>(&self, name: &str, desc: Option<T>, f: F) where T: Into<String>, F: AsyncCallbackArgument<A> + 'static {
-        let wrap_call = Box::leak(Box::new(f));
-        self.inner.programs.lock().unwrap().insert(name.to_owned(), Program::new(desc.map(|desc| desc.into()), Arc::new(|ctx: transaction::Ctx| async {
-            wrap_call.call(ctx).await
+    pub fn program<A, T, F>(&self, name: &str, desc: Option<T>, body: F) where T: Into<String>, F: AsyncCallbackArgument<A> + 'static {
+        let body = Arc::new(body);
+        self.inner.programs.lock().unwrap().insert(name.to_owned(), Program::new(desc.map(|desc| desc.into()), Arc::new(move |ctx: transaction::Ctx| {
+            let body = body.clone();
+            async move {
+                body.call(ctx).await
+            }
         })));
     }
 
