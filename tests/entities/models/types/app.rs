@@ -22,6 +22,7 @@ pub fn load_app() -> Result<App> {
             let values = try_join_all(objects.iter().map(|object| object.to_teon())).await?;
             Ok(Response::data(Value::Array(values)))
         });
-    });
+        Ok(())
+    })?;
     Ok(app)
 }

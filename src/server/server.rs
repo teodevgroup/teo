@@ -19,6 +19,8 @@ use teo_parser::diagnostics::diagnostics::Diagnostics;
 use teo_result::ErrorSerializable;
 use teo_runtime::handler::default::{aggregate, copy, copy_many, count, create, create_many, delete, delete_many, find_first, find_many, find_unique, group_by, update, update_many, upsert};
 use teo_runtime::handler::input::{validate_and_transform_json_input_for_builtin_action, validate_and_transform_json_input_for_handler};
+use teo_runtime::middleware::next::Next;
+use teo_runtime::middleware::middleware_imp::MiddlewareImp;
 use teo_runtime::schema::load::load_data_sets::load_data_sets;
 use tower_http::services::fs::ServeFileSystemResponseBody;
 use crate::app::App;
@@ -30,7 +32,6 @@ use crate::prelude::Result;
 use crate::prelude::Error;
 use crate::purge::purge;
 use crate::seeder::seed::seed;
-use crate::server::droppable_next::DroppableNext;
 use crate::server::handler_found::{find_handler, HandlerFound};
 use crate::server::parse_body::{parse_form_body, parse_json_body};
 use crate::server::response::hyper_response_from;
@@ -140,7 +141,7 @@ impl Server {
     pub async fn process_request(&self, request: Request) -> Result<Response> {
         let main_namespace = self.app.compiled_main_namespace();
         let conf = self.app.compiled_main_namespace().server().unwrap();
-        let droppable_next = DroppableNext::new(move |request: Request| async move {
+        let droppable_next = Next::new(move |request: Request| async move {
             let path = remove_path_prefix(request.path(), conf.path_prefix());
             let Some(handler_match) = main_namespace.handler_map().match_all(request.method(), &path) else {
                 return Err(Error::not_found());
@@ -150,9 +151,9 @@ impl Server {
                 return Err(Error::not_found());
             };
             if request.method() == Method::OPTIONS {
-                return dest_namespace.handler_middleware_stack().call(request, &|_: Request| async {
+                return dest_namespace.handler_middleware_stack().call(request, Next::new(|_: Request| async {
                     Ok::<Response, Error>(Response::empty())
-                }).await;
+                })).await;
             }
             let incoming_full_bytes = request.take_incoming_bytes_for_test();
             let incoming = request.take_incoming();
@@ -187,51 +188,51 @@ impl Server {
                     let body = validate_and_transform_json_input_for_builtin_action(model, action, &body_value, main_namespace)?;
                     request.set_body_value(body);
                     match handler_match.handler_name() {
-                        "findMany" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, &|request: Request| async move {
+                        "findMany" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(|request: Request| async move {
                             find_many(&request).await
-                        }).await?),
-                        "findFirst" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, &|request: Request| async move {
+                        })).await?),
+                        "findFirst" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(|request: Request| async move {
                             find_first(&request).await
-                        }).await?),
-                        "findUnique" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, &|request: Request| async move {
+                        })).await?),
+                        "findUnique" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(|request: Request| async move {
                             find_unique(&request).await
-                        }).await?),
-                        "create" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, &|request: Request| async move {
+                        })).await?),
+                        "create" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(|request: Request| async move {
                             create(&request).await
-                        }).await?),
-                        "delete" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, &|request: Request| async move {
+                        })).await?),
+                        "delete" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(|request: Request| async move {
                             delete(&request).await
-                        }).await?),
-                        "update" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, &|request: Request| async move {
+                        })).await?),
+                        "update" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(|request: Request| async move {
                             update(&request).await
-                        }).await?),
-                        "upsert" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, &|request: Request| async move {
+                        })).await?),
+                        "upsert" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(|request: Request| async move {
                             upsert(&request).await
-                        }).await?),
-                        "copy" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, &|request: Request| async move {
+                        })).await?),
+                        "copy" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(|request: Request| async move {
                             copy(&request).await
-                        }).await?),
-                        "createMany" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, &|request: Request| async move {
+                        })).await?),
+                        "createMany" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(|request: Request| async move {
                             create_many(&request).await
-                        }).await?),
-                        "updateMany" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, &|request: Request| async move {
+                        })).await?),
+                        "updateMany" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(|request: Request| async move {
                             update_many(&request).await
-                        }).await?),
-                        "copyMany" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, &|request: Request| async move {
+                        })).await?),
+                        "copyMany" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(|request: Request| async move {
                             copy_many(&request).await
-                        }).await?),
-                        "deleteMany" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, &|request: Request| async move {
+                        })).await?),
+                        "deleteMany" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(|request: Request| async move {
                             delete_many(&request).await
-                        }).await?),
-                        "count" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, &|request: Request| async move {
+                        })).await?),
+                        "count" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(|request: Request| async move {
                             count(&request).await
-                        }).await?),
-                        "aggregate" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, &|request: Request| async move {
+                        })).await?),
+                        "aggregate" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(|request: Request| async move {
                             aggregate(&request).await
-                        }).await?),
-                        "groupBy" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, &|request: Request| async move {
+                        })).await?),
+                        "groupBy" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(|request: Request| async move {
                             group_by(&request).await
-                        }).await?),
+                        })).await?),
                         _ => Err(Error::not_found())?,
                     }
                 },
@@ -242,7 +243,7 @@ impl Server {
                 }
             }
         });
-        let response = main_namespace.request_middleware_stack().call(request.clone(), droppable_next.get_next()).await?;
+        let response = main_namespace.request_middleware_stack().call(request.clone(), droppable_next).await?;
         Ok(response)
     }
 

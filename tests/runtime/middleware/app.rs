@@ -2,7 +2,7 @@ use teo_runtime::request::Request;
 use teo_runtime::response::Response;
 use teo_runtime::{request, teon, Value};
 use teo_runtime::arguments::Arguments;
-use teo_runtime::middleware::{MiddlewareImpl, Next};
+use teo_runtime::middleware::next::{Next, NextImp};
 use teo::app::App;
 use teo::result::Result;
 use teo::test::schema_path::schema_path_args;
@@ -24,44 +24,44 @@ pub fn load_app() -> Result<App> {
         })))
     });
     app.main_namespace().define_request_middleware("requestOuter", |arguments: Arguments| async move {
-        Ok(MiddlewareImpl::new(|req: Request, next: &'static dyn Next| async move {
+        Ok(|req: Request, next: Next| async move {
             req.local_values().insert("number", 42);
             Ok(next.call(req).await?)
-        }))
+        })
     });
     app.main_namespace().define_request_middleware("requestMiddle", |arguments: Arguments| async move {
-        Ok(MiddlewareImpl::new(|req: Request, next: &'static dyn Next| async move {
+        Ok(|req: Request, next: Next| async move {
             let number: Option<i32> = req.local_values().get("number")?;
             req.local_values().insert("number", number.unwrap() * 2);
             Ok(next.call(req).await?)
-        }))
+        })
     });
     app.main_namespace().define_request_middleware("requestInner", |arguments: Arguments| async move {
-        Ok(MiddlewareImpl::new(|req: Request, next: &'static dyn Next| async move {
+        Ok(|req: Request, next: Next| async move {
             let number: Option<i32> = req.local_values().get("number")?;
             req.local_values().insert("number", number.unwrap() + 16);
             Ok(next.call(req).await?)
-        }))
+        })
     });
     app.main_namespace().define_handler_middleware("handlerOuter", |arguments: Arguments| async move {
-        Ok(MiddlewareImpl::new(|req: Request, next: &'static dyn Next| async move {
+        Ok(|req: Request, next: Next| async move {
             req.local_objects().insert("number", NumberContainer { number: 24 });
             Ok(next.call(req).await?)
-        }))
+        })
     });
     app.main_namespace().define_handler_middleware("handlerMiddle", |arguments: Arguments| async move {
-        Ok(MiddlewareImpl::new(|req: Request, next: &'static dyn Next| async move {
+        Ok(|req: Request, next: Next| async move {
             let number: &mut NumberContainer = req.local_objects().get_mut("number").unwrap();
             number.number *= 4;
             Ok(next.call(req).await?)
-        }))
+        })
     });
     app.main_namespace().define_handler_middleware("handlerInner", |arguments: Arguments| async move {
-        Ok(MiddlewareImpl::new(|req: Request, next: &'static dyn Next| async move {
+        Ok(|req: Request, next: Next| async move {
             let number: &mut NumberContainer = req.local_objects().get_mut("number").unwrap();
             number.number += 4;
             Ok(next.call(req).await?)
-        }))
+        })
     });
     Ok(app)
 }
