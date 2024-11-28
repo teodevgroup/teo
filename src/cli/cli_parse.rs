@@ -4,19 +4,23 @@ use teo_runtime::app::entrance::Entrance;
 use teo_runtime::app::runtime_version::RuntimeVersion;
 use super::command::{CLI, CLICommand, GenerateAdminCommand, GenerateClientCommand, GenerateCommand, GenerateEntityCommand, LintCommand, MigrateCommand, PurgeCommand, RunCommand, SeedCommand, SeedCommandAction, ServeCommand};
 
+fn make_static_str(s: String) -> &'static str {
+    unsafe { &*Box::into_raw(s.into_boxed_str()) }
+}
+
 pub(crate) fn cli_parse(runtime_version: &RuntimeVersion, entrance: &Entrance, argv: Option<Vec<String>>) -> CLI {
     let argv = argv.unwrap_or(env::args_os().map(|s| s.to_str().unwrap().to_owned()).collect());
-    let version = Box::leak(Box::new(format!("Teo {} ({}) [{}]", env!("CARGO_PKG_VERSION"), runtime_version.to_string(), entrance.to_str())));
-    let about = Box::leak(Box::new(match entrance {
+    let version = format!("Teo {} ({}) [{}]", env!("CARGO_PKG_VERSION"), runtime_version.to_string(), entrance.to_str());
+    let about = match entrance {
         Entrance::CLI => format!("{version}\n\nRun Teo application with CLI."),
         Entrance::APP => format!("{version}\n\nRun Teo application with user app loaded."),
-    }));
+    };
     let matches = ClapCommand::new("teo")
-        .version(version.as_str())
+        .version(make_static_str(version))
         .disable_version_flag(true)
         .disable_help_subcommand(true)
         .arg_required_else_help(true)
-        .about(about.as_str())
+        .about(about.clone())
         .subcommand_required(true)
         .arg(Arg::new("SCHEMA_FILE")
             .short('s')
