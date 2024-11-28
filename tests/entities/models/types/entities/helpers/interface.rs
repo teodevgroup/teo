@@ -1,3 +1,7 @@
+#![allow(dead_code)]
+#![allow(unused_variables)]
+#![allow(unused_imports)]
+
 use bigdecimal::BigDecimal;
 use bson::oid::ObjectId;
 use chrono::{DateTime, NaiveDate, Utc};
