@@ -1,8 +1,8 @@
 use std::collections::BTreeMap;
 use std::process::exit;
 use std::env::current_dir;
-use std::ptr::null;
 use std::sync::{Arc, Mutex};
+use deferred_box::DeferredBox;
 use teo_result::{Error, Result};
 use teo_runtime::namespace::Namespace;
 use teo_runtime::namespace;
@@ -36,7 +36,7 @@ pub struct App {
 pub struct Inner {
     argv: Option<Vec<String>>,
     main_namespace: namespace::Builder,
-    compiled_main_namespace: Arc<Mutex<&'static Namespace>>,
+    compiled_main_namespace: DeferredBox<Namespace>,
     cli: CLI,
     #[educe(Debug(ignore))]
     schema: Schema,
@@ -84,7 +84,7 @@ impl App {
                 cli,
                 schema,
                 main_namespace: namespace_builder,
-                compiled_main_namespace: Arc::new(Mutex::new(unsafe { &*null() })),
+                compiled_main_namespace: DeferredBox::new(),
                 setup: Arc::new(Mutex::new(None)),
                 programs: Arc::new(Mutex::new(btreemap!{})),
                 conn_ctx: Arc::new(Mutex::new(None)),
@@ -117,8 +117,8 @@ impl App {
         })));
     }
 
-    pub fn compiled_main_namespace(&self) -> &'static Namespace {
-        *self.inner.compiled_main_namespace.lock().unwrap()
+    pub fn compiled_main_namespace(&self) -> &Namespace {
+        self.inner.compiled_main_namespace.get().unwrap()
     }
 
     pub fn main_namespace(&self) -> &namespace::Builder {
@@ -153,8 +153,8 @@ impl App {
         self.inner.programs.lock().unwrap().clone()
     }
 
-    pub fn set_compiled_main_namespace(&self, main_namespace: &'static Namespace) {
-        *self.inner.compiled_main_namespace.lock().unwrap() = main_namespace;
+    fn set_compiled_main_namespace(&self, main_namespace: Namespace) {
+        self.inner.compiled_main_namespace.set(main_namespace).unwrap()
     }
 
     pub fn app_data(&self) -> &AppData {
@@ -168,8 +168,8 @@ impl App {
 
     pub async fn prepare_for_run(&self) -> Result<()> {
         load_schema(self.main_namespace(), self.schema(), self.cli().command.ignores_loading()).await?;
-        let namespace = Box::into_raw(Box::new(self.main_namespace().build()));
-        self.set_compiled_main_namespace(unsafe { &*namespace });
+        let namespace = self.main_namespace().build();
+        self.set_compiled_main_namespace(namespace);
         Ok(())
     }
 
@@ -178,19 +178,14 @@ impl App {
     }
 }
 
-// impl Drop for App {
-//     fn drop(&mut self) {
-//         // drop dynamic classes
-//         if let Some(clean_up) = self.dynamic_classes_clean_up() {
-//             clean_up.call(self);
-//         }
-//         // drop namespace
-//         let p = unsafe { self.compiled_main_namespace() as *const Namespace as *mut Namespace };
-//         if !p.is_null() {
-//             let _ = unsafe { Box::from_raw(p) };
-//         }
-//     }
-// }
+impl Drop for App {
+    fn drop(&mut self) {
+        // drop dynamic classes
+        if let Some(clean_up) = self.app_data().dynamic_classes_clean_up() {
+            clean_up.call(self.app_data().clone());
+        }
+    }
+}
 
 unsafe impl Send for App { }
 unsafe impl Sync for App { }

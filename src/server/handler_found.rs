@@ -20,7 +20,7 @@ impl<'a> HandlerFound<'a> {
     }
 }
 
-pub(super) fn find_handler<'a>(main_namespace: &'static Namespace, match_result: &'a HandlerMatch) -> Option<(&'static Namespace, HandlerFound<'a>)> {
+pub(super) fn find_handler<'a>(main_namespace: &'a Namespace, match_result: &'a HandlerMatch) -> Option<(&'a Namespace, HandlerFound<'a>)> {
     let mut group = false;
     let dest_namespace = if let Some(d) = main_namespace.namespace_at_path(&match_result.path()) {
         d

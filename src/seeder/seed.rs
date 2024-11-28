@@ -260,7 +260,7 @@ async fn setup_new_relations(dataset: &DataSet, ordered_groups: &Vec<&Group>, li
     }
 }
 
-async fn sync_relation_internal<'a>(record: &Record, reference: &'a Value, relation: &'static Relation, dataset: &DataSet, object: &'a Object, relation_records: &'a Vec<DataSetRelation>, relation_record_refs: &mut Vec<&'a DataSetRelation>, ctx: transaction::Ctx) {
+async fn sync_relation_internal<'a>(record: &Record, reference: &'a Value, relation: &Relation, dataset: &DataSet, object: &'a Object, relation_records: &'a Vec<DataSetRelation>, relation_record_refs: &mut Vec<&'a DataSetRelation>, ctx: transaction::Ctx) {
     let that_name = reference.as_str().unwrap().to_string();
     if let Some(existing_relation_record) = relation_records.iter().find(|r| {
         (&r.name_a() == record.name.as_str() && r.name_b() == that_name) ||
@@ -272,7 +272,7 @@ async fn sync_relation_internal<'a>(record: &Record, reference: &'a Value, relat
     setup_relations_internal(record, reference, relation, dataset, object, ctx.clone()).await;
 }
 
-async fn setup_relations_internal<'a>(record: &Record, reference: &'a Value, relation: &'static Relation, dataset: &DataSet, object: &'a Object, ctx: transaction::Ctx) {
+async fn setup_relations_internal<'a>(record: &Record, reference: &'a Value, relation: &Relation, dataset: &DataSet, object: &'a Object, ctx: transaction::Ctx) {
     let that_name = reference.as_str().unwrap().to_string();
     let that_seed_record = DataSetRecord::find_first_object(teon!({
         "where": {
@@ -354,7 +354,7 @@ async fn setup_relations_internal<'a>(record: &Record, reference: &'a Value, rel
 }
 
 /// This perform, deletes an object from the database.
-async fn perform_remove_from_database<'a>(dataset: &DataSet, record: &'a DataSetRecord, group_model: &'static Model, ctx: transaction::Ctx) {
+async fn perform_remove_from_database<'a>(dataset: &DataSet, record: &'a DataSetRecord, group_model: &Model, ctx: transaction::Ctx) {
     let json_identifier = record.record();
     let exist: Option<Object> = ctx.find_unique(group_model, &teon!({
         "where": record_json_string_to_where_unique(json_identifier, group_model)
@@ -390,7 +390,7 @@ async fn perform_remove_from_database<'a>(dataset: &DataSet, record: &'a DataSet
     record.delete().await.unwrap();
 }
 
-async fn cut_relation<'a>(relation: &'a DataSetRelation, record: &'a DataSetRecord, group_model: &'static Model, dataset: &DataSet, exist: &'a Object, ctx: transaction::Ctx) {
+async fn cut_relation<'a>(relation: &'a DataSetRelation, record: &'a DataSetRecord, group_model: &Model, dataset: &DataSet, exist: &'a Object, ctx: transaction::Ctx) {
     let rel_name = if record.group().join(".").as_str() == relation.group_a() { relation.relation_a() } else { relation.relation_b() };
     let model_relation = group_model.relation(&rel_name).unwrap();
     if model_relation.has_foreign_key() {
@@ -458,7 +458,7 @@ async fn cut_relation<'a>(relation: &'a DataSetRelation, record: &'a DataSetReco
     relation.delete().await.unwrap();
 }
 
-async fn perform_recreate_or_update_an_record<'a>(dataset: &DataSet, group: &Group, record: &Record, group_model: &'static Model, seed_record: &'a DataSetRecord, ctx: transaction::Ctx) {
+async fn perform_recreate_or_update_an_record<'a>(dataset: &DataSet, group: &Group, record: &Record, group_model: &Model, seed_record: &'a DataSetRecord, ctx: transaction::Ctx) {
     let object: Option<Object> = ctx.find_unique(group_model, &teon!({
         "where": record_json_string_to_where_unique(seed_record.record(), group_model)
     }), None, path![]).await.unwrap();
@@ -475,7 +475,7 @@ async fn perform_recreate_or_update_an_record<'a>(dataset: &DataSet, group: &Gro
     seed_record.save().await.unwrap();
 }
 
-async fn insert_or_update_input(dataset: &DataSet, group: &Group, record: &Record, group_model: &'static Model, ctx: transaction::Ctx) -> Value {
+async fn insert_or_update_input(dataset: &DataSet, group: &Group, record: &Record, group_model: &Model, ctx: transaction::Ctx) -> Value {
     let mut input = teon!({});
     // nullify exist relations and reset
     for field in group_model.fields().values().filter(|f| f.foreign_key()) {
@@ -547,7 +547,7 @@ async fn insert_or_update_input(dataset: &DataSet, group: &Group, record: &Recor
 
 /// This perform, saves an object into the database. It doesn't setup relationships without
 /// required foreign keys.
-async fn perform_insert_into_database(dataset: &DataSet, group: &Group, record: &Record, group_model: &'static Model, ctx: transaction::Ctx) {
+async fn perform_insert_into_database(dataset: &DataSet, group: &Group, record: &Record, group_model: &Model, ctx: transaction::Ctx) {
     let input = insert_or_update_input(dataset, group, record, group_model, ctx.clone()).await;
     let object = ctx.create_object(group_model, &input, None).await.unwrap();
     object.save_for_seed_without_required_relation().await.unwrap();
@@ -560,7 +560,7 @@ async fn perform_insert_into_database(dataset: &DataSet, group: &Group, record: 
     record_object.save().await.unwrap();
 }
 
-fn record_json_string_to_where_unique(json_str: impl AsRef<str>, model: &'static Model) -> Value {
+fn record_json_string_to_where_unique(json_str: impl AsRef<str>, model: &Model) -> Value {
     let json_value: serde_json::Value = serde_json::from_str(json_str.as_ref()).unwrap();
     let json_object = json_value.as_object().unwrap();
     let mut result_teon_value = teon!({});

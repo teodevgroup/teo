@@ -134,7 +134,7 @@ impl Server {
         hyper::Response::builder().status(error.code).header(CONTENT_TYPE, "application/json").body(Either::Left(error_string.into())).unwrap()
     }
 
-    async fn hyper_handler_with_error_responses(&self, hyper_request: hyper::Request<Incoming>) -> Result<hyper::Response<Either<Full<Bytes>, ServeFileSystemResponseBody>>> {
+    async fn hyper_handler_with_error_responses(self, hyper_request: hyper::Request<Incoming>) -> Result<hyper::Response<Either<Full<Bytes>, ServeFileSystemResponseBody>>> {
         match self.hyper_handler(hyper_request).await {
             Ok(response) => Ok(response),
             Err(error) => Ok(self.error_to_hyper_response(error)),
@@ -142,110 +142,84 @@ impl Server {
     }
 
     pub async fn process_request(&self, request: Request) -> Result<Response> {
-        let main_namespace = self.app.compiled_main_namespace();
-        let conf = self.app.compiled_main_namespace().server().unwrap();
-        let droppable_next = Next::new(move |request: Request| async move {
-            let path = remove_path_prefix(request.path(), conf.path_prefix());
-            let Some(handler_match) = main_namespace.handler_map().match_all(request.method(), &path) else {
-                return Err(Error::not_found());
-            };
-            request.set_handler_match(handler_match.clone());
-            let Some((dest_namespace, handler_found)) = find_handler(main_namespace, &handler_match) else {
-                return Err(Error::not_found());
-            };
-            if request.method() == Method::OPTIONS {
-                return dest_namespace.handler_middleware_stack().call(request, Next::new(|_: Request| async {
-                    Ok::<Response, Error>(Response::empty())
-                })).await;
-            }
-            let incoming_full_bytes = request.take_incoming_bytes_for_test();
-            let incoming = request.take_incoming();
-            if incoming_full_bytes.is_none() && incoming.is_none() {
-                return Err(Error::internal_server_error_message("HTTP body is taken"))
-            }
+        let main_namespace = self.app.compiled_main_namespace().clone();
+        let droppable_next = Next::new(move |request: Request| {
+            let main_namespace = main_namespace.clone();
+            async move {
+                let path_prefix = main_namespace.server().unwrap().path_prefix.clone();
+                let path = remove_path_prefix(request.path(), path_prefix.as_ref());
+                let Some(handler_match) = main_namespace.handler_map().match_all(request.method(), &path) else {
+                    return Err(Error::not_found());
+                };
+                request.set_handler_match(handler_match.clone());
+                let Some((dest_namespace, handler_found)) = find_handler(&main_namespace, &handler_match) else {
+                    return Err(Error::not_found());
+                };
+                if request.method() == Method::OPTIONS {
+                    return dest_namespace.handler_middleware_stack().call(request, Next::new(|_: Request| async {
+                        Ok::<Response, Error>(Response::empty())
+                    })).await;
+                }
+                let incoming_full_bytes = request.take_incoming_bytes_for_test();
+                let incoming = request.take_incoming();
+                if incoming_full_bytes.is_none() && incoming.is_none() {
+                    return Err(Error::internal_server_error_message("HTTP body is taken"))
+                }
 
-            let body_value = if let Some(incoming) = incoming {
-                match handler_found.handler_format() {
-                    HandlerInputFormat::Json => if request.method() == Method::GET || request.method() == Method::DELETE {
-                        JsonValue::Null
-                    } else {
-                        parse_json_body(incoming).await?
-                    },
-                    HandlerInputFormat::Form => parse_form_body(&request, incoming).await?,
-                }
-            } else if let Some(incoming_full_bytes) = incoming_full_bytes {
-                match handler_found.handler_format() {
-                    HandlerInputFormat::Json => if request.method() == Method::GET || request.method() == Method::DELETE {
-                        JsonValue::Null
-                    } else {
-                        parse_json_body(incoming_full_bytes).await?
-                    },
-                    HandlerInputFormat::Form => parse_form_body(&request, incoming_full_bytes).await?,
-                }
-            } else {
-                unreachable!()
-            };
-            // dispatch and run
-            return match handler_found {
-                HandlerFound::Builtin(model, action) => {
-                    let body = validate_and_transform_json_input_for_builtin_action(model, action, &body_value, main_namespace)?;
-                    request.set_body_value(body);
-                    match handler_match.handler_name() {
-                        "findMany" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(|request: Request| async move {
-                            find_many(&request).await
-                        })).await?),
-                        "findFirst" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(|request: Request| async move {
-                            find_first(&request).await
-                        })).await?),
-                        "findUnique" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(|request: Request| async move {
-                            find_unique(&request).await
-                        })).await?),
-                        "create" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(|request: Request| async move {
-                            create(&request).await
-                        })).await?),
-                        "delete" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(|request: Request| async move {
-                            delete(&request).await
-                        })).await?),
-                        "update" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(|request: Request| async move {
-                            update(&request).await
-                        })).await?),
-                        "upsert" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(|request: Request| async move {
-                            upsert(&request).await
-                        })).await?),
-                        "copy" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(|request: Request| async move {
-                            copy(&request).await
-                        })).await?),
-                        "createMany" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(|request: Request| async move {
-                            create_many(&request).await
-                        })).await?),
-                        "updateMany" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(|request: Request| async move {
-                            update_many(&request).await
-                        })).await?),
-                        "copyMany" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(|request: Request| async move {
-                            copy_many(&request).await
-                        })).await?),
-                        "deleteMany" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(|request: Request| async move {
-                            delete_many(&request).await
-                        })).await?),
-                        "count" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(|request: Request| async move {
-                            count(&request).await
-                        })).await?),
-                        "aggregate" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(|request: Request| async move {
-                            aggregate(&request).await
-                        })).await?),
-                        "groupBy" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(|request: Request| async move {
-                            group_by(&request).await
-                        })).await?),
-                        _ => Err(Error::not_found())?,
+                let body_value = if let Some(incoming) = incoming {
+                    match handler_found.handler_format() {
+                        HandlerInputFormat::Json => if request.method() == Method::GET || request.method() == Method::DELETE {
+                            JsonValue::Null
+                        } else {
+                            parse_json_body(incoming).await?
+                        },
+                        HandlerInputFormat::Form => parse_form_body(&request, incoming).await?,
                     }
-                },
-                HandlerFound::Custom(handler) => {
-                    let body = validate_and_transform_json_input_for_handler(handler, &body_value, main_namespace)?;
-                    request.set_body_value(body);
-                    Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, handler.call()).await?)
+                } else if let Some(incoming_full_bytes) = incoming_full_bytes {
+                    match handler_found.handler_format() {
+                        HandlerInputFormat::Json => if request.method() == Method::GET || request.method() == Method::DELETE {
+                            JsonValue::Null
+                        } else {
+                            parse_json_body(incoming_full_bytes).await?
+                        },
+                        HandlerInputFormat::Form => parse_form_body(&request, incoming_full_bytes).await?,
+                    }
+                } else {
+                    unreachable!()
+                };
+                // dispatch and run
+                return match handler_found {
+                    HandlerFound::Builtin(model, action) => {
+                        let body = validate_and_transform_json_input_for_builtin_action(model, action, &body_value, &main_namespace)?;
+                        request.set_body_value(body);
+                        match handler_match.handler_name() {
+                            "findMany" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(find_many)).await?),
+                            "findFirst" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(find_first)).await?),
+                            "findUnique" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(find_unique)).await?),
+                            "create" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(create)).await?),
+                            "delete" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(delete)).await?),
+                            "update" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(update)).await?),
+                            "upsert" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(upsert)).await?),
+                            "copy" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(copy)).await?),
+                            "createMany" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(create_many)).await?),
+                            "updateMany" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(update_many)).await?),
+                            "copyMany" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(copy_many)).await?),
+                            "deleteMany" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(delete_many)).await?),
+                            "count" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(count)).await?),
+                            "aggregate" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(aggregate)).await?),
+                            "groupBy" => Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, Next::new(group_by)).await?),
+                            _ => Err(Error::not_found())?,
+                        }
+                    },
+                    HandlerFound::Custom(handler) => {
+                        let body = validate_and_transform_json_input_for_handler(handler, &body_value, &main_namespace)?;
+                        request.set_body_value(body);
+                        Ok::<Response, Error>(dest_namespace.handler_middleware_stack().call(request, handler.call()).await?)
+                    }
                 }
             }
         });
+        let main_namespace = self.app.compiled_main_namespace();
         let response = main_namespace.request_middleware_stack().call(request.clone(), droppable_next).await?;
         Ok(response)
     }
@@ -290,7 +264,7 @@ impl Service<hyper::Request<Incoming>> for Server {
     type Future = Pin<Box<dyn Future<Output = core::result::Result<Self::Response, Self::Error>> + Send>>;
 
     fn call(&self, req: hyper::Request<Incoming>) -> Self::Future {
-        let self_ = unsafe { &*(self as *const Server) } as &'static Server;
-        Box::pin(self_.hyper_handler_with_error_responses(req))
+        let server = self.clone();
+        Box::pin(server.hyper_handler_with_error_responses(req))
     }
 }
