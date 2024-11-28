@@ -972,10 +972,16 @@
 - Node.js: ignore linting generated entity **[DONE]**
 - Pipeline item creation should be like middlewares **[DONE]**
 - Python: Upgrade pyo3 and pyo3-async-runtimes to 0.23 **[DONE]**
-- Python: update pipeline API **[IN PROGRESS]**
+- Python: update pipeline API **[DONE]**
 - Python: decorated pipeline items and extracted arguments
+- Python: update API, use property instead of methods when possible
+- Rust: Entity tests for custom pipeline items
+- Python: Entity tests for custom pipeline items
+- Python: Item logging and debug print
 - Node.js: Updated pipeline API
 - Node.js: Propagate errors correctly in Node.js API
+- Node.js: Entity tests for custom pipeline items
+- Node.js: Item logging and debug print
 
 ### 0.3.6
 - Rust unit testing tools

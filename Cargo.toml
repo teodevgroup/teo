@@ -11,17 +11,16 @@ documentation = "https://docs.teodev.io"
 repository = "https://github.com/teodevgroup/teo"
 
 [dependencies]
-teo-result = { version = "0.3.4", path = "../teo-result", features = ["multer"] }
+teo-result = { version = "0.3.5", path = "../teo-result", features = ["multer"] }
 teo-parser = { version = "0.3.0", path = "../teo-parser" }
 teo-runtime = { version = "0.3.5", path = "../teo-runtime" }
 teo-sql-connector = { version = "0.3.0", path = "../teo-sql-connector" }
 teo-mongodb-connector = { version = "0.3.0", path = "../teo-mongodb-connector" }
-teo-generator = { version = "0.3.2", path = "../teo-generator" }
-hyper = { version = "1.5.0", features = ["full"] }
-hyper-util = { version = "0.1.9", features = ["full"] }
-http-body-util = "0.1"
+teo-generator = { version = "0.3.5", path = "../teo-generator" }
+hyper = { version = "1.5.1", features = ["full"] }
+hyper-util = { version = "0.1.10", features = ["full"] }
+http-body-util = "0.1.2"
 multer = "3.1.0"
-mime_guess = "2.0.5"
 mime = "0.3.17"
 tower-http = { version = "0.6", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
@@ -31,21 +30,15 @@ futures = "0.3"
 futures-util = "0.3"
 regex = "1.11.1"
 tokio = { version = "1.0", features = ["full"] }
-async-recursion = "1.1.1"
-async-trait = "0.1.83"
 maplit = "1.0.2"
 indexmap = "2.6"
 itertools = "0.13.0"
 array_tool = "1.0.3"
 clap = { version = "4.5", features = ["derive"] }
-path-absolutize = "3.1.1"
 dotenvy = "0.15.7"
-rand = "0.8.5"
 educe = "0.6.0"
 colored = "2.1.0"
 bson = { version = "2.13.0", features = ["chrono-0_4", "serde_with"] }
-ring = "0.17.7"
-time = "0.3.36"
 key-path = "0.2.2"
 bytes = "1.8.0"
 cookie = { version = "0.18.1", features = ["percent-encode"] }
