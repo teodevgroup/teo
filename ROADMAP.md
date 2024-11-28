@@ -973,6 +973,7 @@
 - Pipeline item creation should be like middlewares **[DONE]**
 - Python: Upgrade pyo3 and pyo3-async-runtimes to 0.23 **[DONE]**
 - Python: update pipeline API **[DONE]**
+- Rust: remove static references and box leaks **[DONE]**
 - Python: decorated pipeline items and extracted arguments
 - Python: update API, use property instead of methods when possible
 - Rust: Entity tests for custom pipeline items
