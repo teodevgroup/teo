@@ -21,7 +21,7 @@ pub trait AsyncCallbackArgument<I>: Send + Sync {
 
 impl<A0, F, Fut> AsyncCallbackArgument<(A0,)> for F where
     A0: ExtractFromTransactionCtx + Send + Sync,
-    F: Fn(A0) -> Fut + Sync + Send + Clone + 'static,
+    F: Fn(A0) -> Fut + Sync + Send + 'static,
     Fut: Future<Output = Result<()>> + Send + 'static {
     fn call(&self, ctx: Ctx) -> BoxFuture<'static, Result<()>> {
         let value: A0 = ExtractFromTransactionCtx::extract(&ctx);
