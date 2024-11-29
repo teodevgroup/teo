@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 #![allow(unused_imports)]
+
 pub mod admin;
 
 pub mod bcrypt;
@@ -31,7 +32,7 @@ pub use identity::IdentityNamespace;
 ///
 /// Represents the sort order
 #[repr(transparent)]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone)]
 pub struct Sort {
     inner: String,
 }
@@ -63,6 +64,18 @@ impl Sort {
     }
 }
 
+impl Debug for Sort {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Sort(.{})", self.inner)
+    }
+}
+
+impl Display for Sort {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.inner)
+    }
+}
+
 impl From<Sort> for Value {
     fn from(value: Sort) -> Value {
         Value::String(value.inner.clone())
@@ -74,6 +87,23 @@ impl TryFrom<Value> for Sort {
     type Error = Error;
 
     fn try_from(value: Value) -> std::result::Result<Self, Self::Error> {
+        if let Some(enum_variant) = value.as_str() {
+            Ok(match enum_variant {
+                "asc" => Sort::asc(),
+                "desc" => Sort::desc(),
+                _ => Err(Error::new("cannot convert value to Sort"))?
+            })
+        } else {
+            Err(Error::new("cannot convert value to Sort"))
+        }
+    }
+}
+
+impl TryFrom<&Value> for Sort {
+
+    type Error = Error;
+
+    fn try_from(value: &Value) -> std::result::Result<Self, Self::Error> {
         if let Some(enum_variant) = value.as_str() {
             Ok(match enum_variant {
                 "asc" => Sort::asc(),
@@ -134,7 +164,7 @@ impl AsInterfaceRef for Sort {
 ///
 /// Whether the string query is case sensitive or not
 #[repr(transparent)]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone)]
 pub struct StringMatchMode {
     inner: String,
 }
@@ -166,6 +196,18 @@ impl StringMatchMode {
     }
 }
 
+impl Debug for StringMatchMode {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "StringMatchMode(.{})", self.inner)
+    }
+}
+
+impl Display for StringMatchMode {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.inner)
+    }
+}
+
 impl From<StringMatchMode> for Value {
     fn from(value: StringMatchMode) -> Value {
         Value::String(value.inner.clone())
@@ -177,6 +219,23 @@ impl TryFrom<Value> for StringMatchMode {
     type Error = Error;
 
     fn try_from(value: Value) -> std::result::Result<Self, Self::Error> {
+        if let Some(enum_variant) = value.as_str() {
+            Ok(match enum_variant {
+                "default" => StringMatchMode::default(),
+                "caseInsensitive" => StringMatchMode::case_insensitive(),
+                _ => Err(Error::new("cannot convert value to StringMatchMode"))?
+            })
+        } else {
+            Err(Error::new("cannot convert value to StringMatchMode"))
+        }
+    }
+}
+
+impl TryFrom<&Value> for StringMatchMode {
+
+    type Error = Error;
+
+    fn try_from(value: &Value) -> std::result::Result<Self, Self::Error> {
         if let Some(enum_variant) = value.as_str() {
             Ok(match enum_variant {
                 "default" => StringMatchMode::default(),

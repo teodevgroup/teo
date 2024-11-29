@@ -1,7 +1,6 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 #![allow(unused_imports)]
-
 pub mod helpers;
 pub mod stdlib;
 
@@ -205,7 +204,7 @@ impl AsInterfaceRef for Status {
 ///
 /// This synthesized enum doesn't have a description.
 #[repr(transparent)]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone)]
 pub struct ContainerScalarFields {
     inner: String,
 }
@@ -477,6 +476,18 @@ impl ContainerScalarFields {
     }
 }
 
+impl Debug for ContainerScalarFields {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "ContainerScalarFields(.{})", self.inner)
+    }
+}
+
+impl Display for ContainerScalarFields {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.inner)
+    }
+}
+
 impl From<ContainerScalarFields> for Value {
     fn from(value: ContainerScalarFields) -> Value {
         Value::String(value.inner.clone())
@@ -488,6 +499,43 @@ impl TryFrom<Value> for ContainerScalarFields {
     type Error = Error;
 
     fn try_from(value: Value) -> std::result::Result<Self, Self::Error> {
+        if let Some(enum_variant) = value.as_str() {
+            Ok(match enum_variant {
+                "bool" => ContainerScalarFields::bool(),
+                "boolArray" => ContainerScalarFields::bool_array(),
+                "date" => ContainerScalarFields::date(),
+                "dateArray" => ContainerScalarFields::date_array(),
+                "dateTime" => ContainerScalarFields::date_time(),
+                "dateTimeArray" => ContainerScalarFields::date_time_array(),
+                "decimal" => ContainerScalarFields::decimal(),
+                "decimalArray" => ContainerScalarFields::decimal_array(),
+                "float32" => ContainerScalarFields::float_32(),
+                "float32Array" => ContainerScalarFields::float_32_array(),
+                "float64" => ContainerScalarFields::float_64(),
+                "float64Array" => ContainerScalarFields::float_64_array(),
+                "id" => ContainerScalarFields::id(),
+                "int32" => ContainerScalarFields::int_32(),
+                "int32Array" => ContainerScalarFields::int_32_array(),
+                "int64" => ContainerScalarFields::int_64(),
+                "int64Array" => ContainerScalarFields::int_64_array(),
+                "message" => ContainerScalarFields::message(),
+                "status" => ContainerScalarFields::status(),
+                "statusArray" => ContainerScalarFields::status_array(),
+                "string" => ContainerScalarFields::string(),
+                "stringArray" => ContainerScalarFields::string_array(),
+                _ => Err(Error::new("cannot convert value to ContainerScalarFields"))?
+            })
+        } else {
+            Err(Error::new("cannot convert value to ContainerScalarFields"))
+        }
+    }
+}
+
+impl TryFrom<&Value> for ContainerScalarFields {
+
+    type Error = Error;
+
+    fn try_from(value: &Value) -> std::result::Result<Self, Self::Error> {
         if let Some(enum_variant) = value.as_str() {
             Ok(match enum_variant {
                 "bool" => ContainerScalarFields::bool(),
@@ -628,7 +676,7 @@ impl AsInterfaceRef for ContainerScalarFields {
 ///
 /// This synthesized enum doesn't have a description.
 #[repr(transparent)]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone)]
 pub struct ContainerSerializableScalarFields {
     inner: String,
 }
@@ -900,6 +948,18 @@ impl ContainerSerializableScalarFields {
     }
 }
 
+impl Debug for ContainerSerializableScalarFields {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "ContainerSerializableScalarFields(.{})", self.inner)
+    }
+}
+
+impl Display for ContainerSerializableScalarFields {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.inner)
+    }
+}
+
 impl From<ContainerSerializableScalarFields> for Value {
     fn from(value: ContainerSerializableScalarFields) -> Value {
         Value::String(value.inner.clone())
@@ -911,6 +971,43 @@ impl TryFrom<Value> for ContainerSerializableScalarFields {
     type Error = Error;
 
     fn try_from(value: Value) -> std::result::Result<Self, Self::Error> {
+        if let Some(enum_variant) = value.as_str() {
+            Ok(match enum_variant {
+                "bool" => ContainerSerializableScalarFields::bool(),
+                "boolArray" => ContainerSerializableScalarFields::bool_array(),
+                "date" => ContainerSerializableScalarFields::date(),
+                "dateArray" => ContainerSerializableScalarFields::date_array(),
+                "dateTime" => ContainerSerializableScalarFields::date_time(),
+                "dateTimeArray" => ContainerSerializableScalarFields::date_time_array(),
+                "decimal" => ContainerSerializableScalarFields::decimal(),
+                "decimalArray" => ContainerSerializableScalarFields::decimal_array(),
+                "float32" => ContainerSerializableScalarFields::float_32(),
+                "float32Array" => ContainerSerializableScalarFields::float_32_array(),
+                "float64" => ContainerSerializableScalarFields::float_64(),
+                "float64Array" => ContainerSerializableScalarFields::float_64_array(),
+                "id" => ContainerSerializableScalarFields::id(),
+                "int32" => ContainerSerializableScalarFields::int_32(),
+                "int32Array" => ContainerSerializableScalarFields::int_32_array(),
+                "int64" => ContainerSerializableScalarFields::int_64(),
+                "int64Array" => ContainerSerializableScalarFields::int_64_array(),
+                "message" => ContainerSerializableScalarFields::message(),
+                "status" => ContainerSerializableScalarFields::status(),
+                "statusArray" => ContainerSerializableScalarFields::status_array(),
+                "string" => ContainerSerializableScalarFields::string(),
+                "stringArray" => ContainerSerializableScalarFields::string_array(),
+                _ => Err(Error::new("cannot convert value to ContainerSerializableScalarFields"))?
+            })
+        } else {
+            Err(Error::new("cannot convert value to ContainerSerializableScalarFields"))
+        }
+    }
+}
+
+impl TryFrom<&Value> for ContainerSerializableScalarFields {
+
+    type Error = Error;
+
+    fn try_from(value: &Value) -> std::result::Result<Self, Self::Error> {
         if let Some(enum_variant) = value.as_str() {
             Ok(match enum_variant {
                 "bool" => ContainerSerializableScalarFields::bool(),
@@ -1051,12 +1148,24 @@ impl AsInterfaceRef for ContainerSerializableScalarFields {
 ///
 /// This synthesized enum doesn't have a description.
 #[repr(transparent)]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone)]
 pub struct ContainerRelations {
     inner: String,
 }
 
 impl ContainerRelations {
+}
+
+impl Debug for ContainerRelations {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "ContainerRelations(.{})", self.inner)
+    }
+}
+
+impl Display for ContainerRelations {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.inner)
+    }
 }
 
 impl From<ContainerRelations> for Value {
@@ -1070,6 +1179,21 @@ impl TryFrom<Value> for ContainerRelations {
     type Error = Error;
 
     fn try_from(value: Value) -> std::result::Result<Self, Self::Error> {
+        if let Some(enum_variant) = value.as_str() {
+            Ok(match enum_variant {
+                _ => Err(Error::new("cannot convert value to ContainerRelations"))?
+            })
+        } else {
+            Err(Error::new("cannot convert value to ContainerRelations"))
+        }
+    }
+}
+
+impl TryFrom<&Value> for ContainerRelations {
+
+    type Error = Error;
+
+    fn try_from(value: &Value) -> std::result::Result<Self, Self::Error> {
         if let Some(enum_variant) = value.as_str() {
             Ok(match enum_variant {
                 _ => Err(Error::new("cannot convert value to ContainerRelations"))?
@@ -1122,12 +1246,24 @@ impl AsInterfaceRef for ContainerRelations {
 ///
 /// This synthesized enum doesn't have a description.
 #[repr(transparent)]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone)]
 pub struct ContainerDirectRelations {
     inner: String,
 }
 
 impl ContainerDirectRelations {
+}
+
+impl Debug for ContainerDirectRelations {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "ContainerDirectRelations(.{})", self.inner)
+    }
+}
+
+impl Display for ContainerDirectRelations {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.inner)
+    }
 }
 
 impl From<ContainerDirectRelations> for Value {
@@ -1141,6 +1277,21 @@ impl TryFrom<Value> for ContainerDirectRelations {
     type Error = Error;
 
     fn try_from(value: Value) -> std::result::Result<Self, Self::Error> {
+        if let Some(enum_variant) = value.as_str() {
+            Ok(match enum_variant {
+                _ => Err(Error::new("cannot convert value to ContainerDirectRelations"))?
+            })
+        } else {
+            Err(Error::new("cannot convert value to ContainerDirectRelations"))
+        }
+    }
+}
+
+impl TryFrom<&Value> for ContainerDirectRelations {
+
+    type Error = Error;
+
+    fn try_from(value: &Value) -> std::result::Result<Self, Self::Error> {
         if let Some(enum_variant) = value.as_str() {
             Ok(match enum_variant {
                 _ => Err(Error::new("cannot convert value to ContainerDirectRelations"))?
@@ -1193,12 +1344,24 @@ impl AsInterfaceRef for ContainerDirectRelations {
 ///
 /// This synthesized enum doesn't have a description.
 #[repr(transparent)]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone)]
 pub struct ContainerIndirectRelations {
     inner: String,
 }
 
 impl ContainerIndirectRelations {
+}
+
+impl Debug for ContainerIndirectRelations {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "ContainerIndirectRelations(.{})", self.inner)
+    }
+}
+
+impl Display for ContainerIndirectRelations {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.inner)
+    }
 }
 
 impl From<ContainerIndirectRelations> for Value {
@@ -1212,6 +1375,21 @@ impl TryFrom<Value> for ContainerIndirectRelations {
     type Error = Error;
 
     fn try_from(value: Value) -> std::result::Result<Self, Self::Error> {
+        if let Some(enum_variant) = value.as_str() {
+            Ok(match enum_variant {
+                _ => Err(Error::new("cannot convert value to ContainerIndirectRelations"))?
+            })
+        } else {
+            Err(Error::new("cannot convert value to ContainerIndirectRelations"))
+        }
+    }
+}
+
+impl TryFrom<&Value> for ContainerIndirectRelations {
+
+    type Error = Error;
+
+    fn try_from(value: &Value) -> std::result::Result<Self, Self::Error> {
         if let Some(enum_variant) = value.as_str() {
             Ok(match enum_variant {
                 _ => Err(Error::new("cannot convert value to ContainerIndirectRelations"))?
@@ -1327,6 +1505,7 @@ impl ContainerModel {
     
 }
 
+#[repr(transparent)]
 #[derive(Clone)]
 pub struct Container {
     inner: model::Object,
