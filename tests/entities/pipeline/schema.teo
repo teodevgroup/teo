@@ -12,8 +12,6 @@ entity {
   dest: DIR + "entities"
 }
 
-// Data types
-
 enum Status {
   open
   inProgress
