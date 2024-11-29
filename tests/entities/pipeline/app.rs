@@ -17,52 +17,52 @@ pub fn load_app() -> Result<App> {
         schema_path_args(file!(), "schema.teo")
     )?;
     app.main_namespace().define_transform_pipeline_item("transformInt32", |_| {
-        return Ok(|value: i32| async move {
+        Ok(|value: i32| async move {
             value * 10
         })
     });
     app.main_namespace().define_transform_pipeline_item("transformInt64", |_| {
-        return Ok(|value: i64| async move {
+        Ok(|value: i64| async move {
             value * 10
         })
     });
     app.main_namespace().define_transform_pipeline_item("transformFloat32", |_| {
-        return Ok(|value: f32| async move {
+        Ok(|value: f32| async move {
             value * 10.0
         })
     });
     app.main_namespace().define_transform_pipeline_item("transformFloat64", |_| {
-        return Ok(|value: f64| async move {
+        Ok(|value: f64| async move {
             value * 10.0
         })
     });
     app.main_namespace().define_transform_pipeline_item("transformBool", |_| {
-        return Ok(|value: bool| async move {
+        Ok(|value: bool| async move {
             !value
         })
     });
     app.main_namespace().define_transform_pipeline_item("transformString", |_| {
-        return Ok(|value: String| async move {
+        Ok(|value: String| async move {
             format!("*{}*", value)
         })
     });
     app.main_namespace().define_transform_pipeline_item("transformDate", |_| {
-        return Ok(|value: NaiveDate| async move {
+        Ok(|value: NaiveDate| async move {
             value + Duration::days(1)
         })
     });
     app.main_namespace().define_transform_pipeline_item("transformDateTime", |_| {
-        return Ok(|value: DateTime<Utc>| async move {
+        Ok(|value: DateTime<Utc>| async move {
             value + Duration::days(1)
         })
     });
     app.main_namespace().define_transform_pipeline_item("transformDecimal", |_| {
-        return Ok(|value: BigDecimal| async move {
+        Ok(|value: BigDecimal| async move {
             value * BigDecimal::from(10)
         })
     });
     app.main_namespace().define_transform_pipeline_item("transformStatus", |_| {
-        return Ok(|value: Status| async move {
+        Ok(|value: Status| async move {
             Ok::<Status, Error>(if value.is_open() {
                 Status::pending()
             } else if value.is_pending() {
@@ -79,52 +79,52 @@ pub fn load_app() -> Result<App> {
         })
     });
     app.main_namespace().define_transform_pipeline_item("transformInt32Array", |_| {
-        return Ok(|value: Vec<i32>| async move {
+        Ok(|value: Vec<i32>| async move {
             value.into_iter().map(|v| v * 10).collect::<Vec<i32>>()
         })
     });
     app.main_namespace().define_transform_pipeline_item("transformInt64Array", |_| {
-        return Ok(|value: Vec<i64>| async move {
+        Ok(|value: Vec<i64>| async move {
             value.into_iter().map(|v| v * 10).collect::<Vec<i64>>()
         })
     });
     app.main_namespace().define_transform_pipeline_item("transformFloat32Array", |_| {
-        return Ok(|value: Vec<f32>| async move {
+        Ok(|value: Vec<f32>| async move {
             value.into_iter().map(|v| v * 10.0).collect::<Vec<f32>>()
         })
     });
     app.main_namespace().define_transform_pipeline_item("transformFloat64Array", |_| {
-        return Ok(|value: Vec<f64>| async move {
+        Ok(|value: Vec<f64>| async move {
             value.into_iter().map(|v| v * 10.0).collect::<Vec<f64>>()
         })
     });
     app.main_namespace().define_transform_pipeline_item("transformBoolArray", |_| {
-        return Ok(|value: Vec<bool>| async move {
+        Ok(|value: Vec<bool>| async move {
             value.into_iter().map(|v| !v).collect::<Vec<bool>>()
         })
     });
     app.main_namespace().define_transform_pipeline_item("transformStringArray", |_| {
-        return Ok(|value: Vec<String>| async move {
+        Ok(|value: Vec<String>| async move {
             value.into_iter().map(|v| format!("*{}*", v)).collect::<Vec<String>>()
         })
     });
     app.main_namespace().define_transform_pipeline_item("transformDateArray", |_| {
-        return Ok(|value: Vec<NaiveDate>| async move {
+        Ok(|value: Vec<NaiveDate>| async move {
             value.into_iter().map(|v| v + Duration::days(1)).collect::<Vec<NaiveDate>>()
         })
     });
     app.main_namespace().define_transform_pipeline_item("transformDateTimeArray", |_| {
-        return Ok(|value: Vec<DateTime<Utc>>| async move {
+        Ok(|value: Vec<DateTime<Utc>>| async move {
             value.into_iter().map(|v| v + Duration::days(1)).collect::<Vec<DateTime<Utc>>>()
         })
     });
     app.main_namespace().define_transform_pipeline_item("transformDecimalArray", |_| {
-        return Ok(|value: Vec<BigDecimal>| async move {
+        Ok(|value: Vec<BigDecimal>| async move {
             value.into_iter().map(|v| v * BigDecimal::from(10)).collect::<Vec<BigDecimal>>()
         })
     });
     app.main_namespace().define_transform_pipeline_item("transformStatusArray", |_| {
-        return Ok(|value: Vec<Status>| async move {
+        Ok(|value: Vec<Status>| async move {
             value.into_iter().map(|v| {
                 Ok::<Status, Error>(if v.is_open() {
                     Status::pending()
@@ -144,27 +144,27 @@ pub fn load_app() -> Result<App> {
     });
     app.main_namespace().define_transform_pipeline_item("alterInt32", |args: Arguments| {
         let to: i32 = args.get("to")?;
-        return Ok(move || async move { to })
+        Ok(move || async move { to })
     });
     app.main_namespace().define_transform_pipeline_item("alterInt64", |args: Arguments| {
         let to: i64 = args.get("to")?;
-        return Ok(move || async move { to })
+        Ok(move || async move { to })
     });
     app.main_namespace().define_transform_pipeline_item("alterFloat32", |args: Arguments| {
         let to: f32 = args.get("to")?;
-        return Ok(move || async move { to })
+        Ok(move || async move { to })
     });
     app.main_namespace().define_transform_pipeline_item("alterFloat64", |args: Arguments| {
         let to: f64 = args.get("to")?;
-        return Ok(move || async move { to })
+        Ok(move || async move { to })
     });
     app.main_namespace().define_transform_pipeline_item("alterBool", |args: Arguments| {
         let to: bool = args.get("to")?;
-        return Ok(move || async move { to })
+        Ok(move || async move { to })
     });
     app.main_namespace().define_transform_pipeline_item("alterString", |args: Arguments| {
         let to: String = args.get("to")?;
-        return Ok(move || {
+        Ok(move || {
             let to = to.clone();
             async move {
                 to
@@ -173,7 +173,7 @@ pub fn load_app() -> Result<App> {
     });
     app.main_namespace().define_transform_pipeline_item("alterDate", |args: Arguments| {
         let to: NaiveDate = args.get("to")?;
-        return Ok(move || {
+        Ok(move || {
             let to = to.clone();
             async move {
                 to
@@ -182,7 +182,7 @@ pub fn load_app() -> Result<App> {
     });
     app.main_namespace().define_transform_pipeline_item("alterDateTime", |args: Arguments| {
         let to: DateTime<Utc> = args.get("to")?;
-        return Ok(move || {
+        Ok(move || {
             let to = to.clone();
             async move {
                 to
@@ -191,7 +191,7 @@ pub fn load_app() -> Result<App> {
     });
     app.main_namespace().define_transform_pipeline_item("alterDecimal", |args: Arguments| {
         let to: BigDecimal = args.get("to")?;
-        return Ok(move || {
+        Ok(move || {
             let to = to.clone();
             async move {
                 to
@@ -200,7 +200,7 @@ pub fn load_app() -> Result<App> {
     });
     app.main_namespace().define_transform_pipeline_item("alterStatus", |args: Arguments| {
         let to: Status = args.get("to")?;
-        return Ok(move || {
+        Ok(move || {
             let to = to.clone();
             async move {
                 to
@@ -209,7 +209,7 @@ pub fn load_app() -> Result<App> {
     });
     app.main_namespace().define_transform_pipeline_item("alterInt32Array", |args: Arguments| {
         let to: Vec<i32> = args.get("to")?;
-        return Ok(move || {
+        Ok(move || {
             let to = to.clone();
             async move {
                 to
@@ -218,7 +218,7 @@ pub fn load_app() -> Result<App> {
     });
     app.main_namespace().define_transform_pipeline_item("alterInt64Array", |args: Arguments| {
         let to: Vec<i64> = args.get("to")?;
-        return Ok(move || {
+        Ok(move || {
             let to = to.clone();
             async move {
                 to
@@ -227,7 +227,7 @@ pub fn load_app() -> Result<App> {
     });
     app.main_namespace().define_transform_pipeline_item("alterFloat32Array", |args: Arguments| {
         let to: Vec<f32> = args.get("to")?;
-        return Ok(move || {
+        Ok(move || {
             let to = to.clone();
             async move {
                 to
@@ -236,7 +236,7 @@ pub fn load_app() -> Result<App> {
     });
     app.main_namespace().define_transform_pipeline_item("alterFloat64Array", |args: Arguments| {
         let to: Vec<f64> = args.get("to")?;
-        return Ok(move || {
+        Ok(move || {
             let to = to.clone();
             async move {
                 to
@@ -245,7 +245,7 @@ pub fn load_app() -> Result<App> {
     });
     app.main_namespace().define_transform_pipeline_item("alterBoolArray", |args: Arguments| {
         let to: Vec<bool> = args.get("to")?;
-        return Ok(move || {
+        Ok(move || {
             let to = to.clone();
             async move {
                 to
@@ -254,7 +254,7 @@ pub fn load_app() -> Result<App> {
     });
     app.main_namespace().define_transform_pipeline_item("alterStringArray", |args: Arguments| {
         let to: Vec<String> = args.get("to")?;
-        return Ok(move || {
+        Ok(move || {
             let to = to.clone();
             async move {
                 to
@@ -263,7 +263,7 @@ pub fn load_app() -> Result<App> {
     });
     app.main_namespace().define_transform_pipeline_item("alterDateArray", |args: Arguments| {
         let to: Vec<NaiveDate> = args.get("to")?;
-        return Ok(move || {
+        Ok(move || {
             let to = to.clone();
             async move {
                 to
@@ -272,7 +272,7 @@ pub fn load_app() -> Result<App> {
     });
     app.main_namespace().define_transform_pipeline_item("alterDateTimeArray", |args: Arguments| {
         let to: Vec<DateTime<Utc>> = args.get("to")?;
-        return Ok(move || {
+        Ok(move || {
             let to = to.clone();
             async move {
                 to
@@ -281,7 +281,7 @@ pub fn load_app() -> Result<App> {
     });
     app.main_namespace().define_transform_pipeline_item("alterDecimalArray", |args: Arguments| {
         let to: Vec<BigDecimal> = args.get("to")?;
-        return Ok(move || {
+        Ok(move || {
             let to = to.clone();
             async move {
                 to
@@ -290,7 +290,7 @@ pub fn load_app() -> Result<App> {
     });
     app.main_namespace().define_transform_pipeline_item("alterStatusArray", |args: Arguments| {
         let to: Vec<Status> = args.get("to")?;
-        return Ok(move || {
+        Ok(move || {
             let to = to.clone();
             async move {
                 to
@@ -298,22 +298,22 @@ pub fn load_app() -> Result<App> {
         })
     });
     app.main_namespace().define_validator_pipeline_item("validateInt32", |_| {
-        return Ok(|_: i32| async move { true })
+        Ok(|_: i32| async move { true })
     });
     app.main_namespace().define_validator_pipeline_item("validateInt64", |_| {
-        return Ok(|_: i64| async move { })
+        Ok(|_: i64| async move { })
     });
     app.main_namespace().define_validator_pipeline_item("validateFloat32", |_| {
-        return Ok(|_: f32| async move { Ok::<bool, Error>(true) })
+        Ok(|_: f32| async move { Ok::<bool, Error>(true) })
     });
     app.main_namespace().define_validator_pipeline_item("validateFloat64", |_| {
-        return Ok(|_: f64| async move { Ok::<(), Error>(()) })
+        Ok(|_: f64| async move { Ok::<(), Error>(()) })
     });
     app.main_namespace().define_validator_pipeline_item("validateBool", |_| {
-        return Ok(|_: bool| async move { Ok::<Validity, Error>(Validity::Valid) })
+        Ok(|_: bool| async move { Ok::<Validity, Error>(Validity::Valid) })
     });
     app.main_namespace().define_validator_pipeline_item("validateString", |_| {
-        return Ok(|s: String| async move {
+        Ok(|s: String| async move {
             if s.len() > 1 {
                 Validity::Valid
             } else {
@@ -322,165 +322,265 @@ pub fn load_app() -> Result<App> {
         })
     });
     app.main_namespace().define_validator_pipeline_item("validateDate", |_| {
-        return Ok(|_: NaiveDate| async move { true })
+        Ok(|_: NaiveDate| async move { true })
     });
     app.main_namespace().define_validator_pipeline_item("validateDateTime", |_| {
-        return Ok(|_: DateTime<Utc>| async move { true })
+        Ok(|_: DateTime<Utc>| async move { true })
     });
     app.main_namespace().define_validator_pipeline_item("validateDecimal", |_| {
-        return Ok(|_: BigDecimal| async move { true })
+        Ok(|_: BigDecimal| async move { true })
     });
     app.main_namespace().define_validator_pipeline_item("validateStatus", |_| {
-        return Ok(|_: Status| async move { true })
+        Ok(|_: Status| async move { true })
     });
     app.main_namespace().define_validator_pipeline_item("validateInt32Array", |_| {
-        return Ok(|_: Vec<i32>| async move { true })
+        Ok(|_: Vec<i32>| async move { true })
     });
     app.main_namespace().define_validator_pipeline_item("validateInt64Array", |_| {
-        return Ok(|_: Vec<i64>| async move { true })
+        Ok(|_: Vec<i64>| async move { true })
     });
     app.main_namespace().define_validator_pipeline_item("validateFloat32Array", |_| {
-        return Ok(|_: Vec<f32>| async move { true })
+        Ok(|_: Vec<f32>| async move { true })
     });
     app.main_namespace().define_validator_pipeline_item("validateFloat64Array", |_| {
-        return Ok(|_: Vec<f64>| async move { true })
+        Ok(|_: Vec<f64>| async move { true })
     });
     app.main_namespace().define_validator_pipeline_item("validateBoolArray", |_| {
-        return Ok(|_: Vec<bool>| async move { true })
+        Ok(|_: Vec<bool>| async move { true })
     });
     app.main_namespace().define_validator_pipeline_item("validateStringArray", |_| {
-        return Ok(|_: Vec<String>| async move { true })
+        Ok(|_: Vec<String>| async move { true })
     });
     app.main_namespace().define_validator_pipeline_item("validateDateArray", |_| {
-        return Ok(|_: Vec<NaiveDate>| async move { true })
+        Ok(|_: Vec<NaiveDate>| async move { true })
     });
     app.main_namespace().define_validator_pipeline_item("validateDateTimeArray", |_| {
-        return Ok(|_: Vec<DateTime<Utc>>| async move { true })
+        Ok(|_: Vec<DateTime<Utc>>| async move { true })
     });
     app.main_namespace().define_validator_pipeline_item("validateDecimalArray", |_| {
-        return Ok(|_: Vec<BigDecimal>| async move { true })
+        Ok(|_: Vec<BigDecimal>| async move { true })
     });
     app.main_namespace().define_validator_pipeline_item("validateStatusArray", |_| {
-        return Ok(|_: Vec<Status>| async move { true })
+        Ok(|_: Vec<Status>| async move { true })
     });
     app.main_namespace().define_callback_pipeline_item("int32Callback", |_| {
-        return Ok(|value: i32, container: Container| async move {
+        Ok(|value: i32, container: Container| async move {
             container.set_message(Some(format!("{}", value)))?;
             Ok(())
         })
     });
     app.main_namespace().define_callback_pipeline_item("int64Callback", |_| {
-        return Ok(|value: i64, container: Container| async move {
+        Ok(|value: i64, container: Container| async move {
             container.set_message(Some(format!("{}", value)))?;
             Ok(())
         })
     });
     app.main_namespace().define_callback_pipeline_item("float32Callback", |_| {
-        return Ok(|value: f32, container: Container| async move {
+        Ok(|value: f32, container: Container| async move {
             container.set_message(Some(format!("{}", value)))?;
             Ok(())
         })
     });
     app.main_namespace().define_callback_pipeline_item("float64Callback", |_| {
-        return Ok(|value: f64, container: Container| async move {
+        Ok(|value: f64, container: Container| async move {
             container.set_message(Some(format!("{}", value)))?;
             Ok(())
         })
     });
     app.main_namespace().define_callback_pipeline_item("boolCallback", |_| {
-        return Ok(|value: bool, container: Container| async move {
+        Ok(|value: bool, container: Container| async move {
             container.set_message(Some(format!("{}", value)))?;
             Ok(())
         })
     });
     app.main_namespace().define_callback_pipeline_item("stringCallback", |_| {
-        return Ok(|value: String, container: Container| async move {
+        Ok(|value: String, container: Container| async move {
             container.set_message(Some(format!("{}", value)))?;
             Ok(())
         })
     });
     app.main_namespace().define_callback_pipeline_item("dateCallback", |_| {
-        return Ok(|value: NaiveDate, container: Container| async move {
+        Ok(|value: NaiveDate, container: Container| async move {
             container.set_message(Some(format!("{}", value)))?;
             Ok(())
         })
     });
     app.main_namespace().define_callback_pipeline_item("dateTimeCallback", |_| {
-        return Ok(|value: DateTime<Utc>, container: Container| async move {
+        Ok(|value: DateTime<Utc>, container: Container| async move {
             container.set_message(Some(format!("{}", value)))?;
             Ok(())
         })
     });
     app.main_namespace().define_callback_pipeline_item("decimalCallback", |_| {
-        return Ok(|value: BigDecimal, container: Container| async move {
+        Ok(|value: BigDecimal, container: Container| async move {
             container.set_message(Some(format!("{}", value)))?;
             Ok(())
         })
     });
     app.main_namespace().define_callback_pipeline_item("statusCallback", |_| {
-        return Ok(|value: Status, container: Container| async move {
+        Ok(|value: Status, container: Container| async move {
             container.set_message(Some(format!("{:?}", value)))?;
             Ok(())
         })
     });
     app.main_namespace().define_callback_pipeline_item("int32ArrayCallback", |_| {
-        return Ok(|value: Vec<i32>, container: Container| async move {
+        Ok(|value: Vec<i32>, container: Container| async move {
             container.set_message(Some(format!("{:?}", value)))?;
             Ok(())
         })
     });
     app.main_namespace().define_callback_pipeline_item("int64ArrayCallback", |_| {
-        return Ok(|value: Vec<i64>, container: Container| async move {
+        Ok(|value: Vec<i64>, container: Container| async move {
             container.set_message(Some(format!("{:?}", value)))?;
             Ok(())
         })
     });
     app.main_namespace().define_callback_pipeline_item("float32ArrayCallback", |_| {
-        return Ok(|value: Vec<f32>, container: Container| async move {
+        Ok(|value: Vec<f32>, container: Container| async move {
             container.set_message(Some(format!("{:?}", value)))?;
             Ok(())
         })
     });
     app.main_namespace().define_callback_pipeline_item("float64ArrayCallback", |_| {
-        return Ok(|value: Vec<f64>, container: Container| async move {
+        Ok(|value: Vec<f64>, container: Container| async move {
             container.set_message(Some(format!("{:?}", value)))?;
             Ok(())
         })
     });
     app.main_namespace().define_callback_pipeline_item("boolArrayCallback", |_| {
-        return Ok(|value: Vec<bool>, container: Container| async move {
+        Ok(|value: Vec<bool>, container: Container| async move {
             container.set_message(Some(format!("{:?}", value)))?;
             Ok(())
         })
     });
     app.main_namespace().define_callback_pipeline_item("stringArrayCallback", |_| {
-        return Ok(|value: Vec<String>, container: Container| async move {
+        Ok(|value: Vec<String>, container: Container| async move {
             container.set_message(Some(format!("{:?}", value)))?;
             Ok(())
         })
     });
     app.main_namespace().define_callback_pipeline_item("dateArrayCallback", |_| {
-        return Ok(|value: Vec<NaiveDate>, container: Container| async move {
+        Ok(|value: Vec<NaiveDate>, container: Container| async move {
             container.set_message(Some(format!("{:?}", value)))?;
             Ok(())
         })
     });
     app.main_namespace().define_callback_pipeline_item("dateTimeArrayCallback", |_| {
-        return Ok(|value: Vec<DateTime<Utc>>, container: Container| async move {
+        Ok(|value: Vec<DateTime<Utc>>, container: Container| async move {
             container.set_message(Some(format!("{:?}", value)))?;
             Ok(())
         })
     });
     app.main_namespace().define_callback_pipeline_item("decimalArrayCallback", |_| {
-        return Ok(|value: Vec<BigDecimal>, container: Container| async move {
+        Ok(|value: Vec<BigDecimal>, container: Container| async move {
             container.set_message(Some(format!("{:?}", value)))?;
             Ok(())
         })
     });
     app.main_namespace().define_callback_pipeline_item("statusArrayCallback", |_| {
-        return Ok(|value: Vec<Status>, container: Container| async move {
+        Ok(|value: Vec<Status>, container: Container| async move {
             container.set_message(Some(format!("{:?}", value)))?;
             Ok(())
+        })
+    });
+    app.main_namespace().define_compare_pipeline_item("compareInt32", |_| {
+        Ok(|old: i32, new: i32| async move {
+            old != new
+        })
+    });
+    app.main_namespace().define_compare_pipeline_item("compareInt64", |_| {
+        Ok(|old: i64, new: i64| async move {
+            old != new
+        })
+    });
+    app.main_namespace().define_compare_pipeline_item("compareFloat32", |_| {
+        Ok(|old: f32, new: f32| async move {
+            old != new
+        })
+    });
+    app.main_namespace().define_compare_pipeline_item("compareFloat64", |_| {
+        Ok(|old: f64, new: f64| async move {
+            old != new
+        })
+    });
+    app.main_namespace().define_compare_pipeline_item("compareBool", |_| {
+        Ok(|old: bool, new: bool| async move {
+            old != new
+        })
+    });
+    app.main_namespace().define_compare_pipeline_item("compareString", |_| {
+        Ok(|old: String, new: String| async move {
+            old != new
+        })
+    });
+    app.main_namespace().define_compare_pipeline_item("compareDate", |_| {
+        Ok(|old: NaiveDate, new: NaiveDate| async move {
+            old != new
+        })
+    });
+    app.main_namespace().define_compare_pipeline_item("compareDateTime", |_| {
+        Ok(|old: DateTime<Utc>, new: DateTime<Utc>| async move {
+            old != new
+        })
+    });
+    app.main_namespace().define_compare_pipeline_item("compareDecimal", |_| {
+        Ok(|old: BigDecimal, new: BigDecimal| async move {
+            old != new
+        })
+    });
+    app.main_namespace().define_compare_pipeline_item("compareStatus", |_| {
+        Ok(|old: Status, new: Status| async move {
+            old != new
+        })
+    });
+    app.main_namespace().define_compare_pipeline_item("compareInt32Array", |_| {
+        Ok(|old: Vec<i32>, new: Vec<i32>| async move {
+            old != new
+        })
+    });
+    app.main_namespace().define_compare_pipeline_item("compareInt64Array", |_| {
+        Ok(|old: Vec<i64>, new: Vec<i64>| async move {
+            old != new
+        })
+    });
+    app.main_namespace().define_compare_pipeline_item("compareFloat32Array", |_| {
+        Ok(|old: Vec<f32>, new: Vec<f32>| async move {
+            old != new
+        })
+    });
+    app.main_namespace().define_compare_pipeline_item("compareFloat64Array", |_| {
+        Ok(|old: Vec<f64>, new: Vec<f64>| async move {
+            old != new
+        })
+    });
+    app.main_namespace().define_compare_pipeline_item("compareBoolArray", |_| {
+        Ok(|old: Vec<bool>, new: Vec<bool>| async move {
+            old != new
+        })
+    });
+    app.main_namespace().define_compare_pipeline_item("compareStringArray", |_| {
+        Ok(|old: Vec<String>, new: Vec<String>| async move {
+            old != new
+        })
+    });
+    app.main_namespace().define_compare_pipeline_item("compareDateArray", |_| {
+        Ok(|old: Vec<NaiveDate>, new: Vec<NaiveDate>| async move {
+            old != new
+        })
+    });
+    app.main_namespace().define_compare_pipeline_item("compareDateTimeArray", |_| {
+        Ok(|old: Vec<DateTime<Utc>>, new: Vec<DateTime<Utc>>| async move {
+            old != new
+        })
+    });
+    app.main_namespace().define_compare_pipeline_item("compareDecimalArray", |_| {
+        Ok(|old: Vec<BigDecimal>, new: Vec<BigDecimal>| async move {
+            old != new
+        })
+    });
+    app.main_namespace().define_compare_pipeline_item("compareStatusArray", |_| {
+        Ok(|old: Vec<Status>, new: Vec<Status>| async move {
+            old != new
         })
     });
     Ok(app)
