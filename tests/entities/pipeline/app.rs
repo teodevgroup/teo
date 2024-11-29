@@ -7,9 +7,8 @@ use teo_runtime::{pipeline, request, teon, Value};
 use teo_runtime::arguments::Arguments;
 use teo_runtime::pipeline::item::templates::validator::{ValidatorResult, Validity};
 use teo::app::App;
-use teo::result::Result;
+use teo::result::{Error, Result};
 use teo::test::schema_path::schema_path_args;
-use teo::prelude::Error;
 use crate::entities::models::types::entities::{SupportCreateInput, SupportFindManyArgs, Teo};
 use crate::entities::pipeline::entities::Status;
 
@@ -79,17 +78,71 @@ pub fn load_app() -> Result<App> {
             })
         })
     });
+    app.main_namespace().define_transform_pipeline_item("transformInt32Array", |_| {
+        return Ok(|value: Vec<i32>| async move {
+            value.into_iter().map(|v| v * 10).collect::<Vec<i32>>()
+        })
+    });
+    app.main_namespace().define_transform_pipeline_item("transformInt64Array", |_| {
+        return Ok(|value: Vec<i64>| async move {
+            value.into_iter().map(|v| v * 10).collect::<Vec<i64>>()
+        })
+    });
+    app.main_namespace().define_transform_pipeline_item("transformFloat32Array", |_| {
+        return Ok(|value: Vec<f32>| async move {
+            value.into_iter().map(|v| v * 10.0).collect::<Vec<f32>>()
+        })
+    });
+    app.main_namespace().define_transform_pipeline_item("transformFloat64Array", |_| {
+        return Ok(|value: Vec<f64>| async move {
+            value.into_iter().map(|v| v * 10.0).collect::<Vec<f64>>()
+        })
+    });
+    app.main_namespace().define_transform_pipeline_item("transformBoolArray", |_| {
+        return Ok(|value: Vec<bool>| async move {
+            value.into_iter().map(|v| !v).collect::<Vec<bool>>()
+        })
+    });
+    app.main_namespace().define_transform_pipeline_item("transformStringArray", |_| {
+        return Ok(|value: Vec<String>| async move {
+            value.into_iter().map(|v| format!("*{}*", v)).collect::<Vec<String>>()
+        })
+    });
+    app.main_namespace().define_transform_pipeline_item("transformDateArray", |_| {
+        return Ok(|value: Vec<NaiveDate>| async move {
+            value.into_iter().map(|v| v + Duration::days(1)).collect::<Vec<NaiveDate>>()
+        })
+    });
+    app.main_namespace().define_transform_pipeline_item("transformDateTimeArray", |_| {
+        return Ok(|value: Vec<DateTime<Utc>>| async move {
+            value.into_iter().map(|v| v + Duration::days(1)).collect::<Vec<DateTime<Utc>>>()
+        })
+    });
+    app.main_namespace().define_transform_pipeline_item("transformDecimalArray", |_| {
+        return Ok(|value: Vec<BigDecimal>| async move {
+            value.into_iter().map(|v| v * BigDecimal::from(10)).collect::<Vec<BigDecimal>>()
+        })
+    });
+    app.main_namespace().define_transform_pipeline_item("transformStatusArray", |_| {
+        return Ok(|value: Vec<Status>| async move {
+            value.into_iter().map(|v| {
+                Ok::<Status, Error>(if v.is_open() {
+                    Status::pending()
+                } else if v.is_pending() {
+                    Status::in_progress()
+                } else if v.is_in_progress() {
+                    Status::waiting_for_review()
+                } else if v.is_waiting_for_review() {
+                    Status::done()
+                } else if v.is_done() {
+                    Status::open()
+                } else {
+                    Err(Error::new(format!("unknown status {:?}", v)))?
+                })
+            }).collect::<Result<Vec<Status>>>()
+        })
+    });
 
-    // declare pipeline item transformInt32Array: Int[] -> Int[]
-    // declare pipeline item transformInt64Array: Int64[] -> Int64[]
-    // declare pipeline item transformFloat32Array: Float32[] -> Float32[]
-    // declare pipeline item transformFloat64Array: Float[] -> Float[]
-    // declare pipeline item transformBoolArray: Bool[] -> Bool[]
-    // declare pipeline item transformStringArray: String[] -> String[]
-    // declare pipeline item transformDateArray: Date[] -> Date[]
-    // declare pipeline item transformDateTimeArray: DateTime[] -> DateTime[]
-    // declare pipeline item transformDecimalArray: Decimal[] -> Decimal[]
-    // declare pipeline item transformStatusArray: Status[] -> Status[]
 
     // app.main_namespace().define_validator_pipeline_item("myValidator", |args: Arguments| {
     //     return Ok(|_: Value, ctx: pipeline::Ctx| async move {
