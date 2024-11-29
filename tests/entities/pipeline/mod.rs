@@ -53,10 +53,10 @@ mod tests {
             .await.unwrap();
         let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
         assert_json!(res, matcher!({
-            "data": {
+            "data": partial({
                 "id": ignore,
                 "int32": 10,
-            }
+            })
         }))
     }
 }

@@ -111,6 +111,10 @@ macro_rules! matcher_internal {
         matcher_internal!(@object $object [$($key)+] (matcher_internal!({$($map)*})) $($rest)*);
     };
 
+    (@object $object:ident ($($key:tt)+) (: partial({$($map:tt)*}) $($rest:tt)*) $copy:tt) => {
+        matcher_internal!(@object $object [$($key)+] (matcher_internal!(partial({$($map)*}))) $($rest)*);
+    };
+
     (@object $object:ident ($($key:tt)+) (: $value:expr , $($rest:tt)*) $copy:tt) => {
         matcher_internal!(@object $object [$($key)+] (matcher_internal!($value)) , $($rest)*);
     };
@@ -175,7 +179,7 @@ macro_rules! matcher_internal {
         $crate::lib::matcher::Matcher::Object(std::collections::HashMap::new(), false)
     };
 
-    (partial, {}) => {
+    (partial({})) => {
         $crate::lib::matcher::Matcher::Object(std::collections::HashMap::new(), true)
     };
 
@@ -187,7 +191,7 @@ macro_rules! matcher_internal {
         }, false)
     };
 
-    (partial, { $($tt:tt)+ }) => {
+    (partial({ $($tt:tt)+ })) => {
         $crate::lib::matcher::Matcher::Object({
             let mut object = std::collections::HashMap::new();
             matcher_internal!(@object object () ($($tt)+) ($($tt)+));
