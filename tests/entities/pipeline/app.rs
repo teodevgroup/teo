@@ -297,11 +297,71 @@ pub fn load_app() -> Result<App> {
             }
         })
     });
-
-    // app.main_namespace().define_validator_pipeline_item("myValidator", |args: Arguments| {
-    //     return Ok(|_: Value, ctx: pipeline::Ctx| async move {
-    //         ValidatorResult::Validity(Validity::Valid)
-    //     })
-    // });
+    app.main_namespace().define_validator_pipeline_item("validateInt32", |_| {
+        return Ok(|_: i32| async move { true })
+    });
+    app.main_namespace().define_validator_pipeline_item("validateInt64", |_| {
+        return Ok(|_: i64| async move { })
+    });
+    app.main_namespace().define_validator_pipeline_item("validateFloat32", |_| {
+        return Ok(|_: f32| async move { Ok::<bool, Error>(true) })
+    });
+    app.main_namespace().define_validator_pipeline_item("validateFloat64", |_| {
+        return Ok(|_: f64| async move { Ok::<(), Error>(()) })
+    });
+    app.main_namespace().define_validator_pipeline_item("validateBool", |_| {
+        return Ok(|_: bool| async move { Ok::<Validity, Error>(Validity::Valid) })
+    });
+    app.main_namespace().define_validator_pipeline_item("validateString", |_| {
+        return Ok(|s: String| async move {
+            if s.len() > 1 {
+                Validity::Valid
+            } else {
+                Validity::Invalid("string is too short, expect length > 1".to_owned())
+            }
+        })
+    });
+    app.main_namespace().define_validator_pipeline_item("validateDate", |_| {
+        return Ok(|_: NaiveDate| async move { true })
+    });
+    app.main_namespace().define_validator_pipeline_item("validateDateTime", |_| {
+        return Ok(|_: DateTime<Utc>| async move { true })
+    });
+    app.main_namespace().define_validator_pipeline_item("validateDecimal", |_| {
+        return Ok(|_: BigDecimal| async move { true })
+    });
+    app.main_namespace().define_validator_pipeline_item("validateStatus", |_| {
+        return Ok(|_: Status| async move { true })
+    });
+    app.main_namespace().define_validator_pipeline_item("validateInt32Array", |_| {
+        return Ok(|_: Vec<i32>| async move { true })
+    });
+    app.main_namespace().define_validator_pipeline_item("validateInt64Array", |_| {
+        return Ok(|_: Vec<i64>| async move { true })
+    });
+    app.main_namespace().define_validator_pipeline_item("validateFloat32Array", |_| {
+        return Ok(|_: Vec<f32>| async move { true })
+    });
+    app.main_namespace().define_validator_pipeline_item("validateFloat64Array", |_| {
+        return Ok(|_: Vec<f64>| async move { true })
+    });
+    app.main_namespace().define_validator_pipeline_item("validateBoolArray", |_| {
+        return Ok(|_: Vec<bool>| async move { true })
+    });
+    app.main_namespace().define_validator_pipeline_item("validateStringArray", |_| {
+        return Ok(|_: Vec<String>| async move { true })
+    });
+    app.main_namespace().define_validator_pipeline_item("validateDateArray", |_| {
+        return Ok(|_: Vec<NaiveDate>| async move { true })
+    });
+    app.main_namespace().define_validator_pipeline_item("validateDateTimeArray", |_| {
+        return Ok(|_: Vec<DateTime<Utc>>| async move { true })
+    });
+    app.main_namespace().define_validator_pipeline_item("validateDecimalArray", |_| {
+        return Ok(|_: Vec<BigDecimal>| async move { true })
+    });
+    app.main_namespace().define_validator_pipeline_item("validateStatusArray", |_| {
+        return Ok(|_: Vec<Status>| async move { true })
+    });
     Ok(app)
 }
