@@ -1,0 +1,175 @@
+connector {
+  provider: .postgres,
+  url: "postgres://127.0.0.1:5433/test_entities_pipeline",
+}
+
+server {
+  bind: ("0.0.0.0", 4126),
+}
+
+entity {
+  provider: .rust,
+  dest: DIR + "entities"
+}
+
+// Data types
+
+enum Status {
+  open
+  inProgress
+  pending
+  waitingForReview
+  done
+}
+
+declare pipeline item transformInt32: Int -> Int
+declare pipeline item transformInt64: Int64 -> Int64
+declare pipeline item transformFloat32: Float32 -> Float32
+declare pipeline item transformFloat64: Float -> Float
+declare pipeline item transformBool: Bool -> Bool
+declare pipeline item transformString: String -> String
+declare pipeline item transformDate: Date -> Date
+declare pipeline item transformDateTime: DateTime -> DateTime
+declare pipeline item transformDecimal: Decimal -> Decimal
+declare pipeline item transformStatus: Status -> Status
+declare pipeline item transformInt32Array: Int[] -> Int[]
+declare pipeline item transformInt64Array: Int64[] -> Int64[]
+declare pipeline item transformFloat32Array: Float32[] -> Float32[]
+declare pipeline item transformFloat64Array: Float[] -> Float[]
+declare pipeline item transformBoolArray: Bool[] -> Bool[]
+declare pipeline item transformStringArray: String[] -> String[]
+declare pipeline item transformDateArray: Date[] -> Date[]
+declare pipeline item transformDateTimeArray: DateTime[] -> DateTime[]
+declare pipeline item transformDecimalArray: Decimal[] -> Decimal[]
+declare pipeline item transformStatusArray: Status[] -> Status[]
+
+declare pipeline item alterInt32(to?: Int): Int? -> Int
+declare pipeline item alterInt64(to?: Int64): Int64? -> Int64
+declare pipeline item alterFloat32(to?: Float32): Float32? -> Float32
+declare pipeline item alterFloat64(to?: Float): Float? -> Float
+declare pipeline item alterBool(to?: Bool): Bool? -> Bool
+declare pipeline item alterString(to?: String): String? -> String
+declare pipeline item alterDate(to?: Date): Date? -> Date
+declare pipeline item alterDateTime(to?: DateTime): DateTime? -> DateTime
+declare pipeline item alterDecimal(to?: Decimal): Decimal? -> Decimal
+declare pipeline item alterStatus(to?: Status): Status? -> Status
+declare pipeline item alterInt32Array(to?: Int[]): Int[]? -> Int[]
+declare pipeline item alterInt64Array(to?: Int64[]): Int64[]? -> Int64[]
+declare pipeline item alterFloat32Array(to?: Float32[]): Float32[]? -> Float32[]
+declare pipeline item alterFloat64Array(to?: Float[]): Float[]? -> Float[]
+declare pipeline item alterBoolArray(to?: Bool[]): Bool[]? -> Bool[]
+declare pipeline item alterStringArray(to?: String[]): String[]? -> String[]
+declare pipeline item alterDateArray(to?: Date[]): Date[]? -> Date[]
+declare pipeline item alterDateTimeArray(to?: DateTime[]): DateTime[]? -> DateTime[]
+declare pipeline item alterDecimalArray(to?: Decimal[]): Decimal[]? -> Decimal[]
+declare pipeline item alterStatusArray(to?: Status[]): Status[]? -> Status[]
+
+declare pipeline item validateInt32: Int -> Int
+declare pipeline item validateInt64: Int64 -> Int64
+declare pipeline item validateFloat32: Float32 -> Float32
+declare pipeline item validateFloat64: Float -> Float
+declare pipeline item validateBool: Bool -> Bool
+declare pipeline item validateString: String -> String
+declare pipeline item validateDate: Date -> Date
+declare pipeline item validateDateTime: DateTime -> DateTime
+declare pipeline item validateDecimal: Decimal -> Decimal
+declare pipeline item validateStatus: Status -> Status
+declare pipeline item validateInt32Array: Int[] -> Int[]
+declare pipeline item validateInt64Array: Int64[] -> Int64[]
+declare pipeline item validateFloat32Array: Float32[] -> Float32[]
+declare pipeline item validateFloat64Array: Float[] -> Float[]
+declare pipeline item validateBoolArray: Bool[] -> Bool[]
+declare pipeline item validateStringArray: String[] -> String[]
+declare pipeline item validateDateArray: Date[] -> Date[]
+declare pipeline item validateDateTimeArray: DateTime[] -> DateTime[]
+declare pipeline item validateDecimalArray: Decimal[] -> Decimal[]
+declare pipeline item validateStatusArray: Status[] -> Status[]
+
+declare pipeline item int32Callback: Int -> Int
+declare pipeline item int64Callback: Int64 -> Int64
+declare pipeline item float32Callback: Float32 -> Float32
+declare pipeline item float64Callback: Float -> Float
+declare pipeline item boolCallback: Bool -> Bool
+declare pipeline item stringCallback: String -> String
+declare pipeline item dateCallback: Date -> Date
+declare pipeline item dateTimeCallback: DateTime -> DateTime
+declare pipeline item decimalCallback: Decimal -> Decimal
+declare pipeline item statusCallback: Status -> Status
+declare pipeline item int32ArrayCallback: Int[] -> Int[]
+declare pipeline item int64ArrayCallback: Int64[] -> Int64[]
+declare pipeline item float32ArrayCallback: Float32[] -> Float32[]
+declare pipeline item float64ArrayCallback: Float[] -> Float[]
+declare pipeline item boolArrayCallback: Bool[] -> Bool[]
+declare pipeline item stringArrayCallback: String[] -> String[]
+declare pipeline item dateArrayCallback: Date[] -> Date[]
+declare pipeline item dateTimeArrayCallback: DateTime[] -> DateTime[]
+declare pipeline item decimalArrayCallback: Decimal[] -> Decimal[]
+declare pipeline item statusArrayCallback: Status[] -> Status[]
+
+declare pipeline item compareInt32: Int -> Int
+declare pipeline item compareInt64: Int64 -> Int64
+declare pipeline item compareFloat32: Float32 -> Float32
+declare pipeline item compareFloat64: Float -> Float
+declare pipeline item compareBool: Bool -> Bool
+declare pipeline item compareString: String -> String
+declare pipeline item compareDate: Date -> Date
+declare pipeline item compareDateTime: DateTime -> DateTime
+declare pipeline item compareDecimal: Decimal -> Decimal
+declare pipeline item compareStatus: Status -> Status
+declare pipeline item compareInt32Array: Int[] -> Int[]
+declare pipeline item compareInt64Array: Int64[] -> Int64[]
+declare pipeline item compareFloat32Array: Float32[] -> Float32[]
+declare pipeline item compareFloat64Array: Float[] -> Float[]
+declare pipeline item compareBoolArray: Bool[] -> Bool[]
+declare pipeline item compareStringArray: String[] -> String[]
+declare pipeline item compareDateArray: Date[] -> Date[]
+declare pipeline item compareDateTimeArray: DateTime[] -> DateTime[]
+declare pipeline item compareDecimalArray: Decimal[] -> Decimal[]
+declare pipeline item compareStatusArray: Status[] -> Status[]
+
+model Container {
+  @id @autoIncrement @readonly
+  id: Int
+  @onSet($if($presents, then: $int32Callback.validateInt32.transformInt32, else: $alterInt32(5)))
+  int32: Int?
+  @onSet($if($presents, then: $int64Callback.validateInt64.transformInt64, else: $alterInt64(5)))
+  int64: Int64?
+  @onSet($if($presents, then: $float32Callback.validateFloat32.transformFloat32, else: $alterFloat32(5.5)))
+  float32: Float32?
+  @onSet($if($presents, then: $float64Callback.validateFloat64.transformFloat64, else: $alterFloat64(5.5)))
+  float64: Float?
+  @onSet($if($presents, then: $boolCallback.validateBool.transformBool, else: $alterBool(true)))
+  bool: Bool?
+  @onSet($if($presents, then: $stringCallback.validateString.transformString, else: $alterString("Flower")))
+  string: String?
+  @onSet($if($presents, then: $dateCallback.validateDate.transformDate, else: $alterDate(Date("2003-06-23"))))
+  date: Date?
+  @onSet($if($presents, then: $dateTimeCallback.validateDateTime.transformDateTime, else: $alterDateTime(DateTime("2004-07-23T11:30:00.000Z"))))
+  dateTime: DateTime?
+  @onSet($if($presents, then: $decimalCallback.validateDecimal.transformDecimal, else: $alterDecimal(Decimal("5"))))
+  decimal: Decimal?
+  @onSet($if($presents, then: $statusCallback.validateStatus.transformStatus, else: $alterStatus(.done)))
+  status: Status?
+  @onSet($if($presents, then: $int32ArrayCallback.validateInt32Array.transformInt32Array, else: $alterInt32Array([5, 5, 5, 5, 5])))
+  int32Array: Int[]?
+  @onSet($if($presents, then: $int64ArrayCallback.validateInt64Array.transformInt64Array, else: $alterInt64Array([5, 5, 5, 5, 5])))
+  int64Array: Int64[]?
+  @onSet($if($presents, then: $float32ArrayCallback.validateFloat32Array.transformFloat32Array, else: $alterFloat32Array([5.5, 5.5, 5.5, 5.5, 5.5])))
+  float32Array: Float32[]?
+  @onSet($if($presents, then: $float64ArrayCallback.validateFloat64Array.transformFloat64Array, else: $alterFloat64Array([5.5, 5.5, 5.5, 5.5, 5.5])))
+  float64Array: Float[]?
+  @onSet($if($presents, then: $boolArrayCallback.validateBoolArray.transformBoolArray, else: $alterBoolArray([true, false, true, false, true])))
+  boolArray: Bool[]?
+  @onSet($if($presents, then: $stringArrayCallback.validateStringArray.transformStringArray, else: $alterStringArray(["Sing", "Dance", "Gift"])))
+  stringArray: String[]?
+  @onSet($if($presents, then: $dateArrayCallback.validateDateArray.transformDateArray, else: $alterDateArray([Date("2003-06-23"), Date("2003-06-23")])))
+  dateArray: Date[]?
+  @onSet($if($presents, then: $dateTimeArrayCallback.validateDateTimeArray.transformDateTimeArray, else: $alterDateTimeArray([DateTime("2004-07-23T11:30:00.000Z"), DateTime("2004-07-23T11:30:00.000Z")])))
+  dateTimeArray: DateTime[]?
+  @onSet($if($presents, then: $decimalArrayCallback.validateDecimalArray.transformDecimalArray, else: $alterDecimalArray([Decimal("5"), Decimal("5"), Decimal("5"), Decimal("5"), Decimal("5")])))
+  decimalArray: Decimal[]?
+  @onSet($if($presents, then: $statusArrayCallback.validateStatusArray.transformStatusArray, else: $alterStatusArray([.open, .inProgress, .pending, .waitingForReview, .done])))
+  statusArray: Status[]?
+  @readonly
+  message: String?
+}
