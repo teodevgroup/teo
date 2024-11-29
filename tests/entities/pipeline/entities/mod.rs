@@ -116,6 +116,26 @@ impl TryFrom<Value> for Status {
     }
 }
 
+impl TryFrom<&Value> for Status {
+
+    type Error = Error;
+
+    fn try_from(value: &Value) -> std::result::Result<Self, Self::Error> {
+        if let Some(enum_variant) = value.as_str() {
+            Ok(match enum_variant {
+                "open" => Status::open(),
+                "inProgress" => Status::in_progress(),
+                "pending" => Status::pending(),
+                "waitingForReview" => Status::waiting_for_review(),
+                "done" => Status::done(),
+                _ => Err(Error::new("cannot convert value to Status"))?
+            })
+        } else {
+            Err(Error::new("cannot convert value to Status"))
+        }
+    }
+}
+
 impl<'a> TryFrom<&'a Value> for &Status {
 
     type Error = Error;

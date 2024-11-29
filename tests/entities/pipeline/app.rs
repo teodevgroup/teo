@@ -142,7 +142,161 @@ pub fn load_app() -> Result<App> {
             }).collect::<Result<Vec<Status>>>()
         })
     });
-
+    app.main_namespace().define_transform_pipeline_item("alterInt32", |args: Arguments| {
+        let to: i32 = args.get("to")?;
+        return Ok(move || async move { to })
+    });
+    app.main_namespace().define_transform_pipeline_item("alterInt64", |args: Arguments| {
+        let to: i64 = args.get("to")?;
+        return Ok(move || async move { to })
+    });
+    app.main_namespace().define_transform_pipeline_item("alterFloat32", |args: Arguments| {
+        let to: f32 = args.get("to")?;
+        return Ok(move || async move { to })
+    });
+    app.main_namespace().define_transform_pipeline_item("alterFloat64", |args: Arguments| {
+        let to: f64 = args.get("to")?;
+        return Ok(move || async move { to })
+    });
+    app.main_namespace().define_transform_pipeline_item("alterBool", |args: Arguments| {
+        let to: bool = args.get("to")?;
+        return Ok(move || async move { to })
+    });
+    app.main_namespace().define_transform_pipeline_item("alterString", |args: Arguments| {
+        let to: String = args.get("to")?;
+        return Ok(move || {
+            let to = to.clone();
+            async move {
+                to
+            }
+        })
+    });
+    app.main_namespace().define_transform_pipeline_item("alterDate", |args: Arguments| {
+        let to: NaiveDate = args.get("to")?;
+        return Ok(move || {
+            let to = to.clone();
+            async move {
+                to
+            }
+        })
+    });
+    app.main_namespace().define_transform_pipeline_item("alterDateTime", |args: Arguments| {
+        let to: DateTime<Utc> = args.get("to")?;
+        return Ok(move || {
+            let to = to.clone();
+            async move {
+                to
+            }
+        })
+    });
+    app.main_namespace().define_transform_pipeline_item("alterDecimal", |args: Arguments| {
+        let to: BigDecimal = args.get("to")?;
+        return Ok(move || {
+            let to = to.clone();
+            async move {
+                to
+            }
+        })
+    });
+    app.main_namespace().define_transform_pipeline_item("alterStatus", |args: Arguments| {
+        let to: Status = args.get("to")?;
+        return Ok(move || {
+            let to = to.clone();
+            async move {
+                to
+            }
+        })
+    });
+    app.main_namespace().define_transform_pipeline_item("alterInt32Array", |args: Arguments| {
+        let to: Vec<i32> = args.get("to")?;
+        return Ok(move || {
+            let to = to.clone();
+            async move {
+                to
+            }
+        })
+    });
+    app.main_namespace().define_transform_pipeline_item("alterInt64Array", |args: Arguments| {
+        let to: Vec<i64> = args.get("to")?;
+        return Ok(move || {
+            let to = to.clone();
+            async move {
+                to
+            }
+        })
+    });
+    app.main_namespace().define_transform_pipeline_item("alterFloat32Array", |args: Arguments| {
+        let to: Vec<f32> = args.get("to")?;
+        return Ok(move || {
+            let to = to.clone();
+            async move {
+                to
+            }
+        })
+    });
+    app.main_namespace().define_transform_pipeline_item("alterFloat64Array", |args: Arguments| {
+        let to: Vec<f64> = args.get("to")?;
+        return Ok(move || {
+            let to = to.clone();
+            async move {
+                to
+            }
+        })
+    });
+    app.main_namespace().define_transform_pipeline_item("alterBoolArray", |args: Arguments| {
+        let to: Vec<bool> = args.get("to")?;
+        return Ok(move || {
+            let to = to.clone();
+            async move {
+                to
+            }
+        })
+    });
+    app.main_namespace().define_transform_pipeline_item("alterStringArray", |args: Arguments| {
+        let to: Vec<String> = args.get("to")?;
+        return Ok(move || {
+            let to = to.clone();
+            async move {
+                to
+            }
+        })
+    });
+    app.main_namespace().define_transform_pipeline_item("alterDateArray", |args: Arguments| {
+        let to: Vec<NaiveDate> = args.get("to")?;
+        return Ok(move || {
+            let to = to.clone();
+            async move {
+                to
+            }
+        })
+    });
+    app.main_namespace().define_transform_pipeline_item("alterDateTimeArray", |args: Arguments| {
+        let to: Vec<DateTime<Utc>> = args.get("to")?;
+        return Ok(move || {
+            let to = to.clone();
+            async move {
+                to
+            }
+        })
+    });
+    app.main_namespace().define_transform_pipeline_item("alterDecimalArray", |args: Arguments| {
+        let to: Vec<BigDecimal> = args.get("to")?;
+        return Ok(move || {
+            let to = to.clone();
+            async move {
+                to
+            }
+        })
+    });
+    app.main_namespace().define_transform_pipeline_item("alterStatusArray", |args: Arguments| {
+        let to: Vec<Status> = args.get("to")?;
+        return Ok(move || {
+            let to = to.clone();
+            async move {
+                to
+            }
+        })
+    });
 
     // app.main_namespace().define_validator_pipeline_item("myValidator", |args: Arguments| {
     //     return Ok(|_: Value, ctx: pipeline::Ctx| async move {
