@@ -59,4 +59,172 @@ mod tests {
             })
         }))
     }
+
+    #[serial]
+    #[shared_tokio_runtime::runtime_test]
+    async fn transform_int64() {
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/Container/create")
+            .json_body(json!({
+                "create": {
+                    "int64": 1,
+                },
+            }))
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
+        assert_json!(res, matcher!({
+            "data": partial({
+                "id": ignore,
+                "int64": 10,
+            })
+        }))
+    }
+
+    #[serial]
+    #[shared_tokio_runtime::runtime_test]
+    async fn transform_float32() {
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/Container/create")
+            .json_body(json!({
+                "create": {
+                    "float32": 1.0,
+                },
+            }))
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
+        assert_json!(res, matcher!({
+            "data": partial({
+                "id": ignore,
+                "float32": 10.0,
+            })
+        }))
+    }
+
+    #[serial]
+    #[shared_tokio_runtime::runtime_test]
+    async fn transform_float64() {
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/Container/create")
+            .json_body(json!({
+                "create": {
+                    "float64": 1.0,
+                },
+            }))
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
+        assert_json!(res, matcher!({
+            "data": partial({
+                "id": ignore,
+                "float64": 10.0,
+            })
+        }))
+    }
+
+    #[serial]
+    #[shared_tokio_runtime::runtime_test]
+    async fn transform_bool() {
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/Container/create")
+            .json_body(json!({
+                "create": {
+                    "bool": false,
+                },
+            }))
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
+        assert_json!(res, matcher!({
+            "data": partial({
+                "id": ignore,
+                "bool": true,
+            })
+        }))
+    }
+
+    #[serial]
+    #[shared_tokio_runtime::runtime_test]
+    async fn transform_date() {
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/Container/create")
+            .json_body(json!({
+                "create": {
+                    "date": "2005-06-01",
+                },
+            }))
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
+        assert_json!(res, matcher!({
+            "data": partial({
+                "id": ignore,
+                "date": date_value("2005-06-02"),
+            })
+        }))
+    }
+
+    #[serial]
+    #[shared_tokio_runtime::runtime_test]
+    async fn transform_date_time() {
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/Container/create")
+            .json_body(json!({
+                "create": {
+                    "dateTime": "2024-11-29T14:49:13.498Z",
+                },
+            }))
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
+        assert_json!(res, matcher!({
+            "data": partial({
+                "id": ignore,
+                "dateTime": date_time_value("2024-11-30T14:49:13.498Z"),
+            })
+        }))
+    }
+
+    #[serial]
+    #[shared_tokio_runtime::runtime_test]
+    async fn transform_decimal() {
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/Container/create")
+            .json_body(json!({
+                "create": {
+                    "decimal": "1",
+                },
+            }))
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
+        assert_json!(res, matcher!({
+            "data": partial({
+                "id": ignore,
+                "decimal": decimal_value("10"),
+            })
+        }))
+    }
+
+    #[serial]
+    #[shared_tokio_runtime::runtime_test]
+    async fn transform_status() {
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/Container/create")
+            .json_body(json!({
+                "create": {
+                    "status": "open",
+                },
+            }))
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
+        assert_json!(res, matcher!({
+            "data": partial({
+                "id": ignore,
+                "status": "pending",
+            })
+        }))
+    }
 }
