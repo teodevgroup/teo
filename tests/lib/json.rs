@@ -71,12 +71,18 @@ fn json_match_array(value: &Value, array: &Vec<Value>, matcher: &Matcher, path: 
 
 fn json_match_object(value: &Value, map: &Map<String, Value>, matcher: &Matcher, path: &KeyPath) -> Result<(), String> {
     match matcher {
-        Matcher::Object(m) => {
+        Matcher::Object(m, partial) => {
             // compare keys
-            json_match_error_if_not(m.len() == map.len(), value, path)?;
+            if !partial {
+                json_match_error_if_not(m.len() == map.len(), value, path)?;
+            }
             let m_keys: HashSet<&str> = m.keys().into_iter().map(|k| k.as_str()).collect();
             let map_keys: HashSet<&str> = map.keys().into_iter().map(|k| k.as_str()).collect();
-            json_match_error_if_not(m_keys == map_keys, value, path)?;
+            if *partial {
+                json_match_error_if_not(map_keys.is_superset(&m_keys), value, path)?;
+            } else {
+                json_match_error_if_not(m_keys == map_keys, value, path)?;
+            }
             for (key, matcher) in m.iter() {
                 let map_value = map.get(key).unwrap();
                 json_match_internal(map_value, matcher, &(path + key))?;

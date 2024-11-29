@@ -9,7 +9,6 @@ use teo_runtime::pipeline::item::templates::validator::{ValidatorResult, Validit
 use teo::app::App;
 use teo::result::{Error, Result};
 use teo::test::schema_path::schema_path_args;
-use crate::entities::models::types::entities::{SupportCreateInput, SupportFindManyArgs, Teo};
 use crate::entities::pipeline::entities::{Container, Status};
 
 pub fn load_app() -> Result<App> {

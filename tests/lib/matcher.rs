@@ -9,7 +9,7 @@ pub enum Matcher {
     Number(Number),
     String(String),
     Array(Vec<Matcher>),
-    Object(HashMap<String, Matcher>),
+    Object(HashMap<String, Matcher>, bool),
     ValueMatcher(Arc<dyn Fn(&Value) -> bool>),
 }
 
@@ -172,7 +172,11 @@ macro_rules! matcher_internal {
     };
 
     ({}) => {
-        $crate::lib::matcher::Matcher::Object(std::collections::HashMap::new())
+        $crate::lib::matcher::Matcher::Object(std::collections::HashMap::new(), false)
+    };
+
+    (partial, {}) => {
+        $crate::lib::matcher::Matcher::Object(std::collections::HashMap::new(), true)
     };
 
     ({ $($tt:tt)+ }) => {
@@ -180,7 +184,15 @@ macro_rules! matcher_internal {
             let mut object = std::collections::HashMap::new();
             matcher_internal!(@object object () ($($tt)+) ($($tt)+));
             object
-        })
+        }, false)
+    };
+
+    (partial, { $($tt:tt)+ }) => {
+        $crate::lib::matcher::Matcher::Object({
+            let mut object = std::collections::HashMap::new();
+            matcher_internal!(@object object () ($($tt)+) ($($tt)+));
+            object
+        }, true)
     };
 
     ($other:expr) => {
@@ -232,7 +244,7 @@ impl From<f32> for Matcher {
 
 impl From<f64> for Matcher {
     fn from(value: f64) -> Self {
-        Matcher::Number(Number::from_f64(value as f64).unwrap())
+        Matcher::Number(Number::from_f64(value).unwrap())
     }
 }
 
@@ -332,9 +344,9 @@ impl Matcher {
         self.as_array().is_some()
     }
 
-    pub fn as_object(&self) -> Option<&HashMap<String, Matcher>> {
+    pub fn as_object(&self) -> Option<(&HashMap<String, Matcher>, bool)> {
         match self {
-            Matcher::Object(obj) => Some(obj),
+            Matcher::Object(obj, partial) => Some((obj, *partial)),
             _ => None,
         }
     }

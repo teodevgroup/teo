@@ -974,9 +974,11 @@
 - Python: Upgrade pyo3 and pyo3-async-runtimes to 0.23 **[DONE]**
 - Python: update pipeline API **[DONE]**
 - Rust: remove static references and box leaks **[DONE]**
+- Rust: update defining pipeline item APIs **[DONE]**
+- Rust: add partial object matcher to test **[DONE]**
+- Rust: Entity tests for custom pipeline items **[IN PROGRESS]**
 - Python: decorated pipeline items and extracted arguments
 - Python: update API, use property instead of methods when possible
-- Rust: Entity tests for custom pipeline items
 - Python: Entity tests for custom pipeline items
 - Python: Item logging and debug print
 - Node.js: Updated pipeline API

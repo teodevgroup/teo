@@ -1,5 +1,5 @@
 pub mod app;
-pub mod entities;
+mod entities;
 
 #[cfg(test)]
 mod tests {
@@ -76,8 +76,6 @@ mod tests {
             "data": []
         }))
     }
-
-
 
     // int32
     //
