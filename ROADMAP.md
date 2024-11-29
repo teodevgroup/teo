@@ -976,7 +976,8 @@
 - Rust: remove static references and box leaks **[DONE]**
 - Rust: update defining pipeline item APIs **[DONE]**
 - Rust: add partial object matcher to test **[DONE]**
-- Rust: Entity tests for custom pipeline items **[IN PROGRESS]**
+- Rust: Entity tests for custom pipeline items **[DONE]**
+- Rust Entity: generate display trait for entity enums **[DONE]**
 - Python: decorated pipeline items and extracted arguments
 - Python: update API, use property instead of methods when possible
 - Python: Entity tests for custom pipeline items

@@ -73,7 +73,7 @@ pub fn load_app() -> Result<App> {
             } else if value.is_done() {
                 Status::open()
             } else {
-                Err(Error::new(format!("unknown status {:?}", value)))?
+                Err(Error::new(format!("unknown status {}", value)))?
             })
         })
     });
@@ -136,7 +136,7 @@ pub fn load_app() -> Result<App> {
                 } else if v.is_done() {
                     Status::open()
                 } else {
-                    Err(Error::new(format!("unknown status {:?}", v)))?
+                    Err(Error::new(format!("unknown status {}", v)))?
                 })
             }).collect::<Result<Vec<Status>>>()
         })
@@ -418,7 +418,7 @@ pub fn load_app() -> Result<App> {
     });
     app.main_namespace().define_callback_pipeline_item("statusCallback", |_| {
         Ok(|value: Status, container: Container| async move {
-            container.set_message(Some(format!("{:?}", value)))?;
+            container.set_message(Some(format!("{}", value)))?;
             Ok(())
         })
     });

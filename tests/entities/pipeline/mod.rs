@@ -878,4 +878,425 @@ mod tests {
             })
         }))
     }
+
+
+    #[serial]
+    #[shared_tokio_runtime::runtime_test]
+    async fn callback_int32() {
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/Container/create")
+            .json_body(json!({
+                "create": {
+                    "int32": 1,
+                },
+            }))
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
+        assert_json!(res, matcher!({
+            "data": partial({
+                "id": ignore,
+                "message": "1",
+            })
+        }))
+    }
+
+    #[serial]
+    #[shared_tokio_runtime::runtime_test]
+    async fn callback_int64() {
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/Container/create")
+            .json_body(json!({
+                "create": {
+                    "int64": 1,
+                },
+            }))
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
+        assert_json!(res, matcher!({
+            "data": partial({
+                "id": ignore,
+                "message": "1",
+            })
+        }))
+    }
+
+    #[serial]
+    #[shared_tokio_runtime::runtime_test]
+    async fn callback_float32() {
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/Container/create")
+            .json_body(json!({
+                "create": {
+                    "float32": 1.0,
+                },
+            }))
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
+        assert_json!(res, matcher!({
+            "data": partial({
+                "id": ignore,
+                "message": "1",
+            })
+        }))
+    }
+
+    #[serial]
+    #[shared_tokio_runtime::runtime_test]
+    async fn callback_float64() {
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/Container/create")
+            .json_body(json!({
+                "create": {
+                    "float64": 1.0,
+                },
+            }))
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
+        assert_json!(res, matcher!({
+            "data": partial({
+                "id": ignore,
+                "message": "1",
+            })
+        }))
+    }
+
+    #[serial]
+    #[shared_tokio_runtime::runtime_test]
+    async fn callback_bool() {
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/Container/create")
+            .json_body(json!({
+                "create": {
+                    "bool": false,
+                },
+            }))
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
+        assert_json!(res, matcher!({
+            "data": partial({
+                "id": ignore,
+                "message": "false",
+            })
+        }))
+    }
+
+    #[serial]
+    #[shared_tokio_runtime::runtime_test]
+    async fn callback_string() {
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/Container/create")
+            .json_body(json!({
+                "create": {
+                    "string": "Love",
+                },
+            }))
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
+        assert_json!(res, matcher!({
+            "data": partial({
+                "id": ignore,
+                "message": "Love",
+            })
+        }))
+    }
+
+    #[serial]
+    #[shared_tokio_runtime::runtime_test]
+    async fn callback_date() {
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/Container/create")
+            .json_body(json!({
+                "create": {
+                    "date": "2005-06-01",
+                },
+            }))
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
+        assert_json!(res, matcher!({
+            "data": partial({
+                "id": ignore,
+                "message": "2005-06-01",
+            })
+        }))
+    }
+
+    #[serial]
+    #[shared_tokio_runtime::runtime_test]
+    async fn callback_date_time() {
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/Container/create")
+            .json_body(json!({
+                "create": {
+                    "dateTime": "2024-11-29T14:49:13.498Z",
+                },
+            }))
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
+        assert_json!(res, matcher!({
+            "data": partial({
+                "id": ignore,
+                "message": "2024-11-29 14:49:13.498 UTC",
+            })
+        }))
+    }
+
+    #[serial]
+    #[shared_tokio_runtime::runtime_test]
+    async fn callback_decimal() {
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/Container/create")
+            .json_body(json!({
+                "create": {
+                    "decimal": "1",
+                },
+            }))
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
+        assert_json!(res, matcher!({
+            "data": partial({
+                "id": ignore,
+                "message": "1",
+            })
+        }))
+    }
+
+    #[serial]
+    #[shared_tokio_runtime::runtime_test]
+    async fn callback_status() {
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/Container/create")
+            .json_body(json!({
+                "create": {
+                    "status": "open",
+                },
+            }))
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
+        assert_json!(res, matcher!({
+            "data": partial({
+                "id": ignore,
+                "message": "open",
+            })
+        }))
+    }
+
+    #[serial]
+    #[shared_tokio_runtime::runtime_test]
+    async fn callback_int32_array() {
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/Container/create")
+            .json_body(json!({
+                "create": {
+                    "int32Array": [1, 1],
+                },
+            }))
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
+        assert_json!(res, matcher!({
+            "data": partial({
+                "id": ignore,
+                "message": "[1, 1]",
+            })
+        }))
+    }
+
+    #[serial]
+    #[shared_tokio_runtime::runtime_test]
+    async fn callback_int64_array() {
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/Container/create")
+            .json_body(json!({
+                "create": {
+                    "int64Array": [1, 1],
+                },
+            }))
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
+        assert_json!(res, matcher!({
+            "data": partial({
+                "id": ignore,
+                "message": "[1, 1]",
+            })
+        }))
+    }
+
+    #[serial]
+    #[shared_tokio_runtime::runtime_test]
+    async fn callback_float32_array() {
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/Container/create")
+            .json_body(json!({
+                "create": {
+                    "float32Array": [1.0, 1.0],
+                },
+            }))
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
+        assert_json!(res, matcher!({
+            "data": partial({
+                "id": ignore,
+                "message": "[1.0, 1.0]",
+            })
+        }))
+    }
+
+    #[serial]
+    #[shared_tokio_runtime::runtime_test]
+    async fn callback_float64_array() {
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/Container/create")
+            .json_body(json!({
+                "create": {
+                    "float64Array": [1.0, 1.0],
+                },
+            }))
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
+        assert_json!(res, matcher!({
+            "data": partial({
+                "id": ignore,
+                "message": "[1.0, 1.0]",
+            })
+        }))
+    }
+
+    #[serial]
+    #[shared_tokio_runtime::runtime_test]
+    async fn callback_bool_array() {
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/Container/create")
+            .json_body(json!({
+                "create": {
+                    "boolArray": [false, false],
+                },
+            }))
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
+        assert_json!(res, matcher!({
+            "data": partial({
+                "id": ignore,
+                "message": "[false, false]",
+            })
+        }))
+    }
+
+    #[serial]
+    #[shared_tokio_runtime::runtime_test]
+    async fn callback_string_array() {
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/Container/create")
+            .json_body(json!({
+                "create": {
+                    "stringArray": ["Love", "Love"],
+                },
+            }))
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
+        assert_json!(res, matcher!({
+            "data": partial({
+                "id": ignore,
+                "message": "[\"Love\", \"Love\"]",
+            })
+        }))
+    }
+
+    #[serial]
+    #[shared_tokio_runtime::runtime_test]
+    async fn callback_date_array() {
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/Container/create")
+            .json_body(json!({
+                "create": {
+                    "dateArray": ["2005-06-01", "2005-06-01"],
+                },
+            }))
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
+        assert_json!(res, matcher!({
+            "data": partial({
+                "id": ignore,
+                "message": "[2005-06-01, 2005-06-01]",
+            })
+        }))
+    }
+
+    #[serial]
+    #[shared_tokio_runtime::runtime_test]
+    async fn callback_date_time_array() {
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/Container/create")
+            .json_body(json!({
+                "create": {
+                    "dateTimeArray": ["2024-11-29T14:49:13.498Z", "2024-11-29T14:49:13.498Z"],
+                },
+            }))
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
+        assert_json!(res, matcher!({
+            "data": partial({
+                "id": ignore,
+                "message": "[2024-11-29T14:49:13.498Z, 2024-11-29T14:49:13.498Z]",
+            })
+        }))
+    }
+
+    #[serial]
+    #[shared_tokio_runtime::runtime_test]
+    async fn callback_decimal_array() {
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/Container/create")
+            .json_body(json!({
+                "create": {
+                    "decimalArray": ["1", "1"],
+                },
+            }))
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
+        assert_json!(res, matcher!({
+            "data": partial({
+                "id": ignore,
+                "message": "[BigDecimal(\"1\"), BigDecimal(\"1\")]",
+            })
+        }))
+    }
+
+    #[serial]
+    #[shared_tokio_runtime::runtime_test]
+    async fn callback_status_array() {
+        before_all().await;
+        before_each().await;
+        let req = TestRequest::new(Method::POST, "/Container/create")
+            .json_body(json!({
+                "create": {
+                    "statusArray": ["open", "open"],
+                },
+            }))
+            .await.unwrap();
+        let res = server().process_test_request(req).await.unwrap().body_as_json().unwrap();
+        assert_json!(res, matcher!({
+            "data": partial({
+                "id": ignore,
+                "message": "[Status(.open), Status(.open)]",
+            })
+        }))
+    }
 }

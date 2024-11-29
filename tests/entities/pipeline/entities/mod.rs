@@ -22,7 +22,7 @@ use helpers::interface::{Interface, AsInterface, AsInterfaceRef, AsInterfaceVecR
 ///
 /// This enum doesn't have a description.
 #[repr(transparent)]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone)]
 pub struct Status {
     inner: String,
 }
@@ -87,6 +87,18 @@ impl Status {
     /// This enum member doesn't have a description.
     pub fn done() -> Self {
         Self { inner: "done".to_owned() }
+    }
+}
+
+impl Debug for Status {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Status(.{})", self.inner)
+    }
+}
+
+impl Display for Status {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.inner)
     }
 }
 
