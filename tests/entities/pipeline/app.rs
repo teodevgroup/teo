@@ -10,7 +10,7 @@ use teo::app::App;
 use teo::result::{Error, Result};
 use teo::test::schema_path::schema_path_args;
 use crate::entities::models::types::entities::{SupportCreateInput, SupportFindManyArgs, Teo};
-use crate::entities::pipeline::entities::Status;
+use crate::entities::pipeline::entities::{Container, Status};
 
 pub fn load_app() -> Result<App> {
     let app = App::new_with_argv(
@@ -362,6 +362,126 @@ pub fn load_app() -> Result<App> {
     });
     app.main_namespace().define_validator_pipeline_item("validateStatusArray", |_| {
         return Ok(|_: Vec<Status>| async move { true })
+    });
+    app.main_namespace().define_callback_pipeline_item("int32Callback", |_| {
+        return Ok(|value: i32, container: Container| async move {
+            container.set_message(Some(format!("{}", value)))?;
+            Ok(())
+        })
+    });
+    app.main_namespace().define_callback_pipeline_item("int64Callback", |_| {
+        return Ok(|value: i64, container: Container| async move {
+            container.set_message(Some(format!("{}", value)))?;
+            Ok(())
+        })
+    });
+    app.main_namespace().define_callback_pipeline_item("float32Callback", |_| {
+        return Ok(|value: f32, container: Container| async move {
+            container.set_message(Some(format!("{}", value)))?;
+            Ok(())
+        })
+    });
+    app.main_namespace().define_callback_pipeline_item("float64Callback", |_| {
+        return Ok(|value: f64, container: Container| async move {
+            container.set_message(Some(format!("{}", value)))?;
+            Ok(())
+        })
+    });
+    app.main_namespace().define_callback_pipeline_item("boolCallback", |_| {
+        return Ok(|value: bool, container: Container| async move {
+            container.set_message(Some(format!("{}", value)))?;
+            Ok(())
+        })
+    });
+    app.main_namespace().define_callback_pipeline_item("stringCallback", |_| {
+        return Ok(|value: String, container: Container| async move {
+            container.set_message(Some(format!("{}", value)))?;
+            Ok(())
+        })
+    });
+    app.main_namespace().define_callback_pipeline_item("dateCallback", |_| {
+        return Ok(|value: NaiveDate, container: Container| async move {
+            container.set_message(Some(format!("{}", value)))?;
+            Ok(())
+        })
+    });
+    app.main_namespace().define_callback_pipeline_item("dateTimeCallback", |_| {
+        return Ok(|value: DateTime<Utc>, container: Container| async move {
+            container.set_message(Some(format!("{}", value)))?;
+            Ok(())
+        })
+    });
+    app.main_namespace().define_callback_pipeline_item("decimalCallback", |_| {
+        return Ok(|value: BigDecimal, container: Container| async move {
+            container.set_message(Some(format!("{}", value)))?;
+            Ok(())
+        })
+    });
+    app.main_namespace().define_callback_pipeline_item("statusCallback", |_| {
+        return Ok(|value: Status, container: Container| async move {
+            container.set_message(Some(format!("{:?}", value)))?;
+            Ok(())
+        })
+    });
+    app.main_namespace().define_callback_pipeline_item("int32ArrayCallback", |_| {
+        return Ok(|value: Vec<i32>, container: Container| async move {
+            container.set_message(Some(format!("{:?}", value)))?;
+            Ok(())
+        })
+    });
+    app.main_namespace().define_callback_pipeline_item("int64ArrayCallback", |_| {
+        return Ok(|value: Vec<i64>, container: Container| async move {
+            container.set_message(Some(format!("{:?}", value)))?;
+            Ok(())
+        })
+    });
+    app.main_namespace().define_callback_pipeline_item("float32ArrayCallback", |_| {
+        return Ok(|value: Vec<f32>, container: Container| async move {
+            container.set_message(Some(format!("{:?}", value)))?;
+            Ok(())
+        })
+    });
+    app.main_namespace().define_callback_pipeline_item("float64ArrayCallback", |_| {
+        return Ok(|value: Vec<f64>, container: Container| async move {
+            container.set_message(Some(format!("{:?}", value)))?;
+            Ok(())
+        })
+    });
+    app.main_namespace().define_callback_pipeline_item("boolArrayCallback", |_| {
+        return Ok(|value: Vec<bool>, container: Container| async move {
+            container.set_message(Some(format!("{:?}", value)))?;
+            Ok(())
+        })
+    });
+    app.main_namespace().define_callback_pipeline_item("stringArrayCallback", |_| {
+        return Ok(|value: Vec<String>, container: Container| async move {
+            container.set_message(Some(format!("{:?}", value)))?;
+            Ok(())
+        })
+    });
+    app.main_namespace().define_callback_pipeline_item("dateArrayCallback", |_| {
+        return Ok(|value: Vec<NaiveDate>, container: Container| async move {
+            container.set_message(Some(format!("{:?}", value)))?;
+            Ok(())
+        })
+    });
+    app.main_namespace().define_callback_pipeline_item("dateTimeArrayCallback", |_| {
+        return Ok(|value: Vec<DateTime<Utc>>, container: Container| async move {
+            container.set_message(Some(format!("{:?}", value)))?;
+            Ok(())
+        })
+    });
+    app.main_namespace().define_callback_pipeline_item("decimalArrayCallback", |_| {
+        return Ok(|value: Vec<BigDecimal>, container: Container| async move {
+            container.set_message(Some(format!("{:?}", value)))?;
+            Ok(())
+        })
+    });
+    app.main_namespace().define_callback_pipeline_item("statusArrayCallback", |_| {
+        return Ok(|value: Vec<Status>, container: Container| async move {
+            container.set_message(Some(format!("{:?}", value)))?;
+            Ok(())
+        })
     });
     Ok(app)
 }
