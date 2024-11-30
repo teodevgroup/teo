@@ -979,14 +979,13 @@
 - Rust: Entity tests for custom pipeline items **[DONE]**
 - Rust Entity: generate display trait for entity enums **[DONE]**
 - Python: decorated pipeline items and extracted arguments **[DONE]**
-- Python: Entity tests for custom pipeline items
-- Python: Item logging and debug print
+- Python: Entity tests for custom pipeline items **[DONE]**
 - Python: update API, use property instead of methods when possible
 - Node.js: Updated pipeline API
 - Node.js: Propagate errors correctly in Node.js API
 - Node.js: Entity tests for custom pipeline items
-- Node.js: Item logging and debug print
 - Node.js: update API, use property instead of methods when possible
+- Python pipeline items: capture and choose thread locals 
 
 ### 0.3.6
 - Rust unit testing tools
@@ -1010,7 +1009,11 @@
 - Finish adding missing tests
 
 ### 0.4.0
-- Fragments
+- Rust: Fragments
+- Node.js: Fragments
+- Python: Fragments
+- Node.js: Classes logging and debug print
+- Python: Classes logging and debug print
 
 ### 0.4.1
 - Combined request in HTTP clients
