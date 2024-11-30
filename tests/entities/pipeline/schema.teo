@@ -128,45 +128,45 @@ declare pipeline item compareStatusArray: Status[] -> Status[]
 model Container {
   @id @autoIncrement @readonly
   id: Int
-  @onSet($if($presents, then: $int32Callback.validateInt32.transformInt32, else: $alterInt32(5)))
+  @onSet($if($presents, then: $int32Callback.validateInt32.transformInt32.compareInt32, else: $alterInt32(5)))
   int32: Int?
-  @onSet($if($presents, then: $int64Callback.validateInt64.transformInt64, else: $alterInt64(5)))
+  @onSet($if($presents, then: $int64Callback.validateInt64.transformInt64.compareInt64, else: $alterInt64(5)))
   int64: Int64?
-  @onSet($if($presents, then: $float32Callback.validateFloat32.transformFloat32, else: $alterFloat32(5.5)))
+  @onSet($if($presents, then: $float32Callback.validateFloat32.transformFloat32.compareFloat32, else: $alterFloat32(5.5)))
   float32: Float32?
-  @onSet($if($presents, then: $float64Callback.validateFloat64.transformFloat64, else: $alterFloat64(5.5)))
+  @onSet($if($presents, then: $float64Callback.validateFloat64.transformFloat64.compareFloat64, else: $alterFloat64(5.5)))
   float64: Float?
-  @onSet($if($presents, then: $boolCallback.validateBool.transformBool, else: $alterBool(true)))
+  @onSet($if($presents, then: $boolCallback.validateBool.transformBool.compareBool, else: $alterBool(true)))
   bool: Bool?
-  @onSet($if($presents, then: $stringCallback.validateString.transformString, else: $alterString("Flower")))
+  @onSet($if($presents, then: $stringCallback.validateString.transformString.compareString, else: $alterString("Flower")))
   string: String?
-  @onSet($if($presents, then: $dateCallback.validateDate.transformDate, else: $alterDate(Date("2003-06-23"))))
+  @onSet($if($presents, then: $dateCallback.validateDate.transformDate.compareDate, else: $alterDate(Date("2003-06-23"))))
   date: Date?
-  @onSet($if($presents, then: $dateTimeCallback.validateDateTime.transformDateTime, else: $alterDateTime(DateTime("2004-07-23T11:30:00.000Z"))))
+  @onSet($if($presents, then: $dateTimeCallback.validateDateTime.transformDateTime.compareDateTime, else: $alterDateTime(DateTime("2004-07-23T11:30:00.000Z"))))
   dateTime: DateTime?
-  @onSet($if($presents, then: $decimalCallback.validateDecimal.transformDecimal, else: $alterDecimal(Decimal("5"))))
+  @onSet($if($presents, then: $decimalCallback.validateDecimal.transformDecimal.compareDecimal, else: $alterDecimal(Decimal("5"))))
   decimal: Decimal?
-  @onSet($if($presents, then: $statusCallback.validateStatus.transformStatus, else: $alterStatus(.done)))
+  @onSet($if($presents, then: $statusCallback.validateStatus.transformStatus.compareStatus, else: $alterStatus(.done)))
   status: Status?
-  @onSet($if($presents, then: $int32ArrayCallback.validateInt32Array.transformInt32Array, else: $alterInt32Array([5, 5, 5, 5, 5])))
+  @onSet($if($presents, then: $int32ArrayCallback.validateInt32Array.transformInt32Array.compareInt32Array, else: $alterInt32Array([5, 5, 5, 5, 5])))
   int32Array: Int[]?
-  @onSet($if($presents, then: $int64ArrayCallback.validateInt64Array.transformInt64Array, else: $alterInt64Array([5, 5, 5, 5, 5])))
+  @onSet($if($presents, then: $int64ArrayCallback.validateInt64Array.transformInt64Array.compareInt64Array, else: $alterInt64Array([5, 5, 5, 5, 5])))
   int64Array: Int64[]?
-  @onSet($if($presents, then: $float32ArrayCallback.validateFloat32Array.transformFloat32Array, else: $alterFloat32Array([5.5, 5.5, 5.5, 5.5, 5.5])))
+  @onSet($if($presents, then: $float32ArrayCallback.validateFloat32Array.transformFloat32Array.compareFloat32Array, else: $alterFloat32Array([5.5, 5.5, 5.5, 5.5, 5.5])))
   float32Array: Float32[]?
-  @onSet($if($presents, then: $float64ArrayCallback.validateFloat64Array.transformFloat64Array, else: $alterFloat64Array([5.5, 5.5, 5.5, 5.5, 5.5])))
+  @onSet($if($presents, then: $float64ArrayCallback.validateFloat64Array.transformFloat64Array.compareFloat64Array, else: $alterFloat64Array([5.5, 5.5, 5.5, 5.5, 5.5])))
   float64Array: Float[]?
-  @onSet($if($presents, then: $boolArrayCallback.validateBoolArray.transformBoolArray, else: $alterBoolArray([true, false, true, false, true])))
+  @onSet($if($presents, then: $boolArrayCallback.validateBoolArray.transformBoolArray.compareBoolArray, else: $alterBoolArray([true, false, true, false, true])))
   boolArray: Bool[]?
-  @onSet($if($presents, then: $stringArrayCallback.validateStringArray.transformStringArray, else: $alterStringArray(["Sing", "Dance", "Gift"])))
+  @onSet($if($presents, then: $stringArrayCallback.validateStringArray.transformStringArray.compareStringArray, else: $alterStringArray(["Sing", "Dance", "Gift"])))
   stringArray: String[]?
-  @onSet($if($presents, then: $dateArrayCallback.validateDateArray.transformDateArray, else: $alterDateArray([Date("2003-06-23"), Date("2003-06-23")])))
+  @onSet($if($presents, then: $dateArrayCallback.validateDateArray.transformDateArray.compareDateArray, else: $alterDateArray([Date("2003-06-23"), Date("2003-06-23")])))
   dateArray: Date[]?
-  @onSet($if($presents, then: $dateTimeArrayCallback.validateDateTimeArray.transformDateTimeArray, else: $alterDateTimeArray([DateTime("2004-07-23T11:30:00.000Z"), DateTime("2004-07-23T11:30:00.000Z")])))
+  @onSet($if($presents, then: $dateTimeArrayCallback.validateDateTimeArray.transformDateTimeArray.compareDateTimeArray, else: $alterDateTimeArray([DateTime("2004-07-23T11:30:00.000Z"), DateTime("2004-07-23T11:30:00.000Z")])))
   dateTimeArray: DateTime[]?
-  @onSet($if($presents, then: $decimalArrayCallback.validateDecimalArray.transformDecimalArray, else: $alterDecimalArray([Decimal("5"), Decimal("5"), Decimal("5"), Decimal("5"), Decimal("5")])))
+  @onSet($if($presents, then: $decimalArrayCallback.validateDecimalArray.transformDecimalArray.compareDecimalArray, else: $alterDecimalArray([Decimal("5"), Decimal("5"), Decimal("5"), Decimal("5"), Decimal("5")])))
   decimalArray: Decimal[]?
-  @onSet($if($presents, then: $statusArrayCallback.validateStatusArray.transformStatusArray, else: $alterStatusArray([.open, .inProgress, .pending, .waitingForReview, .done])))
+  @onSet($if($presents, then: $statusArrayCallback.validateStatusArray.transformStatusArray.compareStatusArray, else: $alterStatusArray([.open, .inProgress, .pending, .waitingForReview, .done])))
   statusArray: Status[]?
   @readonly
   message: String?
