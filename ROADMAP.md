@@ -980,7 +980,8 @@
 - Rust Entity: generate display trait for entity enums **[DONE]**
 - Python: decorated pipeline items and extracted arguments **[DONE]**
 - Python: Entity tests for custom pipeline items **[DONE]**
-- Python: update API, use property instead of methods when possible
+- Rust: Mutable request **[IN PROGRESS]**
+- Python: update API, use property instead of methods when possible **[IN PROGRESS]**
 - Node.js: Updated pipeline API
 - Node.js: Propagate errors correctly in Node.js API
 - Node.js: Entity tests for custom pipeline items
@@ -988,6 +989,9 @@
 - Python pipeline items: capture and choose thread locals 
 
 ### 0.3.6
+- Rust: add cleanup method to App
+- Python: add cleanup method to App
+- Node.js: add cleanup method to App
 - Rust unit testing tools
 - Documentation: unit testing guide
 
