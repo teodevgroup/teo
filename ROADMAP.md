@@ -978,14 +978,15 @@
 - Rust: add partial object matcher to test **[DONE]**
 - Rust: Entity tests for custom pipeline items **[DONE]**
 - Rust Entity: generate display trait for entity enums **[DONE]**
-- Python: decorated pipeline items and extracted arguments
-- Python: update API, use property instead of methods when possible
+- Python: decorated pipeline items and extracted arguments **[DONE]**
 - Python: Entity tests for custom pipeline items
 - Python: Item logging and debug print
+- Python: update API, use property instead of methods when possible
 - Node.js: Updated pipeline API
 - Node.js: Propagate errors correctly in Node.js API
 - Node.js: Entity tests for custom pipeline items
 - Node.js: Item logging and debug print
+- Node.js: update API, use property instead of methods when possible
 
 ### 0.3.6
 - Rust unit testing tools
@@ -994,7 +995,9 @@
 ### 0.3.7
 - Migrations should return errors
 - Debug logging SQL
+- Debug logging MongoDB query
 - Migration dry run
+- Migration describe
 
 ### 0.3.8
 - Update official documentation
@@ -1006,45 +1009,62 @@
 ### 0.3.10
 - Finish adding missing tests
 
-### 0.3.11
+### 0.4.0
+- Fragments
+
+### 0.4.1
+- Combined request in HTTP clients
+- Remove paging information from `findMany`
+- Add handler `paging` to fetch paging info
+
+### 0.4.2
+- `@onSet!()` and `@onSet?()`
+- `$get!()` and `$get?()`
+- Language: Default argument for argument list and config declaration
+
+### 0.4.3
 - Uploaders
 - Amazon S3 uploader
 - Azure storage uploader
 - GCP uploader
 - Local file directory uploader
 - multipart/json: Create and update with form data
+- Admin dashboard: Image uploads
 
-### 0.3.12
-- Node.js: Support more linux systems
-
-### 0.3.13
-- Support datetime BC
-- Support date BC
-
-### 0.4.0
-- `@onSet!()` and `@onSet?()`
-- `$get!()` and `$get?()`
-- Language: Default argument for argument list and config declaration
-- Combined request in HTTP clients
-- Remove paging information from `findMany`
-- Entity: Handlers call handlers
+### 0.4.4
 - Action transformers
 - Soft delete
+
+### 0.4.5
 - MongoDB migration
 - MongoDB `$queryRaw`
+- Run custom MongoDB query
+
+### 0.4.6
 - Update C# client with new namespace API
 - C# client: capitalized names and names with underscore
 - Revamp all client APIs
-- Run custom MongoDB query
+
+### 0.4.7
 - JSON type
+
+### 0.4.8
 - PostgreSQL: Enum types
+
+### 0.4.9
 - Extended database type mapping
+
+### 0.4.10
+- Admin dashboard: Redesign
 - Admin dashboard: Filters
 - Admin dashboard: Sort
 - Admin dashboard: Redesigned date time controls
 - Admin dashboard: Load records on scroll
 - Admin dashboard: Embedded forms
 - Admin dashboard: dashboards
+
+### 0.4.11
+- Node.js: Support WSL linux
 
 ### 0.5.0
 - Runtime: `ExtractFromRequest`: should work with references
@@ -1055,6 +1075,8 @@
 - MongoDB: relation where: multiple keys should be allowed
 - MongoDB: relation where: 'every' results is incorrect
 - MongoDB: aggregate and group by for string and dates
+- Support datetime BC
+- Support date BC
 
 ## Future Stage
 
