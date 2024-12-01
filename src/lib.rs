@@ -44,6 +44,8 @@ pub mod prelude {
     pub use teo_runtime::value::file::File;
     pub use teo_runtime::request::extract::ExtractFromRequest;
     pub use teo_runtime::request::Request;
+    pub use teo_runtime::headers;
+    pub use teo_runtime::cookies;
     pub use teo_runtime::response;
     pub use teo_runtime::pipeline;
     pub use teo_runtime::handler;
