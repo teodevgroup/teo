@@ -37,8 +37,7 @@ pub(super) async fn parse_form_body<I>(request: &Request, incoming: I) -> Result
     <I as Body>::Error: std::error::Error + Send + Sync + 'static {
     let boundary = request
         .headers()
-        .get(CONTENT_TYPE)
-        .and_then(|ct| ct.to_str().ok())
+        .get(CONTENT_TYPE)?
         .and_then(|ct| multer::parse_boundary(ct).ok());
     if boundary.is_none() {
         return Err(Error::invalid_request_message("missing boundary in header"));

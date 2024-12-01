@@ -1,7 +1,7 @@
 use bytes::Bytes;
 use http_body_util::{Either, Full};
 use hyper::body::Body;
-use hyper::header::{HeaderName, HeaderValue, CONTENT_TYPE};
+use hyper::header::{HeaderValue, CONTENT_TYPE};
 use mime::APPLICATION_JSON;
 use teo_result::{Error, Result};
 use teo_runtime::request::Request;
@@ -9,7 +9,6 @@ use teo_runtime::response::body::BodyInner;
 use teo_runtime::response::Response;
 use tower_http::services::fs::ServeFileSystemResponseBody;
 use tower_http::services::ServeFile;
-use std::str::FromStr;
 
 pub async fn hyper_response_from(request: Request, response: Response) -> Result<hyper::Response<Either<Full<Bytes>, ServeFileSystemResponseBody>>> {
     let mut hyper_response = {
@@ -46,11 +45,9 @@ pub async fn hyper_response_from(request: Request, response: Response) -> Result
             }
         }
     }?;
-    for key in response.headers().keys() {
-        hyper_response.headers_mut().append(HeaderName::from_str(&key).unwrap(), HeaderValue::try_from(response.headers().get(&key).unwrap()).unwrap());
-    }
+    response.headers().extend_to(hyper_response.headers_mut());
     for cookie in response.cookies() {
-        hyper_response.headers_mut().append("Set-Cookie", HeaderValue::try_from(cookie.encoded().to_string()).unwrap());
+        hyper_response.headers_mut().append("Set-Cookie", HeaderValue::try_from(cookie.encoded())?);
     }
     Ok(hyper_response)
 }

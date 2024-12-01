@@ -980,7 +980,8 @@
 - Rust Entity: generate display trait for entity enums **[DONE]**
 - Python: decorated pipeline items and extracted arguments **[DONE]**
 - Python: Entity tests for custom pipeline items **[DONE]**
-- Rust: Mutable request **[IN PROGRESS]**
+- Rust: Mutable request **[DONE]**
+- Rust: Combine HTTP headers implementation **[DONE]**
 - Python: update API, use property instead of methods when possible **[IN PROGRESS]**
 - Node.js: Updated pipeline API
 - Node.js: Propagate errors correctly in Node.js API

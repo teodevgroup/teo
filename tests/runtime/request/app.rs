@@ -10,7 +10,7 @@ pub fn load_app() -> Result<App> {
         schema_path_args(file!(), "schema.teo")
     )?;
     app.main_namespace().define_handler("inspect", |req: Request| async move {
-        let content_type = req.headers().get("content-type").unwrap().to_str().unwrap();
+        let content_type = req.headers().get("content-type")?.unwrap();
         Ok(Response::teon(teon!({
             "path": req.path(),
             "query": req.query().map(|s| s.to_string()),
@@ -20,16 +20,16 @@ pub fn load_app() -> Result<App> {
         })))
     });
     app.main_namespace().define_handler("echo", |req: Request| async move {
-        let binding = req.handler_match().unwrap();
+        let binding = req.handler_match()?;
         let captures = binding.captures();
         let echo = captures.get("data").unwrap();
-        Ok(Response::string(echo, "text/plain"))
+        Ok(Response::string(echo, "text/plain")?)
     });
     app.main_namespace().define_handler("echoMore", |req: Request| async move {
-        let binding = req.handler_match().unwrap();
+        let binding = req.handler_match()?;
         let captures = binding.captures();
         let echo = captures.get("data").unwrap();
-        Ok(Response::string(echo, "text/plain"))
+        Ok(Response::string(echo, "text/plain")?)
     });
     app.main_namespace().define_handler("echoJsonBody", |req: Request| async move {
         Ok(Response::teon(req.body_value()?.clone()))
