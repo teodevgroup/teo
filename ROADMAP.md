@@ -987,9 +987,12 @@
 - Node.js: Propagate errors correctly in Node.js API
 - Node.js: Entity tests for custom pipeline items
 - Node.js: update API, use property instead of methods when possible
-- Python pipeline items: capture and choose thread locals 
+- Python pipeline items: capture and choose thread locals
 
 ### 0.3.6
+- Rust: `Request.set_headers`
+- Python: `Request.headers` setter
+- Node.js: `Request.headers` setter
 - Rust: add cleanup method to App
 - Python: add cleanup method to App
 - Node.js: add cleanup method to App
