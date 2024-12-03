@@ -982,7 +982,7 @@
 - Python: Entity tests for custom pipeline items **[DONE]**
 - Rust: Mutable request **[DONE]**
 - Rust: Combine HTTP headers implementation **[DONE]**
-- Python: update API, use property instead of methods when possible **[IN PROGRESS]**
+- Python: update API, use property instead of methods when possible **[DONE]**
 - Node.js: Updated pipeline API
 - Node.js: Propagate errors correctly in Node.js API
 - Node.js: Entity tests for custom pipeline items
@@ -996,15 +996,10 @@
 - Rust: add cleanup method to App
 - Python: add cleanup method to App
 - Node.js: add cleanup method to App
-- Rust unit testing tools
-- Documentation: unit testing guide
 
 ### 0.3.7
-- Migrations should return errors
-- Debug logging SQL
-- Debug logging MongoDB query
-- Migration dry run
-- Migration describe
+- Rust unit testing tools
+- Documentation: unit testing guide
 
 ### 0.3.8
 - Update official documentation
@@ -1015,6 +1010,13 @@
 
 ### 0.3.10
 - Finish adding missing tests
+
+### 0.3.11
+- Migrations should return errors
+- Debug logging SQL
+- Debug logging MongoDB query
+- Migration dry run
+- Migration describe
 
 ### 0.4.0
 - Rust: Fragments
