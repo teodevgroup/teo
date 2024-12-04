@@ -983,8 +983,9 @@
 - Rust: Mutable request **[DONE]**
 - Rust: Combine HTTP headers implementation **[DONE]**
 - Python: update API, use property instead of methods when possible **[DONE]**
-- Node.js: Updated pipeline API
 - Node.js: Propagate errors correctly in Node.js API
+- Node.js: Try convert JsUnknown into error
+- Node.js: Updated pipeline API
 - Node.js: Entity tests for custom pipeline items
 - Node.js: update API, use property instead of methods when possible
 - Python pipeline items: capture and choose thread locals
