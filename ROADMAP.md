@@ -984,6 +984,7 @@
 - Rust: Combine HTTP headers implementation **[DONE]**
 - Python: update API, use property instead of methods when possible **[DONE]**
 - Node.js: Updated pipeline API **[DONE]**
+- Update dynamic classes API **[IN PROGRESS]**
 - Node.js: Fix bug: Access Teo causes crash **[IN PROGRESS]**
 - Node.js: Entity tests for custom pipeline items **[IN PROGRESS]**
 - Node.js: update API, use property instead of methods when possible **[IN PROGRESS]**

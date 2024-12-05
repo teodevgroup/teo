@@ -178,14 +178,5 @@ impl App {
     }
 }
 
-impl Drop for App {
-    fn drop(&mut self) {
-        // drop dynamic classes
-        if let Some(clean_up) = self.app_data().dynamic_classes_clean_up() {
-            clean_up.call(self.app_data().clone());
-        }
-    }
-}
-
 unsafe impl Send for App { }
 unsafe impl Sync for App { }
