@@ -991,7 +991,7 @@
 - Node.js: Entity tests for custom pipeline items **[DONE]**
 - Node.js: Fix floating value is converted to integer bug **[DONE]**
 - Node.js: update API, use property instead of methods when possible **[DONE]**
-- Node.js: Propagate errors correctly in Node.js API
+- Node.js: Propagate errors correctly in Node.js API **[IN PROGRESS]**
 - Node.js: Try convert JsUnknown into error
 - Python: Update dynamic classes API **[DONE]**
 - Python pipeline items: capture and choose thread locals
