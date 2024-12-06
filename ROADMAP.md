@@ -1000,15 +1000,22 @@
 - Rust: `Request.set_headers`
 - Python: `Request.headers` setter
 - Node.js: `Request.headers` setter
-- Rust: add cleanup method to App
-- Python: add cleanup method to App
-- Node.js: add cleanup method to App
+- Rust: `Request.set_cookies`
+- Python: `Request.cookies` setter
+- Node.js: `Request.cookies` setter
+- Python: Test Request with headers accessor
+- Node.js: Test Request with headers accessor
+- Python: Test Response with headers accessor
+- Node.js: Test Response with headers accessor
 
 ### 0.3.7
 - Rust unit testing tools
 - Documentation: unit testing guide
 
 ### 0.3.8
+- Rust: add cleanup method to App
+- Python: add cleanup method to App
+- Node.js: add cleanup method to App
 - Update official documentation
 
 ### 0.3.9
