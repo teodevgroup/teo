@@ -1,5 +1,7 @@
 # Roadmap
 
+## Current Stage
+
 ### 0.0.20
 - `on_output` pipeline is called in save function **[DONE]**
 
@@ -1084,16 +1086,19 @@
 - Node.js: Support WSL linux
 
 ### 0.5.0
-- Runtime: `ExtractFromRequest`: should work with references
 - MongoDB: Upgrade to MongoDB Rust driver 3.0
+
+### 0.5.1
+- Support datetime BC
+- Support date BC
+
+### 0.5.2
 - MongoDB: root skip take and distinct bug
 - MongoDB: nested skip take and distinct bug
 - MongoDB: if cursor key is not orderBy key, result is wrong
 - MongoDB: relation where: multiple keys should be allowed
 - MongoDB: relation where: 'every' results is incorrect
 - MongoDB: aggregate and group by for string and dates
-- Support datetime BC
-- Support date BC
 
 ## Future Stage
 
@@ -1117,13 +1122,13 @@
 - Teo Studio for Linux (Qt)
 
 ### 1.4.0
-- Support MSSQL
-
-### 1.5.0
 - Data subscriptions
 
-### 1.6.0
+### 1.5.0
 - Full text indexes
+
+### 1.6.0
+- Support MSSQL
 
 ### 1.7.0
 - PostgreSQL: Support PostgresML and vector type
