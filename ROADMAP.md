@@ -990,7 +990,7 @@
 - Node.js: update API, use property instead of methods when possible **[IN PROGRESS]**
 - Node.js: Propagate errors correctly in Node.js API
 - Node.js: Try convert JsUnknown into error
-- Python: Update dynamic classes API
+- Python: Update dynamic classes API **[DONE]**
 - Python pipeline items: capture and choose thread locals
 
 ### 0.3.6
