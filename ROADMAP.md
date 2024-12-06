@@ -989,6 +989,7 @@
 - Node.js: Update dynamic classes API **[DONE]**
 - Node.js: Fix bug: Access Teo causes crash **[DONE]**
 - Node.js: Entity tests for custom pipeline items **[DONE]**
+- Node.js: Fix floating value is converted to integer bug **[DONE]**
 - Node.js: update API, use property instead of methods when possible **[IN PROGRESS]**
 - Node.js: Propagate errors correctly in Node.js API
 - Node.js: Try convert JsUnknown into error
