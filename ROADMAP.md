@@ -997,7 +997,7 @@
 
 ### 0.3.6
 - Rust: Remove async keyword from middleware creator functions **[DONE]**
-- Node.js: Remove asyncness from middleware creator functions
+- Node.js: Remove asyncness from middleware creator functions **[DONE]**
 - Python: Remove asyncness from middleware creator functions **[DONE]**
 - Rust: `Request.set_headers`
 - Python: `Request.headers` setter
@@ -1011,30 +1011,30 @@
 - Node.js: Test Response with headers accessor
 
 ### 0.3.7
-- Rust: add cleanup method to App
-- Python: add cleanup method to App
-- Node.js: add cleanup method to App
-
-### 0.3.8
-- Rust unit testing tools
-- Documentation: unit testing guide
-
-### 0.3.9
-- Update official documentation
-
-### 0.3.10
-- Unit test for pipeline items
-- Official documentation for pipeline items
-
-### 0.3.11
-- Finish adding missing tests
-
-### 0.3.12
 - Migrations should return errors
 - Debug logging SQL
 - Debug logging MongoDB query
 - Migration dry run
 - Migration describe
+
+### 0.3.8
+- Rust: add cleanup method to App
+- Python: add cleanup method to App
+- Node.js: add cleanup method to App
+
+### 0.3.9
+- Rust unit testing tools
+- Documentation: unit testing guide
+
+### 0.3.10
+- Update official documentation
+
+### 0.3.11
+- Unit test for pipeline items
+- Official documentation for pipeline items
+
+### 0.3.12
+- Finish adding missing tests
 
 ### 0.3.13 (Pending napi-rs implementation)
 - Node.js: Fix bug: Process panics after Transaction returns value **[PENDING]**
