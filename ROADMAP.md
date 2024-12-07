@@ -992,7 +992,6 @@
 - Node.js: Fix floating value is converted to integer bug **[DONE]**
 - Node.js: update API, use property instead of methods when possible **[DONE]**
 - Node.js: Propagate errors correctly in Node.js API **[DONE]**
-- Node.js: Fix bug: Process panics after Transaction returns value **[IN PROGRESS]**
 - Node.js: Throw TeoError instead of normal Error
 - Python: Update dynamic classes API **[DONE]**
 - Python pipeline items: capture and choose thread locals
@@ -1011,6 +1010,7 @@
 - Node.js: Test Response with headers accessor
 
 ### 0.3.7
+- Node.js: Fix bug: Process panics after Transaction returns value **[PENDING]**
 - Rust unit testing tools
 - Documentation: unit testing guide
 
@@ -1144,9 +1144,9 @@
 - PostgreSQL: Support PostgresML and vector type
 
 ### 2.0.0 (Pending JavaScript implementation)
-- Node.js: Decorated handlers
-- Node.js: Decorated handler groups
-- Node.js: Decorated child namespaces
-- Node.js: Decorated middlewares and extracted arguments
-- Node.js: decorated pipeline items and extracted arguments
+- Node.js: Decorated handlers **[PENDING]**
+- Node.js: Decorated handler groups **[PENDING]**
+- Node.js: Decorated child namespaces **[PENDING]**
+- Node.js: Decorated middlewares and extracted arguments **[PENDING]**
+- Node.js: decorated pipeline items and extracted arguments **[PENDING]**
 
