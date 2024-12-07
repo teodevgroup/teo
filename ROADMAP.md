@@ -996,7 +996,7 @@
 - Python pipeline items: capture and choose thread locals **[DONE]**
 
 ### 0.3.6
-- Rust: Remove async keyword from middleware creator functions
+- Rust: Remove async keyword from middleware creator functions **[DONE]**
 - Rust: `Request.set_headers`
 - Python: `Request.headers` setter
 - Node.js: `Request.headers` setter
