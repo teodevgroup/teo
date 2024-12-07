@@ -1009,8 +1009,6 @@
 - Node.js: Test Response with headers accessor
 
 ### 0.3.7
-- Node.js: Fix bug: Process panics after Transaction returns value **[PENDING]**
-- Node.js: Throw TeoError instead of normal Error **[PENDING]**
 - Rust unit testing tools
 - Documentation: unit testing guide
 
@@ -1033,6 +1031,10 @@
 - Debug logging MongoDB query
 - Migration dry run
 - Migration describe
+
+### 0.3.12 (Pending napi-rs implementation)
+- Node.js: Fix bug: Process panics after Transaction returns value **[PENDING]**
+- Node.js: Throw TeoError instead of normal Error **[PENDING]**
 
 ### 0.4.0
 - Rust: Fragments
