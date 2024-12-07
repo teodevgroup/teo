@@ -1,6 +1,6 @@
 [package]
 name = "teo"
-version = "0.3.5"
+version = "0.3.6"
 edition = "2021"
 rust-version = "1.82"
 description = "Schema-driven web server framework."
@@ -13,7 +13,7 @@ repository = "https://github.com/teodevgroup/teo"
 [dependencies]
 teo-result = { version = "0.3.5", path = "../teo-result", features = ["multer"] }
 teo-parser = { version = "0.3.0", path = "../teo-parser" }
-teo-runtime = { version = "0.3.5", path = "../teo-runtime" }
+teo-runtime = { version = "0.3.6", path = "../teo-runtime" }
 teo-sql-connector = { version = "0.3.5", path = "../teo-sql-connector" }
 teo-mongodb-connector = { version = "0.3.5", path = "../teo-mongodb-connector" }
 teo-generator = { version = "0.3.5", path = "../teo-generator" }
