@@ -992,12 +992,13 @@
 - Node.js: Fix floating value is converted to integer bug **[DONE]**
 - Node.js: update API, use property instead of methods when possible **[DONE]**
 - Node.js: Propagate errors correctly in Node.js API **[DONE]**
-- Node.js: Fix bug: Transaction cannot return value **[IN PROGRESS]**
+- Node.js: Fix bug: Process panics after Transaction returns value **[IN PROGRESS]**
 - Node.js: Throw TeoError instead of normal Error
 - Python: Update dynamic classes API **[DONE]**
 - Python pipeline items: capture and choose thread locals
 
 ### 0.3.6
+- Rust: Remove async keyword from middleware creator functions
 - Rust: `Request.set_headers`
 - Python: `Request.headers` setter
 - Node.js: `Request.headers` setter
