@@ -998,7 +998,7 @@
 ### 0.3.6
 - Rust: Remove async keyword from middleware creator functions **[DONE]**
 - Node.js: Remove asyncness from middleware creator functions
-- Python: Remove asyncness from middleware creator functions
+- Python: Remove asyncness from middleware creator functions **[DONE]**
 - Rust: `Request.set_headers`
 - Python: `Request.headers` setter
 - Node.js: `Request.headers` setter
