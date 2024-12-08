@@ -998,29 +998,27 @@
 ### 0.3.6
 - Remove async keyword from middleware creator functions **[DONE]**
 - Set headers and cookies on requests and responses **[DONE]**
-- Python: Test Request with headers accessor
-- Node.js: Test Request with headers accessor
-- Python: Test Response with headers accessor
-- Node.js: Test Response with headers accessor
+- Test Request and test response with headers and cookies accessors **[IN PROGRESS]**
+- Python: Fix building process error on Windows
 
 ### 0.3.7
+- Update official documentation
+
+### 0.3.8
 - Migrations should return errors
 - Debug logging SQL
 - Debug logging MongoDB query
 - Migration dry run
 - Migration describe
 
-### 0.3.8
+### 0.3.9
 - Rust: add cleanup method to App
 - Python: add cleanup method to App
 - Node.js: add cleanup method to App
 
-### 0.3.9
+### 0.3.10
 - Rust unit testing tools
 - Documentation: unit testing guide
-
-### 0.3.10
-- Update official documentation
 
 ### 0.3.11
 - Unit test for pipeline items
@@ -1033,26 +1031,29 @@
 - Node.js: Fix bug: Process panics after Transaction returns value **[PENDING]**
 - Node.js: Throw TeoError instead of normal Error **[PENDING]**
 
+### 0.3.14
+- Node.js: Classes logging and debug print
+- Python: Classes logging and debug print
+- Rust: Add missing iterators for the classes
+- Node.js: Add missing iterators for the classes
+- Python: Add missing iterators for the classes
+
 ### 0.4.0
 - Rust: Fragments
 - Node.js: Fragments
 - Python: Fragments
 
 ### 0.4.1
-- Node.js: Classes logging and debug print
-- Python: Classes logging and debug print
-
-### 0.4.2
 - Combined request in HTTP clients
 - Remove paging information from `findMany`
 - Add handler `paging` to fetch paging info
 
-### 0.4.3
+### 0.4.2
 - `@onSet!()` and `@onSet?()`
 - `$get!()` and `$get?()`
 - Language: Default argument for argument list and config declaration
 
-### 0.4.4
+### 0.4.3
 - Uploaders
 - Amazon S3 uploader
 - Azure storage uploader
@@ -1061,30 +1062,30 @@
 - multipart/json: Create and update with form data
 - Admin dashboard: Image uploads
 
-### 0.4.5
-- Action transformers
-- Soft delete
-
-### 0.4.6
+### 0.4.4
 - MongoDB migration
 - MongoDB `$queryRaw`
 - Run custom MongoDB query
 
-### 0.4.7
+### 0.4.5
 - Update C# client with new namespace API
 - C# client: capitalized names and names with underscore
 - Revamp all client APIs
 
-### 0.4.8
+### 0.4.6
 - JSON type
 
-### 0.4.9
+### 0.4.7
 - PostgreSQL: Enum types
 
-### 0.4.10
+### 0.4.8
 - Extended database type mapping
 
-### 0.4.11
+### 0.4.9
+- Action transformers
+- Soft delete
+
+### 0.4.10
 - Admin dashboard: Redesign
 - Admin dashboard: Filters
 - Admin dashboard: Sort
@@ -1093,7 +1094,7 @@
 - Admin dashboard: Embedded forms
 - Admin dashboard: dashboards
 
-### 0.4.12
+### 0.4.11
 - Node.js: Support WSL linux
 
 ### 0.5.0

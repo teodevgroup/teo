@@ -1,28 +1,35 @@
 use bytes::Bytes;
 use http_body_util::{BodyExt, Either, Full};
-use hyper::{HeaderMap, StatusCode, Version};
+use hyper::{StatusCode, Version};
 use tower_http::services::fs::ServeFileSystemResponseBody;
 use teo_result::{Result, Error};
+use teo_runtime::cookies::Cookies;
+use teo_runtime::headers::Headers;
 
 #[derive(Clone)]
 pub struct TestResponse {
-    headers: HeaderMap,
-    status: StatusCode,
     version: Version,
+    status: StatusCode,
+    headers: Headers,
     body: Bytes,
+    cookies: Cookies,
 }
 
 impl TestResponse {
+
     pub(crate) async fn new(hyper_response: hyper::Response<Either<Full<Bytes>, ServeFileSystemResponseBody>>) -> Result<Self> {
         let (parts, body) = hyper_response.into_parts();
         let body = match body.collect().await {
             Ok(body) => body.to_bytes(),
             Err(_) => return Err(Error::internal_server_error_message("cannot read test response body")),
         };
+        let headers = Headers::from(parts.headers);
+        let cookies = Cookies::from_response_headers(&headers)?;
         Ok(Self {
             status: parts.status,
             version: parts.version,
-            headers: parts.headers,
+            headers,
+            cookies,
             body,
         })
     }
@@ -35,7 +42,7 @@ impl TestResponse {
         self.version
     }
 
-    pub fn headers(&self) -> &HeaderMap {
+    pub fn headers(&self) -> &Headers {
         &self.headers
     }
 

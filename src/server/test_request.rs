@@ -1,15 +1,18 @@
 use bytes::Bytes;
 use http_body_util::{BodyExt, Full};
-use hyper::{HeaderMap, Method};
+use hyper::Method;
 use hyper::body::Body;
-use hyper::header::{HeaderValue, IntoHeaderName};
+use hyper::header::HeaderValue;
 use teo_result::{Error, Result};
+use teo_runtime::cookies::Cookies;
+use teo_runtime::headers::Headers;
 
 #[derive(Clone)]
 pub struct TestRequest {
     method: Method,
     uri: String,
-    headers: HeaderMap,
+    headers: Headers,
+    cookies: Cookies,
     body: Full<Bytes>,
 }
 
@@ -18,23 +21,14 @@ impl TestRequest {
         Self {
             method,
             uri: uri.to_string(),
-            headers: HeaderMap::new(),
+            headers: Headers::new(),
+            cookies: Cookies::new(),
             body: Full::new(Bytes::new()),
         }
     }
 
-    pub fn insert_header<K, V>(mut self, key: K, value: V) -> Result<Self> where K: IntoHeaderName, V: TryInto<HeaderValue>, V::Error: std::error::Error {
-        self.headers.insert::<K>(key.into(), value.try_into().map_err(|_| Error::internal_server_error_message("cannot read header value"))?);
-        Ok(self)
-    }
-
-    pub fn append_header<K, V>(mut self, key: K, value: V) -> Result<Self> where K: IntoHeaderName, V: TryInto<HeaderValue>, V::Error: std::error::Error {
-        self.headers.append::<K>(key.into(), value.try_into().map_err(|_| Error::internal_server_error_message("cannot read header value"))?);
-        Ok(self)
-    }
-
     pub async fn json_body(mut self, json: serde_json::Value) -> Result<Self> {
-        self = self.insert_header("content-type", "application/json")?;
+        self.headers().insert("content-type", "application/json")?;
         let body = match serde_json::to_string(&json) {
             Ok(body) => body,
             Err(_) => return Err(Error::internal_server_error_message("cannot serialize json value"))
@@ -59,17 +53,33 @@ impl TestRequest {
         &self.uri
     }
 
-    pub fn headers(&self) -> &HeaderMap {
+    pub fn headers(&self) -> &Headers {
         &self.headers
     }
 
-    pub(crate) fn to_hyper_request(self) -> hyper::Request<Full<Bytes>> {
+    pub fn set_headers(&mut self, headers: Headers) {
+        self.headers = headers
+    }
+
+    pub fn cookies(&self) -> &Cookies {
+        &self.cookies
+    }
+
+    pub fn set_cookies(&mut self, cookies: Cookies) {
+        self.cookies = cookies
+    }
+
+    pub(crate) fn to_hyper_request(self) -> Result<hyper::Request<Full<Bytes>>> {
+        let headers = self.headers().clone();
+        let cookies = self.cookies().clone();
         let mut request = hyper::Request::builder()
             .method(self.method)
             .uri(self.uri);
-        for (key, value) in self.headers.into_iter() {
-            request = request.header(key.unwrap(), value.clone());
+        let mut request = request.body(self.body).unwrap();
+        headers.extend_to(request.headers_mut());
+        for cookie in cookies {
+            request.headers_mut().append("Cookie", HeaderValue::try_from(cookie.encoded())?);
         }
-        request.body(self.body).unwrap()
+        Ok(request)
     }
 }

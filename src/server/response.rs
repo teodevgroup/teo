@@ -31,7 +31,7 @@ pub async fn hyper_response_from(request: Request, response: Response) -> Result
                 Ok(builder.body(Either::Left(string_value.into())).unwrap())
             },
             BodyInner::File(path_buf) => {
-                let result = ServeFile::new(path_buf).try_call(request.clone_hyper_request()).await;
+                let result = ServeFile::new(path_buf).try_call(request.clone_hyper_request_for_file_processing()).await;
                 match result {
                     Ok(response) => {
                         let (parts, body) = response.into_parts();
