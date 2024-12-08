@@ -998,7 +998,7 @@
 ### 0.3.6
 - Remove async keyword from middleware creator functions **[DONE]**
 - Set headers and cookies on requests and responses **[DONE]**
-- Test Request and test response with headers and cookies accessors **[IN PROGRESS]**
+- Test Request and test response with headers and cookies accessors **[DONE]**
 - Python: Fix building process error on Windows
 
 ### 0.3.7
