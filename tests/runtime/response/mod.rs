@@ -78,7 +78,7 @@ mod tests {
         before_each().await;
         let req = TestRequest::new(Method::GET, "/textResponse");
         let res = server().process_test_request(req).await.unwrap();
-        assert_eq!(res.headers().get("set-cookie").unwrap().to_str().unwrap(), "foo=bar");
+        assert_eq!(res.headers().get("set-cookie").unwrap().unwrap(), "foo=bar");
     }
 
     #[serial]
@@ -88,7 +88,7 @@ mod tests {
         before_each().await;
         let req = TestRequest::new(Method::GET, "/jsonResponse");
         let res = server().process_test_request(req).await.unwrap();
-        assert_eq!(res.headers().get("set-cookie").unwrap().to_str().unwrap(), "foo=bar");
+        assert_eq!(res.headers().get("set-cookie").unwrap().unwrap(), "foo=bar");
     }
 
     #[serial]
@@ -98,6 +98,6 @@ mod tests {
         before_each().await;
         let req = TestRequest::new(Method::GET, "/fileResponse");
         let res = server().process_test_request(req).await.unwrap();
-        assert_eq!(res.headers().get("set-cookie").unwrap().to_str().unwrap(), "foo=bar");
+        assert_eq!(res.headers().get("set-cookie").unwrap().unwrap(), "foo=bar");
     }
 }

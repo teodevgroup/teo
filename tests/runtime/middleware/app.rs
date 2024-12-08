@@ -23,40 +23,40 @@ pub fn load_app() -> Result<App> {
             "numberFromObjects": number_from_objects.number,
         })))
     });
-    app.main_namespace().define_request_middleware("requestOuter", |arguments: Arguments| async move {
+    app.main_namespace().define_request_middleware("requestOuter", |arguments: Arguments| {
         Ok(|req: Request, next: Next| async move {
             req.local_values().insert("number", 42);
             Ok(next.call(req).await?)
         })
     });
-    app.main_namespace().define_request_middleware("requestMiddle", |arguments: Arguments| async move {
+    app.main_namespace().define_request_middleware("requestMiddle", |arguments: Arguments| {
         Ok(|req: Request, next: Next| async move {
             let number: Option<i32> = req.local_values().get("number")?;
             req.local_values().insert("number", number.unwrap() * 2);
             Ok(next.call(req).await?)
         })
     });
-    app.main_namespace().define_request_middleware("requestInner", |arguments: Arguments| async move {
+    app.main_namespace().define_request_middleware("requestInner", |arguments: Arguments| {
         Ok(|req: Request, next: Next| async move {
             let number: Option<i32> = req.local_values().get("number")?;
             req.local_values().insert("number", number.unwrap() + 16);
             Ok(next.call(req).await?)
         })
     });
-    app.main_namespace().define_handler_middleware("handlerOuter", |arguments: Arguments| async move {
+    app.main_namespace().define_handler_middleware("handlerOuter", |arguments: Arguments| {
         Ok(|req: Request, next: Next| async move {
             req.local_objects().insert("number", NumberContainer { number: 24 });
             Ok(next.call(req).await?)
         })
     });
-    app.main_namespace().define_handler_middleware("handlerMiddle", |arguments: Arguments| async move {
+    app.main_namespace().define_handler_middleware("handlerMiddle", |arguments: Arguments| {
         Ok(|req: Request, next: Next| async move {
             let number: &mut NumberContainer = req.local_objects().get_mut("number").unwrap();
             number.number *= 4;
             Ok(next.call(req).await?)
         })
     });
-    app.main_namespace().define_handler_middleware("handlerInner", |arguments: Arguments| async move {
+    app.main_namespace().define_handler_middleware("handlerInner", |arguments: Arguments| {
         Ok(|req: Request, next: Next| async move {
             let number: &mut NumberContainer = req.local_objects().get_mut("number").unwrap();
             number.number += 4;

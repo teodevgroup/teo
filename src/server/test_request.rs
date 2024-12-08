@@ -2,7 +2,7 @@ use bytes::Bytes;
 use http_body_util::{BodyExt, Full};
 use hyper::Method;
 use hyper::body::Body;
-use hyper::header::HeaderValue;
+use hyper::header::{HeaderValue, IntoHeaderName};
 use teo_result::{Error, Result};
 use teo_runtime::cookies::Cookies;
 use teo_runtime::headers::Headers;
@@ -51,6 +51,16 @@ impl TestRequest {
 
     pub fn uri(&self) -> &str {
         &self.uri
+    }
+
+    pub fn insert_header<K, V>(mut self, key: K, value: V) -> Result<Self> where K: Into<String>, V: Into<String> {
+        self.headers.insert(key, value)?;
+        Ok(self)
+    }
+
+    pub fn append_header<K, V>(mut self, key: K, value: V) -> Result<Self> where K: Into<String>, V: Into<String> {
+        self.headers.append(key, value)?;
+        Ok(self)
     }
 
     pub fn headers(&self) -> &Headers {

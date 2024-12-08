@@ -225,7 +225,7 @@ impl Server {
     }
 
     pub async fn process_test_request(&self, test_request: TestRequest) -> Result<TestResponse> {
-        self.process_test_request_with_hyper_request(test_request.to_hyper_request()).await
+        self.process_test_request_with_hyper_request(test_request.to_hyper_request()?).await
     }
 
     pub async fn process_test_request_with_hyper_request(&self, test_hyper_request: hyper::Request<Full<Bytes>>) -> Result<TestResponse> {
