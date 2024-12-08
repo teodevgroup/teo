@@ -1012,24 +1012,24 @@
 - Migration describe
 
 ### 0.3.9
-- Rust: add cleanup method to App
-- Python: add cleanup method to App
-- Node.js: add cleanup method to App
-
-### 0.3.10
 - Rust unit testing tools
 - Documentation: unit testing guide
 
-### 0.3.11
+### 0.3.10
 - Unit test for pipeline items
 - Official documentation for pipeline items
 
-### 0.3.12
+### 0.3.11
 - Finish adding missing tests
 
-### 0.3.13 (Pending napi-rs implementation)
+### 0.3.12 (Pending napi-rs implementation)
 - Node.js: Fix bug: Process panics after Transaction returns value **[PENDING]**
 - Node.js: Throw TeoError instead of normal Error **[PENDING]**
+
+### 0.3.13
+- Rust: add cleanup method to App
+- Python: add cleanup method to App
+- Node.js: add cleanup method to App
 
 ### 0.3.14
 - Node.js: Classes logging and debug print
