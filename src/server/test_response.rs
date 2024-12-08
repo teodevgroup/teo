@@ -46,6 +46,10 @@ impl TestResponse {
         &self.headers
     }
 
+    pub fn cookies(&self) -> &Cookies {
+        &self.cookies
+    }
+
     pub fn body(&self) -> &Bytes {
         &self.body
     }
