@@ -1003,6 +1003,14 @@
 
 ### 0.3.7
 - Update official documentation
+- Rust: Fragments
+- Node.js: Fragments
+- Python: Fragments
+- Add `@canAccess` modifier to fragments and handlers
+- Update the permission system
+- Combined request in HTTP clients
+- Remove paging information from `findMany`
+- Add handler `paging` to fetch paging info
 
 ### 0.3.8
 - Migrations should return errors
@@ -1022,9 +1030,10 @@
 ### 0.3.11
 - Finish adding missing tests
 
-### 0.3.12 (Pending napi-rs implementation)
-- Node.js: Fix bug: Process panics after Transaction returns value **[PENDING]**
-- Node.js: Throw TeoError instead of normal Error **[PENDING]**
+### 0.3.12
+- Update C# client with new namespace API
+- C# client: capitalized names and names with underscore
+- Revamp all client APIs
 
 ### 0.3.13
 - Rust: add cleanup method to App
@@ -1039,21 +1048,15 @@
 - Python: Add missing iterators for the classes
 
 ### 0.4.0
-- Rust: Fragments
-- Node.js: Fragments
-- Python: Fragments
-
-### 0.4.1
-- Combined request in HTTP clients
-- Remove paging information from `findMany`
-- Add handler `paging` to fetch paging info
-
-### 0.4.2
 - `@onSet!()` and `@onSet?()`
 - `$get!()` and `$get?()`
 - Language: Default argument for argument list and config declaration
 
-### 0.4.3
+### 0.4.1 (Pending napi-rs implementation)
+- Node.js: Fix bug: Process panics after Transaction returns value **[PENDING]**
+- Node.js: Throw TeoError instead of normal Error **[PENDING]**
+
+### 0.4.2
 - Uploaders
 - Amazon S3 uploader
 - Azure storage uploader
@@ -1062,17 +1065,12 @@
 - multipart/json: Create and update with form data
 - Admin dashboard: Image uploads
 
-### 0.4.4
+### 0.4.3
 - MongoDB migration
 - MongoDB `$queryRaw`
 - Run custom MongoDB query
 
-### 0.4.5
-- Update C# client with new namespace API
-- C# client: capitalized names and names with underscore
-- Revamp all client APIs
-
-### 0.4.6
+### 0.4.4
 - JSON type
 
 ### 0.4.7
