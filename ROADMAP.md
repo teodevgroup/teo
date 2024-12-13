@@ -1048,6 +1048,9 @@
 - Python: Add missing iterators for the classes
 
 ### 0.4.0
+- CLI API
+- Add `App.connect_databases`
+- Add `App.context` for running database code with `Teo`
 - `@onSet!()` and `@onSet?()`
 - `$get!()` and `$get?()`
 - Language: Default argument for argument list and config declaration
