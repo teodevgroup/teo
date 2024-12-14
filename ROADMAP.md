@@ -1012,6 +1012,9 @@
 ### 0.3.9
 - Swift client: Do not `try!` to result into fatal errors **[DONE]**
 - Swift client: Debug print for classes **[DONE]**
+- Rust: print error object when error is returned
+- Python: print error object when error is returned
+- Node.js: print error object when error is returned
 
 ### 0.3.10
 - Update official documentation
