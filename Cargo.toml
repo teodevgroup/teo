@@ -41,7 +41,6 @@ colored = "2.1.0"
 bson = { version = "2.13.0", features = ["chrono-0_4", "serde_with"] }
 key-path = "0.2.2"
 bytes = "1.8.0"
-cookie = { version = "0.18.1", features = ["percent-encode"] }
 bigdecimal = { version = "=0.3.1" }
 deferred-box = "0.1.4"
 
