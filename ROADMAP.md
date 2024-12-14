@@ -1005,8 +1005,9 @@
 - Python: Fix `TypedDict` keyword escaping problem **[DONE]**
 
 ### 0.3.8
-- Swift client: allow generating empty classes
-- Swift client: Fix request URL bug
+- Swift client: allow generating empty classes **[DONE]**
+- Clients: Fix request URL bug **[DONE]**
+- Fix connection-string is deprecated warning **[DONE]**
 
 ### 0.3.9
 - Update official documentation
