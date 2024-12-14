@@ -1010,6 +1010,10 @@
 - Fix connection-string is deprecated warning **[DONE]**
 
 ### 0.3.9
+- Swift client: Do not `try!` to result into fatal errors
+- Swift client: Debug print for classes
+
+### 0.3.10
 - Update official documentation
 - Rust: Fragments
 - Node.js: Fragments
@@ -1020,35 +1024,35 @@
 - Remove paging information from `findMany`
 - Add handler `paging` to fetch paging info
 
-### 0.3.10
+### 0.3.11
 - Migrations should return errors
 - Debug logging SQL
 - Debug logging MongoDB query
 - Migration dry run
 - Migration describe
 
-### 0.3.11
+### 0.3.12
 - Rust unit testing tools
 - Documentation: unit testing guide
 
-### 0.3.12
+### 0.3.13
 - Unit test for pipeline items
 - Official documentation for pipeline items
 
-### 0.3.13
+### 0.3.14
 - Finish adding missing tests
 
-### 0.3.14
+### 0.3.15
 - Update C# client with new namespace API
 - C# client: capitalized names and names with underscore
 - Revamp all client APIs
 
-### 0.3.15
+### 0.3.16
 - Rust: add cleanup method to App
 - Python: add cleanup method to App
 - Node.js: add cleanup method to App
 
-### 0.3.16
+### 0.3.17
 - Node.js: Classes logging and debug print
 - Python: Classes logging and debug print
 - Rust: Add missing iterators for the classes
