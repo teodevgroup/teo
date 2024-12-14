@@ -1010,8 +1010,8 @@
 - Fix connection-string is deprecated warning **[DONE]**
 
 ### 0.3.9
-- Swift client: Do not `try!` to result into fatal errors
-- Swift client: Debug print for classes
+- Swift client: Do not `try!` to result into fatal errors **[DONE]**
+- Swift client: Debug print for classes **[DONE]**
 
 ### 0.3.10
 - Update official documentation
