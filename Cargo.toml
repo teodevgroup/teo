@@ -26,8 +26,8 @@ tower-http = { version = "0.6", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0", features = ["preserve_order"] }
 chrono = { version = "0.4.38", features = ["serde"] }
-futures = "0.3"
-futures-util = "0.3"
+futures = "0.3.31"
+futures-util = "0.3.31"
 regex = "1.11.1"
 tokio = { version = "1.0", features = ["full"] }
 maplit = "1.0.2"
