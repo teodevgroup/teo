@@ -1012,12 +1012,14 @@
 ### 0.3.9
 - Swift client: Do not `try!` to result into fatal errors **[DONE]**
 - Swift client: Debug print for classes **[DONE]**
-- Rust: print error object when error is returned
-- Python: print error object when error is returned
-- Node.js: print error object when error is returned
 
-### 0.3.10
-- Update official documentation
+### 0.4.0
+- Language: Rewrite parser
+- Language: Default argument for argument list
+- Introduce package: teo language runtime
+- Introduce `@onSet!()` and `@onSet?()`
+- `Introduce $get!()` and `$get?()`
+- Increase VSCode plugin speed
 - Rust: Fragments
 - Node.js: Fragments
 - Python: Fragments
@@ -1026,55 +1028,44 @@
 - Combined request in HTTP clients
 - Remove paging information from `findMany`
 - Add handler `paging` to fetch paging info
-
-### 0.3.11
+- Add handler `permission` to fetch permission info
 - Migrations should return errors
 - Debug logging SQL
 - Debug logging MongoDB query
 - Migration dry run
 - Migration describe
-
-### 0.3.12
-- Rust unit testing tools
-- Documentation: unit testing guide
-
-### 0.3.13
-- Unit test for pipeline items
-- Official documentation for pipeline items
-
-### 0.3.14
-- Finish adding missing tests
-
-### 0.3.15
 - Update C# client with new namespace API
 - C# client: capitalized names and names with underscore
 - Revamp all client APIs
+- CLI API
+- Add `App.connect_databases`
+- Add `App.context` for running database code with `Teo`
+- Node.js: support more systems
+- Rust: print error object when error is returned
+- Python: print error object when error is returned
+- Node.js: print error object when error is returned
 
-### 0.3.16
+### 0.4.1
+- Rust unit testing tools
+- Documentation: unit testing guide
+- Update official documentation
+- Unit test for pipeline items
+- Official documentation for pipeline items
+- Finish adding missing tests
+
+### 0.4.2
 - Rust: add cleanup method to App
 - Python: add cleanup method to App
 - Node.js: add cleanup method to App
 
-### 0.3.17
+### 0.4.3
 - Node.js: Classes logging and debug print
 - Python: Classes logging and debug print
 - Rust: Add missing iterators for the classes
 - Node.js: Add missing iterators for the classes
 - Python: Add missing iterators for the classes
 
-### 0.4.0
-- CLI API
-- Add `App.connect_databases`
-- Add `App.context` for running database code with `Teo`
-- `@onSet!()` and `@onSet?()`
-- `$get!()` and `$get?()`
-- Language: Default argument for argument list and config declaration
-
-### 0.4.1 (Pending napi-rs implementation)
-- Node.js: Fix bug: Process panics after Transaction returns value **[PENDING]**
-- Node.js: Throw TeoError instead of normal Error **[PENDING]**
-
-### 0.4.2
+### 0.4.4
 - Uploaders
 - Amazon S3 uploader
 - Azure storage uploader
@@ -1083,12 +1074,12 @@
 - multipart/json: Create and update with form data
 - Admin dashboard: Image uploads
 
-### 0.4.3
+### 0.4.5
 - MongoDB migration
 - MongoDB `$queryRaw`
 - Run custom MongoDB query
 
-### 0.4.4
+### 0.4.6
 - JSON type
 
 ### 0.4.7
@@ -1110,9 +1101,6 @@
 - Admin dashboard: Embedded forms
 - Admin dashboard: dashboards
 
-### 0.4.11
-- Node.js: Support WSL linux
-
 ### 0.5.0
 - MongoDB: Upgrade to MongoDB Rust driver 3.0
 
@@ -1130,12 +1118,9 @@
 
 ## Future Stage
 
-### 0.6.0 (Revamped language & parser)
-- Rewrite parser with nom
-- Increase VSCode plugin speed
-
-### 0.6.1
-- Add `@example` to comment
+### 0.6.0 (Pending napi-rs implementation)
+- Node.js: Fix bug: Process panics after Transaction returns value **[PENDING]**
+- Node.js: Throw TeoError instead of normal Error **[PENDING]**
 
 ### 1.0.0
 - First stable major version
