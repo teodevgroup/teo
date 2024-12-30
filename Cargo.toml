@@ -17,7 +17,7 @@ teo-runtime = { version = "0.3.8", path = "../teo-runtime" }
 teo-sql-connector = { version = "0.3.8", path = "../teo-sql-connector" }
 teo-mongodb-connector = { version = "0.3.5", path = "../teo-mongodb-connector" }
 teo-generator = { version = "0.3.9", path = "../teo-generator" }
-hyper = { version = "1.5.1", features = ["full"] }
+hyper = { version = "1.5.2", features = ["full"] }
 hyper-util = { version = "0.1.10", features = ["full"] }
 http-body-util = "0.1.2"
 multer = "3.1.0"
