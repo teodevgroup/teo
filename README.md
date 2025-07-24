@@ -23,6 +23,10 @@
   <hr />
 </div>
 
+## Notice
+
+Teo 0.4 will be a total new version. Teo is relocated as an ORM. CLI, Code generation, Node.js and Python will be removed.
+
 ## Introduction
 
 Teo is **schema-driven** web server framework. The server side API is native to Rust, Node.js and Python.
