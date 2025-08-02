@@ -1,13 +1,13 @@
 # Welcome!
 
-Welcome! You've arrived at our Contributing page and are now one step away from joining our quest to make coding more 
-fun. We're thankful for all your contributions, whether it's helping us find issues in our code, highlighting features 
-we're missing, or contributing to the codebase. If you've found your way here, you'll soon be ready to join in the fun 
+Welcome! You've arrived at our Contributing page and are now one step away from joining our quest to make coding more
+fun. We're thankful for all your contributions, whether it's helping us find issues in our code, highlighting features
+we're missing, or contributing to the codebase. If you've found your way here, you'll soon be ready to join in the fun
 of building features and fixing bugs directly with us - and we're thrilled to have you on board!
 
-To get you started on a good foot, we've created an easy overview of the most important things to get you started 
-contributing code to Teo below as well as a 
-[Code of Conduct](https://github.com/teodevgroup/teo/blob/master/CODE_OF_CONDUCT.md) for contributing to the development 
+To get you started on a good foot, we've created an easy overview of the most important things to get you started
+contributing code to Teo below as well as a
+[Code of Conduct](https://github.com/teodevgroup/teo/blob/master/CODE_OF_CONDUCT.md) for contributing to the development
 of Teo.
 
 ## Contributing Code
@@ -17,12 +17,6 @@ Welcome to the repository for the TEO HTTP server framework.
 ## General Prerequisites
 
 * Core: Rust `>=1.67`, latest is recommended
-* Clients:
-  * TypeScript & JavaScript: Node.js `>=20`, latest or lastest LTS is recommended
-  * Dart & Flutter: Dart `>=3.3`, latest is recommended
-* Servers:
-  * Node.js: Node.js `>=20`, latest or latest LTS is recommended
-  * Python: Python `>=3.12`, latest is recommended
 
 ## Checkout repositories
 
@@ -93,7 +87,7 @@ We structure our messages like this:
 * lang: The schema language
 * seed: The data seeder
 * client: Client generators
-  * ts: TypeScript client generator 
+  * ts: TypeScript client generator
   * swift: Swift client generator
   * kotlin: Kotlin client generator
   * csharp: C# client generator
@@ -127,8 +121,8 @@ RUST_TEST_THREADS=1 cargo test --test mod -- --nocapture
 
 ## Legal
 
-Pull Request authors must sign the [TEO Dev Group CLA](https://cla-assistant.io/teodevgroup/teo), it will show up in an 
+Pull Request authors must sign the [TEO Dev Group CLA](https://cla-assistant.io/teodevgroup/teo), it will show up in an
 automated comment after you create a PR.
 
-If you cannot or do not want to sign this CLA (e.g. your employment contract for your employer may not allow this), you 
+If you cannot or do not want to sign this CLA (e.g. your employment contract for your employer may not allow this), you
 should not submit a PR. Open an issue and someone else can do the work.

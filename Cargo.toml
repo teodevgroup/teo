@@ -11,47 +11,17 @@ documentation = "https://docs.teodev.io"
 repository = "https://github.com/teodevgroup/teo"
 
 [dependencies]
-teo-result = { version = "0.3.5", path = "../teo-result", features = ["multer"] }
-teo-parser = { version = "0.3.0", path = "../teo-parser" }
-teo-runtime = { version = "0.3.8", path = "../teo-runtime" }
-teo-sql-connector = { version = "0.3.8", path = "../teo-sql-connector" }
-teo-mongodb-connector = { version = "0.3.5", path = "../teo-mongodb-connector" }
-teo-generator = { version = "0.3.9", path = "../teo-generator" }
-hyper = { version = "1.5.2", features = ["full"] }
-hyper-util = { version = "0.1.10", features = ["full"] }
-http-body-util = "0.1.2"
-multer = "3.1.0"
-mime = "0.3.17"
-tower-http = { version = "0.6", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0", features = ["preserve_order"] }
-chrono = { version = "0.4.38", features = ["serde"] }
-futures = "0.3.31"
-futures-util = "0.3.31"
-regex = "1.11.1"
 tokio = { version = "1.0", features = ["full"] }
-maplit = "1.0.2"
-indexmap = "2.6"
-itertools = "0.13.0"
-array_tool = "1.0.3"
-clap = { version = "4.5", features = ["derive"] }
-dotenvy = "0.15.7"
-educe = "0.6.0"
-colored = "2.1.0"
-bson = { version = "2.13.0", features = ["chrono-0_4", "serde_with"] }
-key-path = "0.2.2"
-bytes = "1.8.0"
+chrono = { version = "0.4.38", features = ["serde"] }
 bigdecimal = { version = "=0.3.1" }
-deferred-box = "0.1.4"
+regex = "1.11.1"
+maplit = "1.0.2"
+bytes = "1.8.0"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 openssl = { version = "0.10", features = ["vendored"] }
 
 [dev-dependencies]
 serial_test = "3.1.1"
-shared-tokio-runtime = { version = "0.1.8" }
-form-data-builder = "1.0.1"
-bigdecimal = "=0.3.1"
-
-[build-dependencies]
-rustc_version = "0.4.0"
