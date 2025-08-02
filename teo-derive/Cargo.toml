@@ -2,6 +2,9 @@
 name = "teo-derive"
 version = "0.4.0-alpha.0"
 edition = "2024"
+rust-version = "1.88"
+description = "High performance Rust ORM."
+license = "MIT"
 
 [lib]
 name = "teo_derive"
