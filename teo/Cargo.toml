@@ -18,8 +18,8 @@ rust_decimal = ["dep:rust_decimal"]
 mysql = ["dep:mysql_async"]
 postgres = ["dep:tokio-postgres"]
 sqlite = ["dep:rusqlite"]
-mongodb = ["dep:mongodb"]
-default = ["derive", "uuid", "chrono", "bigdecimal", "mysql", "postgres", "sqlite", "mongodb"]
+mongo = ["dep:mongodb"]
+default = ["derive", "uuid", "chrono", "bigdecimal", "mysql", "postgres", "sqlite", "mongo"]
 
 [dependencies]
 teo-derive = { path = "../teo-derive", version = "0.4.0-alpha.0", optional = true }

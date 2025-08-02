@@ -3,4 +3,8 @@ resolver = "3"
 members = [
   "teo",
   "teo-derive",
+  "examples/mysql",
+  "examples/postgres",
+  "examples/sqlite",
+  "examples/mongo"
 ]

@@ -9,6 +9,6 @@ pub trait Insertable {
   #[cfg(feature = "sqlite")]
   fn insert_as_sqlite(&self) -> ();
 
-  #[cfg(feature = "mongodb")]
-  fn insert_as_mongodb(&self) -> ();
+  #[cfg(feature = "mongo")]
+  fn insert_as_mongo(&self) -> ();
 }
