@@ -1,11 +1,10 @@
 [package]
 name = "teo"
-version = "0.3.9"
-edition = "2021"
-rust-version = "1.82"
-description = "Schema-driven web server framework."
-license = "Apache-2.0"
-build = "build.rs"
+version = "0.4.0-alpha.0"
+edition = "2024"
+rust-version = "1.88"
+description = "High performance Rust ORM."
+license = "MIT"
 homepage = "https://teodev.io"
 documentation = "https://docs.teodev.io"
 repository = "https://github.com/teodevgroup/teo"
@@ -13,15 +12,11 @@ repository = "https://github.com/teodevgroup/teo"
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0", features = ["preserve_order"] }
-tokio = { version = "1.0", features = ["full"] }
 chrono = { version = "0.4.38", features = ["serde"] }
 bigdecimal = { version = "=0.3.1" }
 regex = "1.11.1"
 maplit = "1.0.2"
 bytes = "1.8.0"
 
-[target.'cfg(target_os = "linux")'.dependencies]
-openssl = { version = "0.10", features = ["vendored"] }
-
 [dev-dependencies]
-serial_test = "3.1.1"
+tokio = { version = "1.46.1", features = ["full"] }
