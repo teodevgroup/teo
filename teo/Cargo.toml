@@ -9,14 +9,22 @@ homepage = "https://teodev.io"
 documentation = "https://docs.teodev.io"
 repository = "https://github.com/teodevgroup/teo"
 
+[features]
+derive = ["dep:teo-derive"]
+serde = ["dep:serde"]
+uuid = ["dep:uuid"]
+chrono = ["dep:chrono"]
+bigdecimal = ["dep:bigdecimal"]
+rust_decimal = ["dep:rust_decimal"]
+default = ["derive", "serde", "uuid", "chrono", "bigdecimal"]
+
 [dependencies]
-serde = { version = "1.0", features = ["derive"] }
-serde_json = { version = "1.0", features = ["preserve_order"] }
-chrono = { version = "0.4.38", features = ["serde"] }
-bigdecimal = { version = "=0.3.1" }
-regex = "1.11.1"
-maplit = "1.0.2"
-bytes = "1.8.0"
+teo-derive = { path = "../teo-derive", version = "0.4.0-alpha.0", optional = true }
+serde = { version = "1.0", features = ["derive"], optional = true }
+uuid = { version = "1.17.0", features = ["v4", "serde"], optional = true }
+chrono = { version = "0.4.38", features = ["serde"], optional = true }
+bigdecimal = { version = "0.4.8", optional = true }
+rust_decimal = { version = "1.37.2", optional = true }
 
 [dev-dependencies]
 tokio = { version = "1.46.1", features = ["full"] }

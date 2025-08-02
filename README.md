@@ -35,6 +35,7 @@ Teo is a modern server-side ORM for Rust.
 * Supports MySQL, PostgreSQL, SQLite and MongoDB
 * Easy to use query APIs
 * Auto database migration
+* Fully asynchronous
 
 ## Getting started
 
