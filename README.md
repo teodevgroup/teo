@@ -22,19 +22,19 @@
 
 ## Notice
 
-We're rewriting this as a Rust only ORM. Support for Node.js and Python is
+We're rewriting this as a Rust only ORM. Supports for Node.js and Python are
 removed.
 
 ## Introduction
 
-Teo is a modern server-side ORM for Rust.
+Teo is a modern ORM for Rust.
 
 ## Highlights & Features
 
 * High performance
 * Supports MySQL, PostgreSQL, SQLite and MongoDB
 * Easy to use query APIs
-* Auto database migration
+* Incremental database migration
 * Fully asynchronous
 
 ## Getting started

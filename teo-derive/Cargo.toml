@@ -16,4 +16,4 @@ quote = { version = "1.0.40" }
 proc-macro2 = { version = "1.0.95" }
 
 # [dev-dependencies]
-# teo-sync-server = { version = "0.0.1", path = "../teo-sync-server" }
+# teo = { version = "0.0.1", path = "../teo" }
