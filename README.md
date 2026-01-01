@@ -20,14 +20,13 @@
   <hr />
 </div>
 
-## Notice
+## WIP
 
-We're rewriting this as a Rust only ORM. Supports for Node.js and Python are
-removed.
+This project is currently WIP.
 
 ## Introduction
 
-Teo is a modern ORM for Rust.
+High performance ergonomic ORM for Rust.
 
 ## Highlights & Features
 
