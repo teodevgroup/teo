@@ -2,7 +2,7 @@
 name = "teo-derive"
 version = "0.4.0-alpha.0"
 edition = "2024"
-rust-version = "1.92"
+rust-version = "1.93"
 description = "High performance Rust ORM."
 license = "MIT"
 
@@ -11,9 +11,7 @@ name = "teo_derive"
 proc-macro = true
 
 [dependencies]
-syn = { version = "2.0.104", features = ["full", "extra-traits"] }
-quote = { version = "1.0.40" }
-proc-macro2 = { version = "1.0.95" }
-
-# [dev-dependencies]
-# teo = { version = "0.0.1", path = "../teo" }
+syn = { version = "2.0.114", features = ["full", "extra-traits"] }
+quote = { version = "1.0.44" }
+proc-macro2 = { version = "1.0.106" }
+darling = { version = "0.23.0" }

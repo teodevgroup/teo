@@ -1,8 +1,7 @@
 mod entity;
-
 use proc_macro::TokenStream;
 
 #[proc_macro_derive(Entity, attributes(teo))]
 pub fn derive_entity(input: TokenStream) -> TokenStream {
-    crate::entity::perform(input)
+    entity::perform(input)
 }
