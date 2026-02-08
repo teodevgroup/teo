@@ -1,11 +1,41 @@
-use darling::{FromDeriveInput, FromField, FromMeta, ast::Data, util::Ignored};
+use darling::{Error, FromDeriveInput, FromField, FromMeta, Result, ast::Data, util::Ignored};
 use syn::{Attribute, Expr, Ident, Type, Visibility};
+
+pub enum IndexColumnOrder {
+    Asc,
+    Desc,
+}
+
+impl Default for IndexColumnOrder {
+    fn default() -> Self {
+        Self::Asc
+    }
+}
+
+impl FromMeta for IndexColumnOrder {
+    fn from_string(value: &str) -> Result<Self> {
+        Ok(match value {
+            "asc" => Self::Asc,
+            "desc" => Self::Desc,
+            _ => Err(Error::unknown_value(value))?
+        })
+    }
+}
+
+#[derive(FromMeta)]
+pub struct IndexColumnDef {
+    name: Ident,
+    #[darling(default)]
+    order: Option<IndexColumnOrder>
+}
 
 #[derive(Default, FromMeta)]
 pub struct IndexDef {
-    #[darling(rename = "sit")]
-    ipsum: bool,
-    dolor: Option<String>,
+    name: Option<String>,
+    #[darling(multiple, rename = "column")]
+    columns: Vec<IndexColumnDef>,
+    #[darling(default)]
+    unique: bool,
 }
 
 #[derive(FromField)]
@@ -21,6 +51,8 @@ pub struct FieldDef {
     #[darling(default)]
     primary: bool,
     #[darling(default)]
+    auto_increment: bool,
+    #[darling(default)]
     unique: bool,
     #[darling(default)]
     index: bool,
@@ -34,7 +66,7 @@ pub struct EntityDef {
     ident: Ident,
     attrs: Vec<Attribute>,
     table_name: Option<String>,
-    #[darling(multiple)]
+    #[darling(multiple, rename = "index")]
     indexes: Vec<IndexDef>,
     data: Data<Ignored, FieldDef>,
 }
