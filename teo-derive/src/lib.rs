@@ -1,4 +1,5 @@
 mod entity;
+mod enum_type;
 use proc_macro::TokenStream;
 
 #[proc_macro_derive(Entity, attributes(teo))]

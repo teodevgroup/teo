@@ -1,7 +1,7 @@
 use darling::{Error, FromDeriveInput, FromField, FromMeta, Result, ast::Data, util::Ignored};
 use syn::{Attribute, Expr, Ident, Type, Visibility};
 
-pub enum IndexColumnOrder {
+pub(super) enum IndexColumnOrder {
     Asc,
     Desc,
 }
@@ -23,14 +23,14 @@ impl FromMeta for IndexColumnOrder {
 }
 
 #[derive(FromMeta)]
-pub struct IndexColumnDef {
+pub(super) struct IndexColumnDef {
     name: Ident,
     #[darling(default)]
     order: Option<IndexColumnOrder>
 }
 
 #[derive(Default, FromMeta)]
-pub struct IndexDef {
+pub(super) struct IndexDef {
     name: Option<String>,
     #[darling(multiple, rename = "column")]
     columns: Vec<IndexColumnDef>,
@@ -40,7 +40,7 @@ pub struct IndexDef {
 
 #[derive(FromField)]
 #[darling(attributes(teo))]
-pub struct FieldDef {
+pub(super) struct FieldDef {
     ident: Option<Ident>,
     ty: Type,
     vis: Visibility,
@@ -62,7 +62,7 @@ pub struct FieldDef {
 
 #[derive(FromDeriveInput)]
 #[darling(attributes(teo), forward_attrs(allow, doc, cfg), supports(struct_named))]
-pub struct EntityDef {
+pub(super) struct EntityDef {
     ident: Ident,
     attrs: Vec<Attribute>,
     table_name: Option<String>,
