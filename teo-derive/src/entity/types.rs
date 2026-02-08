@@ -41,23 +41,23 @@ pub(in crate::entity) struct IndexDef {
 #[derive(FromField)]
 #[darling(attributes(teo))]
 pub(in crate::entity) struct FieldDef {
-    ident: Option<Ident>,
-    ty: Type,
-    vis: Visibility,
+    pub(in crate::entity) ident: Option<Ident>,
+    pub(in crate::entity) ty: Type,
+    pub(in crate::entity) vis: Visibility,
     #[darling(default)]
-    column_name: Option<String>,
+    pub(in crate::entity) column_name: Option<String>,
     #[darling(default)]
-    column_type: Option<String>,
+    pub(in crate::entity) column_type: Option<String>,
     #[darling(default)]
-    primary: bool,
+    pub(in crate::entity) primary: bool,
     #[darling(default)]
-    auto_increment: bool,
+    pub(in crate::entity) auto_increment: bool,
     #[darling(default)]
-    unique: bool,
+    pub(in crate::entity) unique: bool,
     #[darling(default)]
-    index: bool,
+    pub(in crate::entity) index: bool,
     #[darling(default)]
-    default: Option<Expr>,
+    pub(in crate::entity) default: Option<Expr>,
 }
 
 #[derive(FromDeriveInput)]
