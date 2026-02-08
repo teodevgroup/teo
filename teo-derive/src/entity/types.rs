@@ -1,7 +1,7 @@
 use darling::{Error, FromDeriveInput, FromField, FromMeta, Result, ast::Data, util::Ignored};
 use syn::{Attribute, Expr, Ident, Type, Visibility};
 
-pub(super) enum IndexColumnOrder {
+pub(in crate::entity) enum IndexColumnOrder {
     Asc,
     Desc,
 }
@@ -23,14 +23,14 @@ impl FromMeta for IndexColumnOrder {
 }
 
 #[derive(FromMeta)]
-pub(super) struct IndexColumnDef {
+pub(in crate::entity) struct IndexColumnDef {
     name: Ident,
     #[darling(default)]
     order: Option<IndexColumnOrder>
 }
 
 #[derive(Default, FromMeta)]
-pub(super) struct IndexDef {
+pub(in crate::entity) struct IndexDef {
     name: Option<String>,
     #[darling(multiple, rename = "column")]
     columns: Vec<IndexColumnDef>,
@@ -40,7 +40,7 @@ pub(super) struct IndexDef {
 
 #[derive(FromField)]
 #[darling(attributes(teo))]
-pub(super) struct FieldDef {
+pub(in crate::entity) struct FieldDef {
     ident: Option<Ident>,
     ty: Type,
     vis: Visibility,
@@ -62,11 +62,17 @@ pub(super) struct FieldDef {
 
 #[derive(FromDeriveInput)]
 #[darling(attributes(teo), forward_attrs(allow, doc, cfg), supports(struct_named))]
-pub(super) struct EntityDef {
-    ident: Ident,
-    attrs: Vec<Attribute>,
-    table_name: Option<String>,
+pub(in crate::entity) struct EntityDef {
+    pub(in crate::entity) ident: Ident,
+    pub(in crate::entity) attrs: Vec<Attribute>,
+    pub(in crate::entity) table_name: Option<String>,
     #[darling(multiple, rename = "index")]
-    indexes: Vec<IndexDef>,
-    data: Data<Ignored, FieldDef>,
+    pub(in crate::entity) indexes: Vec<IndexDef>,
+    pub(in crate::entity) data: Data<Ignored, FieldDef>,
+}
+
+impl EntityDef {
+    pub(in crate::entity) fn table_name(&self) -> String {
+        self.table_name.clone().unwrap_or(self.ident.to_string())
+    }
 }
