@@ -1,5 +1,5 @@
 use std::borrow::Cow;
-use super::super::super::types::SortOrder;
+use super::super::types::SortOrder;
 
 #[derive(Debug)]
 pub struct EnumDef {

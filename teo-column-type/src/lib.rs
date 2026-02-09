@@ -16,3 +16,5 @@ pub use postgres::PostgresColumnType;
 pub use mysql::MySQLColumnType;
 #[cfg(feature = "sqlite")]
 pub use sqlite::SQLiteColumnType;
+#[cfg(feature = "mongo")]
+pub use mongo::MongoColumnType;

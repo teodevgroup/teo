@@ -10,6 +10,13 @@ license = "MIT"
 name = "teo_derive"
 proc-macro = true
 
+[features]
+mongo = []
+mysql = []
+postgres = []
+sqlite = []
+default = ["mongo", "mysql", "postgres", "sqlite"]
+
 [dependencies]
 syn = { version = "2.0.114", features = ["full", "extra-traits"] }
 quote = { version = "1.0.44" }

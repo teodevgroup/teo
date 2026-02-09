@@ -17,14 +17,15 @@ chrono = ["dep:chrono"]
 bigdecimal = ["dep:bigdecimal"]
 rust_decimal = ["dep:rust_decimal"]
 
-mysql = ["dep:mysql_async"]
-postgres = ["dep:tokio-postgres"]
-sqlite = ["dep:rusqlite"]
-mongo = ["dep:mongodb"]
+mysql = ["dep:mysql_async", "teo-derive/mysql", "teo-column-type/mysql"]
+postgres = ["dep:tokio-postgres", "teo-derive/postgres", "teo-column-type/postgres"]
+sqlite = ["dep:rusqlite", "teo-derive/sqlite", "teo-column-type/sqlite"]
+mongo = ["dep:mongodb", "teo-derive/mongo", "teo-column-type/mongo"]
 default = ["derive", "uuid", "chrono", "bigdecimal", "mysql", "postgres", "sqlite", "mongo"]
 
 [dependencies]
 teo-derive = { path = "../teo-derive", version = "0.4.0-alpha.1", optional = true }
+teo-column-type = { path = "../teo-column-type", version = "0.4.0-alpha.1" }
 serde = { version = "1.0", features = ["derive"] }
 uuid = { version = "1.17.0", features = ["v4", "serde"], optional = true }
 chrono = { version = "0.4.38", features = ["serde"], optional = true }
