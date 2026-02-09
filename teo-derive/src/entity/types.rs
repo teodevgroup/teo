@@ -38,6 +38,34 @@ pub(in crate::entity) struct IndexDef {
     unique: bool,
 }
 
+#[cfg(feature = "mongo")]
+#[derive(Default, FromMeta)]
+pub(in crate::entity) struct MongoFieldDef {
+    #[darling(default)]
+    pub(in crate::entity) column_type: Option<String>,
+}
+
+#[cfg(feature = "mysql")]
+#[derive(Default, FromMeta)]
+pub(in crate::entity) struct MySQLFieldDef {
+    #[darling(default)]
+    pub(in crate::entity) column_type: Option<String>,
+}
+
+#[cfg(feature = "mysql")]
+#[derive(Default, FromMeta)]
+pub(in crate::entity) struct PostgresFieldDef {
+    #[darling(default)]
+    pub(in crate::entity) column_type: Option<String>,
+}
+
+#[cfg(feature = "sqlite")]
+#[derive(Default, FromMeta)]
+pub(in crate::entity) struct SQLiteFieldDef {
+    #[darling(default)]
+    pub(in crate::entity) column_type: Option<String>,
+}
+
 #[derive(FromField)]
 #[darling(attributes(teo))]
 pub(in crate::entity) struct FieldDef {
@@ -58,6 +86,19 @@ pub(in crate::entity) struct FieldDef {
     pub(in crate::entity) index: bool,
     #[darling(default)]
     pub(in crate::entity) default: Option<Expr>,
+    #[cfg(feature = "mongo")]
+    #[darling(default)]
+    pub(in crate::entity) mongo: Option<MongoFieldDef>,
+    #[cfg(feature = "mysql")]
+    #[darling(default)]
+    pub(in crate::entity) mysql: Option<MySQLFieldDef>,
+    #[cfg(feature = "postgres")]
+    #[darling(default)]
+    pub(in crate::entity) postgres: Option<PostgresFieldDef>,
+    #[cfg(feature = "sqlite")]
+    #[darling(default)]
+    pub(in crate::entity) sqlite: Option<SQLiteFieldDef>,
+
 }
 
 #[derive(FromDeriveInput)]

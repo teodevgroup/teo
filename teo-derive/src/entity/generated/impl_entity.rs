@@ -31,16 +31,18 @@ pub(in super::super) fn generate_impl_entity(opts: EntityDef) -> Result<TokenStr
     }).collect();
     Ok(quote! {
         impl ::teo::types::Entity for #struct_ident {
-            fn table_def() -> ::teo::migration::TableDef {
-                let mut columns = Vec::new();
-                #( #columns )*
-                let mut indexes = Vec::new();
-                ::teo::migration::TableDef {
-                    name: #table_name,
-                    columns,
-                    indexes
-                }
-            }
+
         }
     })
 }
+
+            // fn table_def() -> ::teo::migration::TableDef {
+            //     let mut columns = Vec::new();
+            //     #( #columns )*
+            //     let mut indexes = Vec::new();
+            //     ::teo::migration::TableDef {
+            //         name: #table_name,
+            //         columns,
+            //         indexes
+            //     }
+            // }

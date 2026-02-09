@@ -14,9 +14,9 @@ pub(crate) fn perform(input: TokenStream) -> TokenStream {
 
 fn _perform(input: DeriveInput) -> Result<TokenStream2> {
     let opts = EntityDef::from_derive_input(&input)?;
-    let impl_entity = generate_impl_entity(opts)?;
+    //let impl_entity = generate_impl_entity(opts)?;
     let output = quote! {
-        #impl_entity
+        //#impl_entity
     };
     Ok(output)
 }
