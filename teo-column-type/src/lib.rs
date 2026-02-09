@@ -14,3 +14,5 @@ pub use error::Error;
 pub use postgres::PostgresColumnType;
 #[cfg(feature = "mysql")]
 pub use mysql::MySQLColumnType;
+#[cfg(feature = "sqlite")]
+pub use sqlite::SQLiteColumnType;
