@@ -1,0 +1,19 @@
+[package]
+name = "teo-column-type"
+version = "0.4.0-alpha.0"
+edition = "2024"
+rust-version = "1.92"
+description = "Column type definitions for Teo."
+license = "MIT"
+homepage = "https://teodev.io"
+documentation = "https://docs.teodev.io"
+repository = "https://github.com/teodevgroup/teo"
+
+[features]
+mongo = []
+mysql = []
+postgres = []
+sqlite = []
+default = ["mongo", "mysql", "postgres", "sqlite"]
+
+[dependencies]

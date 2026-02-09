@@ -11,10 +11,12 @@ repository = "https://github.com/teodevgroup/teo"
 
 [features]
 derive = ["dep:teo-derive"]
+
 uuid = ["dep:uuid"]
 chrono = ["dep:chrono"]
 bigdecimal = ["dep:bigdecimal"]
 rust_decimal = ["dep:rust_decimal"]
+
 mysql = ["dep:mysql_async"]
 postgres = ["dep:tokio-postgres"]
 sqlite = ["dep:rusqlite"]
@@ -35,4 +37,4 @@ mongodb = { version = "3.2.4", optional = true }
 async-trait = { version = "0.1.88" }
 
 [dev-dependencies]
-tokio = { version = "1.46.1", features = ["full"] }
+tokio = { version = "1.49", features = ["full"] }
