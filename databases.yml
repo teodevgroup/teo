@@ -3,17 +3,20 @@ name: 'teo-dev'
 services:
   mysql:
     image: mysql:latest
+    container_name: mysql
     environment:
       - MYSQL_ALLOW_EMPTY_PASSWORD=true
     ports:
-      - '3307:3306'
+      - '3306:3306'
   postgres:
     image: postgres:latest
+    container_name: postgres
     environment:
       - POSTGRES_HOST_AUTH_METHOD=trust
     ports:
-      - '5433:5432'
+      - '5432:5432'
   mongos:
     image: mongo:latest
+    container_name: mongo
     ports:
-      - '27018:27017'
+      - '27017:27017'
