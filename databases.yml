@@ -1,3 +1,5 @@
+name: 'teo-dev'
+
 services:
   mysql:
     image: mysql:latest
