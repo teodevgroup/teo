@@ -9,7 +9,7 @@ use teo_column_type::SQLiteColumnType;
 
 use super::super::migration::{EnumDef, TableDef};
 
-pub trait Schema {
+pub trait Schema: Send {
 
     #[cfg(any(feature = "mysql", feature = "postgres"))]
     fn enum_defs() -> Vec<EnumDef>;
