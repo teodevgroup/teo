@@ -1,6 +1,13 @@
 use crate::types::Schema;
 
-pub trait Connection {
+pub trait SyncConnection {
+
+    type Err;
+
+    fn migrate<S>(&self) -> Result<(), Self::Err> where S: Schema;
+}
+
+pub trait AsyncConnection {
 
     type Err;
 

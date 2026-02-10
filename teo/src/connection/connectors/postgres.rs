@@ -1,7 +1,7 @@
 use tokio_postgres::{Client, Error};
-use crate::{connection::Connection, types::Schema};
+use crate::{connection::AsyncConnection, types::Schema};
 
-impl Connection for Client {
+impl AsyncConnection for Client {
 
     type Err = Error;
 

@@ -1,10 +1,10 @@
-use crate::{connection::Connection, types::Schema};
+use crate::{connection::SyncConnection, types::Schema};
 
-impl Connection for rusqlite::Connection {
+impl SyncConnection for rusqlite::Connection {
 
     type Err = rusqlite::Error;
 
-    async fn migrate<S>(&self) -> Result<(), Self::Err> where S: Schema {
+    fn migrate<S>(&self) -> Result<(), Self::Err> where S: Schema {
         todo!()
     }
 }

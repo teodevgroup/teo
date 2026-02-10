@@ -1,4 +1,4 @@
 mod connection;
 mod connectors;
 
-pub use connection::Connection;
+pub use connection::{SyncConnection, AsyncConnection};
