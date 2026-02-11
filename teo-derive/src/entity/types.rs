@@ -73,7 +73,7 @@ pub(in crate::entity) struct MySQLFieldDef {
     pub(in crate::entity) column_type: Option<ColumnType>,
 }
 
-#[cfg(feature = "mysql")]
+#[cfg(feature = "postgres")]
 #[derive(Default, FromMeta, Clone)]
 pub(in crate::entity) struct PostgresFieldDef {
     #[darling(default)]
@@ -128,16 +128,87 @@ impl FieldDef {
                 ColumnType::LitStr(lit_str) => {
                     use std::str::FromStr;
                     use teo_column_type::MongoColumnType;
+                    use crate::entity::column_types::extended_column_type::ExtendedColumnType;
                     let column_type = MongoColumnType::from_str(&lit_str.value()).map_err(|_| {
                         syn::Error::new(lit_str.span(), "teo(mongo): invalid column type.")
                     })?;
-                    panic!()
+                    Ok(column_type.to_token_stream())
                 },
                 ColumnType::Expr(expr) => Ok(quote! { #expr }),
             }
         } else {
-            use crate::entity::column_types::mongo::default_mongo_column_type;
-            default_mongo_column_type(&self.ty)
+            use teo_column_type::MongoColumnType;
+            use crate::entity::column_types::extended_column_type::ExtendedColumnType;
+            MongoColumnType::default_column_type(&self.ty)
+        }
+    }
+
+    #[cfg(feature = "mysql")]
+    pub(in crate::entity) fn mysql_column_type(&self) -> syn::Result<TokenStream> {
+        if let Some(mysql) = &self.mysql && let Some(column_type) = &mysql.column_type {
+            use quote::quote;
+            match column_type {
+                ColumnType::LitStr(lit_str) => {
+                    use std::str::FromStr;
+                    use teo_column_type::MySQLColumnType;
+                    use crate::entity::column_types::extended_column_type::ExtendedColumnType;
+                    let column_type = MySQLColumnType::from_str(&lit_str.value()).map_err(|_| {
+                        syn::Error::new(lit_str.span(), "teo(mysql): invalid column type.")
+                    })?;
+                    Ok(column_type.to_token_stream())
+                },
+                ColumnType::Expr(expr) => Ok(quote! { #expr }),
+            }
+        } else {
+            use teo_column_type::MySQLColumnType;
+            use crate::entity::column_types::extended_column_type::ExtendedColumnType;
+            MySQLColumnType::default_column_type(&self.ty)
+        }
+    }
+
+    #[cfg(feature = "postgres")]
+    pub(in crate::entity) fn postgres_column_type(&self) -> syn::Result<TokenStream> {
+        if let Some(postgres) = &self.postgres && let Some(column_type) = &postgres.column_type {
+            use quote::quote;
+            match column_type {
+                ColumnType::LitStr(lit_str) => {
+                    use std::str::FromStr;
+                    use teo_column_type::PostgresColumnType;
+                    use crate::entity::column_types::extended_column_type::ExtendedColumnType;
+                    let column_type = PostgresColumnType::from_str(&lit_str.value()).map_err(|_| {
+                        syn::Error::new(lit_str.span(), "teo(postgres): invalid column type.")
+                    })?;
+                    Ok(column_type.to_token_stream())
+                },
+                ColumnType::Expr(expr) => Ok(quote! { #expr }),
+            }
+        } else {
+            use teo_column_type::PostgresColumnType;
+            use crate::entity::column_types::extended_column_type::ExtendedColumnType;
+            PostgresColumnType::default_column_type(&self.ty)
+        }
+    }
+
+    #[cfg(feature = "sqlite")]
+    pub(in crate::entity) fn sqlite_column_type(&self) -> syn::Result<TokenStream> {
+        if let Some(sqlite) = &self.sqlite && let Some(column_type) = &sqlite.column_type {
+            use quote::quote;
+            match column_type {
+                ColumnType::LitStr(lit_str) => {
+                    use std::str::FromStr;
+                    use teo_column_type::SQLiteColumnType;
+                    use crate::entity::column_types::extended_column_type::ExtendedColumnType;
+                    let column_type = SQLiteColumnType::from_str(&lit_str.value()).map_err(|_| {
+                        syn::Error::new(lit_str.span(), "teo(sqlite): invalid column type.")
+                    })?;
+                    Ok(column_type.to_token_stream())
+                },
+                ColumnType::Expr(expr) => Ok(quote! { #expr }),
+            }
+        } else {
+            use teo_column_type::SQLiteColumnType;
+            use crate::entity::column_types::extended_column_type::ExtendedColumnType;
+            SQLiteColumnType::default_column_type(&self.ty)
         }
     }
 }
