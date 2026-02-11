@@ -22,7 +22,7 @@ macro_rules! make_table_def {
                             ty: #ty,
                             nullable: #nullable,
                             default: #default,
-                        })
+                        });
                     });
                 }
             }
