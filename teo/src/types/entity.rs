@@ -10,11 +10,11 @@ use super::super::migration::TableDef;
 
 pub trait Entity {
 
-    #[cfg(feature = "mongo")]
-    fn mysql_table_def() -> TableDef<MongoColumnType>;
-
     #[cfg(feature = "mysql")]
-    fn mongo_table_def() -> TableDef<MySQLColumnType>;
+    fn mongo_table_def() -> TableDef<MongoColumnType>;
+
+    #[cfg(feature = "mongo")]
+    fn mysql_table_def() -> TableDef<MySQLColumnType>;
 
     #[cfg(feature = "postgres")]
     fn postgres_table_def() -> TableDef<PostgresColumnType>;

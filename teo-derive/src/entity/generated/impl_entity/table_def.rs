@@ -1,6 +1,6 @@
 macro_rules! make_table_def {
-    ($fn_name:ident, $return_type:path, $config_name:ident) => {
-        pub(in crate::entity) fn $fn_name(
+    ($name:ident, $fn_name:ident, $return_type:path, $config_name:ident) => {
+        pub(in crate::entity) fn $name(
             opts: crate::entity::types::EntityDef,
         ) -> ::syn::Result<::proc_macro2::TokenStream> {
             let table_name = opts.table_name();
