@@ -209,6 +209,12 @@ pub(crate) trait AsyncMigration: Sync {
             if defined_column_def.ty != exist_column_def.ty {
                 self.alter_table_column_type(table_name, &defined_column_def.name, &defined_column_def.ty).await?;
             }
+            if defined_column_def.nullable != exist_column_def.nullable {
+                self.alter_table_column_nullable(table_name, &defined_column_def.name, defined_column_def.nullable).await?;
+            }
+            if defined_column_def.default != exist_column_def.default {
+                self.alter_table_column_default(table_name, &defined_column_def.name, defined_column_def.default.as_deref()).await?;
+            }
             Ok(())
         }
     }
