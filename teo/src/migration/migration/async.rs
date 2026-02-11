@@ -1,9 +1,11 @@
 use std::collections::BTreeSet;
-use crate::{migration::EnumDef, types::Schema};
+use crate::{migration::{ColumnDef, EnumDef, IndexDef, TableDef}, types::Schema};
 
 pub(crate) trait AsyncMigration: Sync {
 
-    type Err;
+    type Err: Send;
+
+    type ColumnType: Send + Sync;
 
     fn execute_without_params(&self, q: &str) -> impl Future<Output = Result<(), Self::Err>> + Send;
 
@@ -20,6 +22,22 @@ pub(crate) trait AsyncMigration: Sync {
     fn add_enum_variant_statement(&self, enum_name: &str, variant_name: &str) -> String;
 
     fn exist_enum_def(&self, enum_name: &str) -> impl Future<Output = Result<Option<EnumDef>, Self::Err>> + Send;
+
+    fn exist_table_defs<S>(&self) -> Vec<TableDef<Self::ColumnType>> where S: Schema;
+
+    fn exist_table_names(&self) -> impl Future<Output = Result<Vec<String>, Self::Err>> + Send;
+
+    fn delete_table_statement(&self, table_name: &str) -> String;
+
+    fn create_table_statement(&self, table_def: &TableDef<Self::ColumnType>) -> String;
+
+    fn create_index_statement(&self, table_name: &str, index_def: &IndexDef) -> String;
+
+    fn exist_table_def(&self, table_name: &str) -> impl Future<Output = Result<Option<TableDef<Self::ColumnType>>, Self::Err>> + Send;
+
+    fn drop_table_column_statement(&self, table_name: &str, column_name: &str) -> String;
+
+    fn add_table_column_statement(&self, table_name: &str, column_def: &ColumnDef<Self::ColumnType>) -> String;
 
     fn migrate<S>(&self) -> impl Future<Output = Result<(), Self::Err>> + Send where S: Schema {
         async {
@@ -39,7 +57,7 @@ pub(crate) trait AsyncMigration: Sync {
                     self.diff_enum(enum_def).await?;
                 }
             }
-            // db tables here
+            self.diff_tables::<S>(&defined_enum_defs).await?;
             let enums_to_delete = exist_enum_names.difference(&defined_enum_names);
             for enum_name in enums_to_delete {
                 self.delete_enum(*enum_name).await?;
@@ -62,8 +80,7 @@ pub(crate) trait AsyncMigration: Sync {
             let exist_variants: BTreeSet<&str> = exist_enum_def.variants.iter().map(|c| c.as_ref()).collect();
             let variants_to_add = defined_varaints.difference(&exist_variants);
             for variant in variants_to_add {
-                let add_variant_statement = self.add_enum_variant_statement(exist_enum_def.name, *variant);
-                self.execute_without_params(&add_variant_statement).await?;
+                self.add_enum_variant(exist_enum_def.name, *variant).await?;
             }
             Ok(())
         }
@@ -73,6 +90,124 @@ pub(crate) trait AsyncMigration: Sync {
         async {
             let statement = self.enum_drop_statement(enum_name);
             self.execute_without_params(&statement).await
+        }
+    }
+
+    fn add_enum_variant(&self, enum_name: &str, variant_name: &str) -> impl Future<Output = Result<(), Self::Err>> + Send {
+        async {
+            let add_variant_statement = self.add_enum_variant_statement(enum_name, variant_name);
+            self.execute_without_params(&add_variant_statement).await
+        }
+    }
+
+    fn diff_tables<S>(&self, defined_enum_defs: &Vec<EnumDef>) -> impl Future<Output = Result<(), Self::Err>> + Send where S: Schema {
+        async {
+            let defined_table_defs = self.exist_table_defs::<S>();
+            let exist_table_names_vec = self.exist_table_names().await?;
+            let exist_table_names: BTreeSet<&str> = BTreeSet::from_iter(exist_table_names_vec.iter().map(|s| s.as_str()));
+            let defined_table_names: BTreeSet<&str> = BTreeSet::from_iter(defined_table_defs.iter().map(|t| t.name.as_ref()));
+            let tables_to_delete = exist_table_names.difference(&defined_table_names);
+            for table_name in tables_to_delete {
+                self.delete_table(*table_name).await?;
+            }
+            let tables_to_create = defined_table_names.difference(&exist_table_names);
+            for table_name in tables_to_create {
+                if let Some(table_def) = defined_table_defs.iter().find(|def| def.name == *table_name) {
+                    self.create_table(table_def).await?;
+                }
+            }
+            let tables_to_diff = exist_table_names.intersection(&defined_table_names);
+            for table_name in tables_to_diff {
+                if let Some(defined_table_def) = defined_table_defs.iter().find(|def| def.name == *table_name) &&
+                      let Some(exist_table_def) = self.exist_table_def(*table_name).await? {
+                    self.diff_table(defined_table_def, &exist_table_def).await?;
+                }
+            }
+            Ok(())
+        }
+    }
+
+    fn delete_table(&self, table_name: &str) -> impl Future<Output = Result<(), Self::Err>> + Send {
+        async {
+            let statement = self.delete_table_statement(table_name);
+            self.execute_without_params(&statement).await
+        }
+    }
+
+    fn create_table(&self, table_def: &TableDef<Self::ColumnType>) -> impl Future<Output = Result<(), Self::Err>> + Send {
+        async {
+            let statement = self.create_table_statement(table_def);
+            self.execute_without_params(&statement).await?;
+            for index_def in &table_def.indexes {
+                self.create_index(table_def.name, index_def).await?;
+            }
+            Ok(())
+        }
+    }
+
+    fn diff_table(&self, defined_table_def: &TableDef<Self::ColumnType>, exist_table_def: &TableDef<Self::ColumnType>) -> impl Future<Output = Result<(), Self::Err>> + Send {
+        async {
+            self.diff_table_columns(defined_table_def, exist_table_def).await?;
+            self.diff_table_indexes(defined_table_def, exist_table_def).await?;
+            Ok(())
+        }
+    }
+
+    fn diff_table_columns(&self, defined_table_def: &TableDef<Self::ColumnType>, exist_table_def: &TableDef<Self::ColumnType>) -> impl Future<Output = Result<(), Self::Err>> + Send {
+        async {
+            let defined_column_names: BTreeSet<&str> = defined_table_def.columns.iter().map(|c| c.name.as_ref()).collect();
+            let exist_column_names: BTreeSet<&str> = exist_table_def.columns.iter().map(|c| c.name.as_ref()).collect();
+            let columns_to_delete = exist_column_names.difference(&defined_column_names);
+            for column_name in columns_to_delete {
+                self.drop_table_column(defined_table_def.name, *column_name).await?;
+            }
+            let columns_to_add = defined_column_names.difference(&exist_column_names);
+            for column_name in columns_to_add {
+                if let Some(defined_column_def) = defined_table_def.columns.iter().find(|def| def.name == *column_name) {
+                    self.add_table_column(defined_table_def.name, defined_column_def).await?;
+                }
+            }
+            let columns_to_diff = exist_column_names.intersection(&defined_column_names);
+            for column_name in columns_to_diff {
+                if let Some(defined_column_def) = defined_table_def.columns.iter().find(|def| def.name == *column_name) &&
+                      let Some(exist_column_def) = exist_table_def.columns.iter().find(|def| def.name == *column_name) {
+                    self.diff_table_column(defined_table_def.name, defined_column_def, exist_column_def).await?;
+                }
+            }
+            Ok(())
+        }
+    }
+
+    fn drop_table_column(&self, table_name: &str, column_name: &str) -> impl Future<Output = Result<(), Self::Err>> + Send {
+        async {
+            let statement = self.drop_table_column_statement(table_name, column_name);
+            self.execute_without_params(&statement).await
+        }
+    }
+
+    fn add_table_column(&self, table_name: &str, column_def: &ColumnDef<Self::ColumnType>) -> impl Future<Output = Result<(), Self::Err>> + Send {
+        async {
+            let statement = self.add_table_column_statement(table_name, column_def);
+            self.execute_without_params(&statement).await
+        }
+    }
+
+    fn diff_table_column(&self, table_name: &str, defined_column_def: &ColumnDef<Self::ColumnType>, exist_column_def: &ColumnDef<Self::ColumnType>) -> impl Future<Output = Result<(), Self::Err>> + Send {
+        async {
+            Ok(())
+        }
+    }
+
+    fn create_index(&self, table_name: &str, index_def: &IndexDef) -> impl Future<Output = Result<(), Self::Err>> + Send {
+        async {
+            let statement = self.create_index_statement(table_name, index_def);
+            self.execute_without_params(&statement).await
+        }
+    }
+
+    fn diff_table_indexes(&self, defined_table_def: &TableDef<Self::ColumnType>, exist_table_def: &TableDef<Self::ColumnType>) -> impl Future<Output = Result<(), Self::Err>> + Send {
+        async {
+            Ok(())
         }
     }
 }
