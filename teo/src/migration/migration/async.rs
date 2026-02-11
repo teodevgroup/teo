@@ -21,13 +21,15 @@ pub(crate) trait AsyncMigration: Sync {
 
     fn add_enum_variant_statement(&self, enum_name: &str, variant_name: &str) -> String;
 
-    fn exist_enum_def(&self, enum_name: &str) -> impl Future<Output = Result<Option<EnumDef>, Self::Err>> + Send;
+    fn exist_enum_def(&self, enum_name: &'static str) -> impl Future<Output = Result<EnumDef, Self::Err>> + Send;
 
-    fn exist_table_defs<S>(&self) -> Vec<TableDef<Self::ColumnType>> where S: Schema;
+    fn defined_table_defs<S>(&self) -> Vec<TableDef<Self::ColumnType>> where S: Schema;
 
     fn exist_table_names(&self) -> impl Future<Output = Result<Vec<String>, Self::Err>> + Send;
 
-    fn delete_table_statement(&self, table_name: &str) -> String;
+    fn drop_table_statement(&self, table_name: &str) -> String {
+        format!("drop table if exists {}{}{}", Self::ident_quote_char(), table_name, Self::ident_quote_char())
+    }
 
     fn create_table_statement(&self, table_def: &TableDef<Self::ColumnType>) -> String;
 
@@ -87,7 +89,7 @@ pub(crate) trait AsyncMigration: Sync {
 
     fn diff_enum(&self, defined_enum_def: &EnumDef) -> impl Future<Output = Result<(), Self::Err>> + Send {
         async {
-            let Some(exist_enum_def) = self.exist_enum_def(defined_enum_def.name).await? else { return Ok(()) };
+            let exist_enum_def = self.exist_enum_def(defined_enum_def.name).await?;
             let defined_varaints: BTreeSet<&str> = defined_enum_def.variants.iter().map(|c| c.as_ref()).collect();
             let exist_variants: BTreeSet<&str> = exist_enum_def.variants.iter().map(|c| c.as_ref()).collect();
             let variants_to_add = defined_varaints.difference(&exist_variants);
@@ -114,7 +116,7 @@ pub(crate) trait AsyncMigration: Sync {
 
     fn diff_tables<S>(&self, _defined_enum_defs: &Vec<EnumDef>) -> impl Future<Output = Result<(), Self::Err>> + Send where S: Schema {
         async {
-            let defined_table_defs = self.exist_table_defs::<S>();
+            let defined_table_defs = self.defined_table_defs::<S>();
             let exist_table_names_vec = self.exist_table_names().await?;
             let exist_table_names: BTreeSet<&str> = BTreeSet::from_iter(exist_table_names_vec.iter().map(|s| s.as_str()));
             let defined_table_names: BTreeSet<&str> = BTreeSet::from_iter(defined_table_defs.iter().map(|t| t.name.as_ref()));
@@ -141,7 +143,7 @@ pub(crate) trait AsyncMigration: Sync {
 
     fn delete_table(&self, table_name: &str) -> impl Future<Output = Result<(), Self::Err>> + Send {
         async {
-            let statement = self.delete_table_statement(table_name);
+            let statement = self.drop_table_statement(table_name);
             self.execute_without_params(&statement).await
         }
     }
