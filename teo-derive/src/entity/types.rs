@@ -1,4 +1,6 @@
 use darling::{Error, FromDeriveInput, FromField, FromMeta, Result, ast::Data, util::Ignored};
+#[cfg(feature = "mongo")]
+use proc_macro2::TokenStream;
 use syn::{Attribute, Expr, Ident, Lit, LitStr, Type, Visibility};
 
 #[derive(Clone, Copy)]
@@ -115,6 +117,17 @@ pub(in crate::entity) struct FieldDef {
     #[cfg(feature = "sqlite")]
     #[darling(default)]
     pub(in crate::entity) sqlite: Option<SQLiteFieldDef>,
+}
+
+impl FieldDef {
+    #[cfg(feature = "mongo")]
+    pub(in crate::entity) fn mongo_column_type(&self) -> syn::Result<TokenStream> {
+        if let Some(mongo) = &self.mongo && let Some(column_type) = &mongo.column_type {
+
+        } else {
+
+        }
+    }
 }
 
 #[derive(FromDeriveInput, Clone)]

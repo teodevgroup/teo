@@ -3,6 +3,8 @@ use crate::error::Error;
 
 #[derive(Debug, PartialEq)]
 pub enum MongoColumnType {
+    Bool,
+    String,
     Date,
     ObjectId,
     Double,
@@ -10,6 +12,7 @@ pub enum MongoColumnType {
     Long,
     Decimal128,
     Timestamp,
+    UUID,
 }
 
 impl FromStr for MongoColumnType {
