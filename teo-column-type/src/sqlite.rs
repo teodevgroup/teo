@@ -2,14 +2,14 @@ use std::str::FromStr;
 use crate::error::Error;
 
 #[derive(Debug, PartialEq)]
-pub enum SQLiteColumnType {
+pub enum ColumnType {
     Integer,
     Real,
     Text,
     Blob,
 }
 
-impl FromStr for SQLiteColumnType {
+impl FromStr for ColumnType {
 
     type Err = Error;
 

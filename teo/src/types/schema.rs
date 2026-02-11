@@ -1,11 +1,11 @@
 #[cfg(feature = "mongo")]
-use teo_column_type::MongoColumnType;
+use teo_column_type::mongo;
 #[cfg(feature = "mysql")]
-use teo_column_type::MySQLColumnType;
+use teo_column_type::mysql;
 #[cfg(feature = "postgres")]
-use teo_column_type::PostgresColumnType;
+use teo_column_type::postgres;
 #[cfg(feature = "sqlite")]
-use teo_column_type::SQLiteColumnType;
+use teo_column_type::sqlite;
 
 use super::super::migration::{EnumDef, TableDef};
 
@@ -15,15 +15,15 @@ pub trait Schema: Send {
     fn enum_defs() -> Vec<EnumDef>;
 
     #[cfg(feature = "mongo")]
-    fn mongo_table_defs() -> Vec<TableDef<MongoColumnType>>;
+    fn mongo_table_defs() -> Vec<TableDef<mongo::ColumnType>>;
 
     #[cfg(feature = "mysql")]
-    fn mysql_table_defs() -> Vec<TableDef<MySQLColumnType>>;
+    fn mysql_table_defs() -> Vec<TableDef<mysql::ColumnType>>;
 
     #[cfg(feature = "postgres")]
-    fn postgres_table_defs() -> Vec<TableDef<PostgresColumnType>>;
+    fn postgres_table_defs() -> Vec<TableDef<postgres::ColumnType>>;
 
     #[cfg(feature = "sqlite")]
-    fn sqlite_table_defs() -> Vec<TableDef<SQLiteColumnType>>;
+    fn sqlite_table_defs() -> Vec<TableDef<sqlite::ColumnType>>;
 
 }

@@ -2,7 +2,7 @@ use std::str::FromStr;
 use crate::error::Error;
 
 #[derive(Debug, PartialEq)]
-pub enum MySQLColumnType {
+pub enum ColumnType {
     TinyInt,
     SmallInt,
     MediumInt,
@@ -40,7 +40,7 @@ pub enum MySQLColumnType {
     JSON,
 }
 
-impl FromStr for MySQLColumnType {
+impl FromStr for ColumnType {
 
     type Err = Error;
 

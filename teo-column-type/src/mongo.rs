@@ -2,7 +2,7 @@ use std::str::FromStr;
 use crate::error::Error;
 
 #[derive(Debug, PartialEq)]
-pub enum MongoColumnType {
+pub enum ColumnType {
     Bool,
     String,
     Date,
@@ -15,7 +15,7 @@ pub enum MongoColumnType {
     UUID,
 }
 
-impl FromStr for MongoColumnType {
+impl FromStr for ColumnType {
 
     type Err = Error;
 

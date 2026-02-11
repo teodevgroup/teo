@@ -2,7 +2,7 @@ use std::str::FromStr;
 use crate::error::Error;
 
 #[derive(Debug, PartialEq)]
-pub enum PostgresColumnType {
+pub enum ColumnType {
     BigInt,
     BigSerial,
     Bit { n: usize },
@@ -47,7 +47,7 @@ pub enum PostgresColumnType {
     XML,
 }
 
-impl FromStr for PostgresColumnType {
+impl FromStr for ColumnType {
 
     type Err = Error;
 

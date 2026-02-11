@@ -1,5 +1,5 @@
 use teo_derive::Entity;
-use teo::teo_column_type::PostgresColumnType;
+use teo::teo_column_type::postgres::ColumnType;
 
 #[derive(Entity)]
 #[teo(table_name = "User")]
