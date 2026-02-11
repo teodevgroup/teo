@@ -7,7 +7,7 @@ pub struct EnumDef {
     pub variants: Vec<Cow<'static, str>>
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct ColumnDef<T> {
     pub name: Cow<'static, str>,
     pub ty: T,

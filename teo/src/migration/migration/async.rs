@@ -5,7 +5,7 @@ pub(crate) trait AsyncMigration: Sync {
 
     type Err: Send;
 
-    type ColumnType: Send + Sync;
+    type ColumnType: Send + Sync + PartialEq;
 
     fn execute_without_params(&self, q: &str) -> impl Future<Output = Result<(), Self::Err>> + Send;
 
@@ -38,6 +38,18 @@ pub(crate) trait AsyncMigration: Sync {
     fn drop_table_column_statement(&self, table_name: &str, column_name: &str) -> String;
 
     fn add_table_column_statement(&self, table_name: &str, column_def: &ColumnDef<Self::ColumnType>) -> String;
+
+    fn alter_table_column_type_statement(&self, table_name: &str, column_name: &str, column_ty: &Self::ColumnType) -> String;
+
+    fn alter_table_column_set_not_null_statement(&self, table_name: &str, column_name: &str) -> String;
+
+    fn alter_table_column_drop_not_null_statement(&self, table_name: &str, column_name: &str) -> String;
+
+    fn alter_table_column_set_default_statement(&self, table_name: &str, column_name: &str, default: &str) -> String;
+
+    fn alter_table_column_drop_default_statement(&self, table_name: &str, column_name: &str) -> String;
+
+    fn drop_index_statement(&self, index_name: &str) -> String;
 
     fn migrate<S>(&self) -> impl Future<Output = Result<(), Self::Err>> + Send where S: Schema {
         async {
@@ -100,7 +112,7 @@ pub(crate) trait AsyncMigration: Sync {
         }
     }
 
-    fn diff_tables<S>(&self, defined_enum_defs: &Vec<EnumDef>) -> impl Future<Output = Result<(), Self::Err>> + Send where S: Schema {
+    fn diff_tables<S>(&self, _defined_enum_defs: &Vec<EnumDef>) -> impl Future<Output = Result<(), Self::Err>> + Send where S: Schema {
         async {
             let defined_table_defs = self.exist_table_defs::<S>();
             let exist_table_names_vec = self.exist_table_names().await?;
@@ -194,7 +206,39 @@ pub(crate) trait AsyncMigration: Sync {
 
     fn diff_table_column(&self, table_name: &str, defined_column_def: &ColumnDef<Self::ColumnType>, exist_column_def: &ColumnDef<Self::ColumnType>) -> impl Future<Output = Result<(), Self::Err>> + Send {
         async {
+            if defined_column_def.ty != exist_column_def.ty {
+                self.alter_table_column_type(table_name, &defined_column_def.name, &defined_column_def.ty).await?;
+            }
             Ok(())
+        }
+    }
+
+    fn alter_table_column_type(&self, table_name: &str, column_name: &str, column_ty: &Self::ColumnType) -> impl Future<Output = Result<(), Self::Err>> + Send {
+        async {
+            let statement = self.alter_table_column_type_statement(table_name, column_name, column_ty);
+            self.execute_without_params(&statement).await
+        }
+    }
+
+    fn alter_table_column_nullable(&self, table_name: &str, column_name: &str, nullable: bool) -> impl Future<Output = Result<(), Self::Err>> + Send {
+        async move {
+            let statement = if nullable {
+                self.alter_table_column_drop_not_null_statement(table_name, column_name)
+            } else {
+                self.alter_table_column_set_not_null_statement(table_name, column_name)
+            };
+            self.execute_without_params(&statement).await
+        }
+    }
+
+    fn alter_table_column_default(&self, table_name: &str, column_name: &str, default: Option<&str>) -> impl Future<Output = Result<(), Self::Err>> + Send {
+        async move {
+            let statement = if let Some(default) = default {
+                self.alter_table_column_set_default_statement(table_name, column_name, default)
+            } else {
+                self.alter_table_column_drop_default_statement(table_name, column_name)
+            };
+            self.execute_without_params(&statement).await
         }
     }
 
@@ -207,7 +251,36 @@ pub(crate) trait AsyncMigration: Sync {
 
     fn diff_table_indexes(&self, defined_table_def: &TableDef<Self::ColumnType>, exist_table_def: &TableDef<Self::ColumnType>) -> impl Future<Output = Result<(), Self::Err>> + Send {
         async {
+            let defined_index_names: BTreeSet<&str> = defined_table_def.indexes.iter().map(|c| c.name.as_ref()).collect();
+            let exist_index_names: BTreeSet<&str> = exist_table_def.indexes.iter().map(|c| c.name.as_ref()).collect();
+            let indexes_to_delete = exist_index_names.difference(&defined_index_names);
+            for index_name in indexes_to_delete {
+                self.drop_index(index_name).await?;
+            }
+            let indexes_to_create = defined_index_names.difference(&exist_index_names);
+            for index_name in indexes_to_create {
+                if let Some(defined_index_def) = defined_table_def.indexes.iter().find(|def| def.name == *index_name) {
+                    self.create_index(defined_table_def.name, defined_index_def).await?;
+                }
+            }
+            let indexes_to_diff = exist_index_names.intersection(&defined_index_names);
+            for index_name in indexes_to_diff {
+                if let Some(defined_index_def) = defined_table_def.indexes.iter().find(|def| def.name == *index_name) &&
+                let Some(exist_index_def) = exist_table_def.indexes.iter().find(|def| def.name == *index_name) {
+                    if defined_index_def != exist_index_def {
+                        self.drop_index(&exist_index_def.name).await?;
+                        self.create_index(defined_table_def.name, defined_index_def).await?;
+                    }
+                }
+            }
             Ok(())
+        }
+    }
+
+    fn drop_index(&self, index_name: &str) -> impl Future<Output = Result<(), Self::Err>> + Send {
+        async {
+            let statement = self.drop_index_statement(index_name);
+            self.execute_without_params(&statement).await
         }
     }
 }
