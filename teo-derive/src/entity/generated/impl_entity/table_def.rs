@@ -10,7 +10,7 @@ macro_rules! make_table_def {
                 if let Some(ident) = &field_def.ident {
                     let column_name = field_def.column_name.clone().unwrap_or(ident.to_string());
                     let nullable = crate::utils::is_std_option(&field_def.ty);
-                    let ty = field_def.$config_name().unwrap();
+                    let ty = field_def.$config_name()?;
                     let default = if let Some(default) = &field_def.default {
                         Some(::quote::quote! { Some(std::borrow::Cow::Borrowed(#default)) })
                     } else {
