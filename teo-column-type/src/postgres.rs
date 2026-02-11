@@ -159,3 +159,82 @@ impl FromStr for ColumnType {
         })
     }
 }
+
+impl ToString for ColumnType {
+    fn to_string(&self) -> String {
+        match self {
+            ColumnType::BigInt => "bigint".to_string(),
+            ColumnType::BigSerial => "bigserial".to_string(),
+            ColumnType::Bit { n } => format!("bit({n})"),
+            ColumnType::BitVarying { n } => if let Some(n) = n {
+                format!("bit varying({n})")
+            } else {
+                "bit varying".to_string()
+            },
+            ColumnType::Boolean => "boolean".to_string(),
+            ColumnType::Box => "box".to_string(),
+            ColumnType::ByteA => "bytea".to_string(),
+            ColumnType::Character { n } => format!("char({n})"),
+            ColumnType::CharacterVarying { n } => if let Some(n) = n {
+                format!("varchar({n})")
+            } else {
+                "varchar".to_string()
+            },
+            ColumnType::CIDR => "cidr".to_string(),
+            ColumnType::Circle => "circle".to_string(),
+            ColumnType::Date => "date".to_string(),
+            ColumnType::DoublePrecision => "double precision".to_string(),
+            ColumnType::INet => "inet".to_string(),
+            ColumnType::Integer => "integer".to_string(),
+            ColumnType::JSON => "json".to_string(),
+            ColumnType::JSONB => "jsonb".to_string(),
+            ColumnType::Line => "line".to_string(),
+            ColumnType::LSeg => "lSeg".to_string(),
+            ColumnType::MACAddr => "macaddr".to_string(),
+            ColumnType::MACAddr8 => "macaddr8".to_string(),
+            ColumnType::Money => "money".to_string(),
+            ColumnType::Numeric { p, s } => if let Some(p) = p && let Some(s) = s {
+                format!("numeric({p},{s})")
+            } else if let Some(p) = p {
+                format!("numeric({p})")
+            } else {
+                "numeric".to_string()
+            },
+            ColumnType::Path => "path".to_string(),
+            ColumnType::PgLSN => "pg_lsn".to_string(),
+            ColumnType::PGSnapshot => "pg_snapshot".to_string(),
+            ColumnType::Point => "point".to_string(),
+            ColumnType::Polygon => "polygon".to_string(),
+            ColumnType::Real => "real".to_string(),
+            ColumnType::SmallInt => "smallint".to_string(),
+            ColumnType::SmallSerial => "smallserial".to_string(),
+            ColumnType::Serial => "serial".to_string(),
+            ColumnType::Text => "text".to_string(),
+            ColumnType::TimeWithoutTimeZone { p } => if *p == 6 {
+                "time without time zone".to_string()
+            } else {
+                format!("time({p}) without time zone")
+            },
+            ColumnType::TimeWithTimeZone { p } => if *p == 6 {
+                "time with time zone".to_string()
+            } else {
+                format!("time({p}) with time zone")
+            },
+            ColumnType::TimestampWithoutTimeZone { p } => if *p == 6 {
+                "timestamp without time zone".to_string()
+            } else {
+                format!("timestamp({p}) without time zone")
+            },
+            ColumnType::TimestampWithTimeZone { p } => if *p == 6 {
+                "timestamp with time zone".to_string()
+            } else {
+                format!("timestamp({p}) with time zone")
+            },
+            ColumnType::TSQuery => "tsquery".to_string(),
+            ColumnType::TSVector => "tsvector".to_string(),
+            ColumnType::TxIDSnapshot => "txid_snapshot".to_string(),
+            ColumnType::UUID => "uuid".to_string(),
+            ColumnType::XML => "xml".to_string(),
+        }
+    }
+}

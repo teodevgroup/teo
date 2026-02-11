@@ -25,3 +25,14 @@ impl FromStr for ColumnType {
         })
     }
 }
+
+impl ToString for ColumnType {
+    fn to_string(&self) -> String {
+        match self {
+            ColumnType::Integer => "integer".to_string(),
+            ColumnType::Real => "real".to_string(),
+            ColumnType::Text => "text".to_string(),
+            ColumnType::Blob => "blob".to_string(),
+        }
+    }
+}

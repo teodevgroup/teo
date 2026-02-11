@@ -150,3 +150,46 @@ impl FromStr for ColumnType {
         })
     }
 }
+
+impl ToString for ColumnType {
+
+    fn to_string(&self) -> String {
+        match self {
+            ColumnType::TinyInt => "tinyint".to_string(),
+            ColumnType::SmallInt => "smallint".to_string(),
+            ColumnType::MediumInt => "mediumint".to_string(),
+            ColumnType::Int => "int".to_string(),
+            ColumnType::BigInt => "bigint".to_string(),
+            ColumnType::Decimal { m, d } => format!("decimal({m},{d})"),
+            ColumnType::Float => "float".to_string(),
+            ColumnType::Double => "double".to_string(),
+            ColumnType::Bit { m } => format!("bit({m})"),
+            ColumnType::Date => "date".to_string(),
+            ColumnType::Time { fsp } => format!("time({fsp})"),
+            ColumnType::DateTime { fsp } => format!("datetime({fsp})"),
+            ColumnType::Timestamp { fsp } => format!("timestamp({fsp})"),
+            ColumnType::Year => "year".to_string(),
+            ColumnType::Char { m } => format!("char({m})"),
+            ColumnType::VarChar { m } => format!("varchar({m})"),
+            ColumnType::Binary { m } => format!("binary({m})"),
+            ColumnType::VarBinary { m } => format!("varbinary({m})"),
+            ColumnType::TinyBlob => "tinyblob".to_string(),
+            ColumnType::Blob => "blob".to_string(),
+            ColumnType::MediumBlob => "mediumblob".to_string(),
+            ColumnType::LongBlob => "longblob".to_string(),
+            ColumnType::TinyText => "tinytext".to_string(),
+            ColumnType::Text => "text".to_string(),
+            ColumnType::MediumText => "mediumtext".to_string(),
+            ColumnType::LongText => "longtext".to_string(),
+            ColumnType::Geometry => "geometry".to_string(),
+            ColumnType::Point => "point".to_string(),
+            ColumnType::LineString => "linestring".to_string(),
+            ColumnType::Polygon => "polygon".to_string(),
+            ColumnType::Multipoint => "multipoint".to_string(),
+            ColumnType::MultilineString => "multilinestring".to_string(),
+            ColumnType::Multipolygon => "multipolygon".to_string(),
+            ColumnType::GeometryCollection => "geometrycollection".to_string(),
+            ColumnType::JSON => "json".to_string(),
+        }
+    }
+}
