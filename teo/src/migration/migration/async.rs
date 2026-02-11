@@ -208,7 +208,7 @@ pub(crate) trait AsyncMigration: Sync {
             let tables_to_diff = exist_table_names.intersection(&defined_table_names);
             for table_name in tables_to_diff {
                 if let Some(defined_table_def) = defined_table_defs.iter().find(|def| def.name == *table_name) {
-                    let exist_table_def = self.exist_table_def(*table_name).await?;
+                    let exist_table_def = self.exist_table_def(defined_table_def.name).await?;
                     self.diff_table(defined_table_def, &exist_table_def).await?;
                 }
             }
