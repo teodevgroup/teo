@@ -11,10 +11,10 @@ name = "teo_derive"
 proc-macro = true
 
 [features]
-mongo = []
-mysql = []
-postgres = []
-sqlite = []
+mongo = ["teo-column-type/mongo"]
+mysql = ["teo-column-type/mysql"]
+postgres = ["teo-column-type/postgres"]
+sqlite = ["teo-column-type/sqlite"]
 default = ["mongo", "mysql", "postgres", "sqlite"]
 
 [dependencies]
@@ -22,3 +22,4 @@ syn = { version = "2.0.114", features = ["full", "extra-traits"] }
 quote = { version = "1.0.44" }
 proc-macro2 = { version = "1.0.106" }
 darling = { version = "0.23.0" }
+teo-column-type = { path = "../teo-column-type", version = "0.4.0-alpha.1" }

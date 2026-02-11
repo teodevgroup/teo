@@ -123,9 +123,21 @@ impl FieldDef {
     #[cfg(feature = "mongo")]
     pub(in crate::entity) fn mongo_column_type(&self) -> syn::Result<TokenStream> {
         if let Some(mongo) = &self.mongo && let Some(column_type) = &mongo.column_type {
-
+            use quote::quote;
+            match column_type {
+                ColumnType::LitStr(lit_str) => {
+                    use std::str::FromStr;
+                    use teo_column_type::MongoColumnType;
+                    let column_type = MongoColumnType::from_str(&lit_str.value()).map_err(|_| {
+                        syn::Error::new(lit_str.span(), "teo(mongo): invalid column type.")
+                    })?;
+                    panic!()
+                },
+                ColumnType::Expr(expr) => Ok(quote! { #expr }),
+            }
         } else {
-
+            use crate::entity::column_types::mongo::default_mongo_column_type;
+            default_mongo_column_type(&self.ty)
         }
     }
 }
