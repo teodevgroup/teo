@@ -1,11 +1,11 @@
 use std::collections::BTreeSet;
-use crate::{migration::{ColumnDef, EnumDef, IndexDef, TableDef}, types::Schema};
+use crate::{migration::{ColumnDef, EnumDef, IndexColumnDef, IndexDef, TableDef}, types::Schema};
 
 pub(crate) trait AsyncMigration: Sync {
 
     type Err: Send;
 
-    type ColumnType: Send + Sync + PartialEq;
+    type ColumnType: Send + Sync + PartialEq + ToString;
 
     fn execute_without_params(&self, q: &str) -> impl Future<Output = Result<(), Self::Err>> + Send;
 
@@ -33,25 +33,100 @@ pub(crate) trait AsyncMigration: Sync {
 
     fn create_table_statement(&self, table_def: &TableDef<Self::ColumnType>) -> String;
 
-    fn create_index_statement(&self, table_name: &str, index_def: &IndexDef) -> String;
+    fn column_statement(&self, column_def: &ColumnDef<Self::ColumnType>) -> String;
 
-    fn exist_table_def(&self, table_name: &str) -> impl Future<Output = Result<Option<TableDef<Self::ColumnType>>, Self::Err>> + Send;
+    fn index_column_statement(&self, index_column_def: &IndexColumnDef) -> String {
+        format!("{}{}{} {}", Self::ident_quote_char(), index_column_def.name, Self::ident_quote_char(), index_column_def.order.as_ref())
+    }
 
-    fn drop_table_column_statement(&self, table_name: &str, column_name: &str) -> String;
+    fn create_index_statement(&self, table_name: &str, index_def: &IndexDef) -> String {
+        let columns: Vec<String> = index_def.columns.iter().map(|c| self.index_column_statement(c)).collect();
+        let columns_joined = columns.join(",");
+        format!("create index {}{}{} on {}{}{}({})",
+            Self::ident_quote_char(),
+            index_def.name,
+            Self::ident_quote_char(),
+            Self::ident_quote_char(),
+            table_name,
+            Self::ident_quote_char(),
+            columns_joined)
+    }
 
-    fn add_table_column_statement(&self, table_name: &str, column_def: &ColumnDef<Self::ColumnType>) -> String;
+    fn exist_table_def(&self, table_name: &'static str) -> impl Future<Output = Result<TableDef<Self::ColumnType>, Self::Err>> + Send;
 
-    fn alter_table_column_type_statement(&self, table_name: &str, column_name: &str, column_ty: &Self::ColumnType) -> String;
+    fn drop_table_column_statement(&self, table_name: &str, column_name: &str) -> String {
+        format!(r#"alter table {}{}{} drop column {}{}{}"#,
+            Self::ident_quote_char(),
+            table_name,
+            Self::ident_quote_char(),
+            Self::ident_quote_char(),
+            column_name,
+            Self::ident_quote_char())
+    }
 
-    fn alter_table_column_set_not_null_statement(&self, table_name: &str, column_name: &str) -> String;
+    fn add_table_column_statement(&self, table_name: &str, column_def: &ColumnDef<Self::ColumnType>) -> String {
+        format!("alter table {}{}{} add {}",
+            Self::ident_quote_char(),
+            table_name,
+            Self::ident_quote_char(),
+            self.column_statement(column_def))
+    }
 
-    fn alter_table_column_drop_not_null_statement(&self, table_name: &str, column_name: &str) -> String;
+    fn alter_table_column_type_statement(&self, table_name: &str, column_name: &str, column_ty: &Self::ColumnType) -> String {
+        format!("alter table {}{}{} alter column {}{}{} type {}",
+            Self::ident_quote_char(),
+            table_name,
+            Self::ident_quote_char(),
+            Self::ident_quote_char(),
+            column_name,
+            Self::ident_quote_char(),
+            column_ty.to_string())
+    }
 
-    fn alter_table_column_set_default_statement(&self, table_name: &str, column_name: &str, default: &str) -> String;
+    fn alter_table_column_set_not_null_statement(&self, table_name: &str, column_name: &str) -> String {
+        format!("alter table {}{}{} alter column {}{}{} set not null",
+            Self::ident_quote_char(),
+            table_name,
+            Self::ident_quote_char(),
+            Self::ident_quote_char(),
+            column_name,
+            Self::ident_quote_char())
+    }
 
-    fn alter_table_column_drop_default_statement(&self, table_name: &str, column_name: &str) -> String;
+    fn alter_table_column_drop_not_null_statement(&self, table_name: &str, column_name: &str) -> String {
+        format!("alter table {}{}{} alter column {}{}{} drop not null",
+            Self::ident_quote_char(),
+            table_name,
+            Self::ident_quote_char(),
+            Self::ident_quote_char(),
+            column_name,
+            Self::ident_quote_char())
+    }
 
-    fn drop_index_statement(&self, index_name: &str) -> String;
+    fn alter_table_column_set_default_statement(&self, table_name: &str, column_name: &str, default: &str) -> String {
+        format!("alter table {}{}{} alter column {}{}{} set default {}",
+            Self::ident_quote_char(),
+            table_name,
+            Self::ident_quote_char(),
+            Self::ident_quote_char(),
+            column_name,
+            Self::ident_quote_char(),
+            default)
+    }
+
+    fn alter_table_column_drop_default_statement(&self, table_name: &str, column_name: &str) -> String {
+        format!("alter table {}{}{} alter column {}{}{} drop default",
+            Self::ident_quote_char(),
+            table_name,
+            Self::ident_quote_char(),
+            Self::ident_quote_char(),
+            column_name,
+            Self::ident_quote_char())
+    }
+
+    fn drop_index_statement(&self, index_name: &str) -> String {
+        format!("drop index if exists {}{}{}", Self::ident_quote_char(), index_name, Self::ident_quote_char())
+    }
 
     fn migrate<S>(&self) -> impl Future<Output = Result<(), Self::Err>> + Send where S: Schema {
         async {
@@ -132,8 +207,8 @@ pub(crate) trait AsyncMigration: Sync {
             }
             let tables_to_diff = exist_table_names.intersection(&defined_table_names);
             for table_name in tables_to_diff {
-                if let Some(defined_table_def) = defined_table_defs.iter().find(|def| def.name == *table_name) &&
-                      let Some(exist_table_def) = self.exist_table_def(*table_name).await? {
+                if let Some(defined_table_def) = defined_table_defs.iter().find(|def| def.name == *table_name) {
+                    let exist_table_def = self.exist_table_def(*table_name).await?;
                     self.diff_table(defined_table_def, &exist_table_def).await?;
                 }
             }
