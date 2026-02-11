@@ -1,3 +1,5 @@
+pub extern crate teo_column_type;
+
 pub mod types;
 pub mod connection;
 pub mod migration;

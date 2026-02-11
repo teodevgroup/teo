@@ -7,7 +7,7 @@ use teo_derive::Entity;
     column(name = b),
     name = "my_index"))]
 struct User {
-    #[teo(column_name = "a", primary, column_type = "d")]
+    #[teo(column_name = "a", primary)]
     a: String,
     #[teo(postgres(column_type = "int"))]
     b: i32,
