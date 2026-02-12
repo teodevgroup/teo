@@ -1,3 +1,5 @@
+mod connectors;
+
 use teo_derive::Entity;
 use teo::teo_column_type::postgres::ColumnType;
 

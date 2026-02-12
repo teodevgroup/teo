@@ -1,6 +1,6 @@
 use std::{borrow::Cow, str::FromStr};
 
-use rusqlite::{Connection, Error, Params, Rows};
+use rusqlite::{Connection, Error};
 use teo_column_type::sqlite;
 use crate::{connection::SyncConnection, migration::{ColumnDef, IndexColumnDef, IndexDef, SyncMigration, TableDef}, types::{Schema, SortOrder}};
 
@@ -100,7 +100,7 @@ impl SyncMigration for Connection {
             table_name,
             Self::ident_quote_char());
         let mut column_statement = self.prepare(&column_sql)?;
-        let mut columns = column_statement.query_map((), |row| {
+        let columns = column_statement.query_map((), |row| {
             let name: String = row.get("name")?;
             let ty: String = row.get("type")?;
             let notnull: bool = row.get("notnull")?;
