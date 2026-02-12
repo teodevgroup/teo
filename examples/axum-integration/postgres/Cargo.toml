@@ -12,4 +12,4 @@ publish = false
 
 [dependencies]
 teo = { path = "../../../teo", features = ["derive", "postgres_sync"] }
-tokio = { version = "1.46.1", features = ["full"] }
+tokio = { version = "1.49", features = ["full"] }
