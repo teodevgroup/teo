@@ -3,8 +3,7 @@ use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 use syn::{DeriveInput, Result, parse_macro_input};
-
-use crate::schema::types::SchemaDef;
+use crate::schema::{generated::generate_impl_schema, types::SchemaDef};
 
 pub(crate) fn perform(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);

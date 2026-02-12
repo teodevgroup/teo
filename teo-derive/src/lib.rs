@@ -9,3 +9,8 @@ use proc_macro::TokenStream;
 pub fn derive_entity(input: TokenStream) -> TokenStream {
     entity::perform(input)
 }
+
+#[proc_macro_derive(Schema, attributes(teo))]
+pub fn derive_schema(input: TokenStream) -> TokenStream {
+    schema::perform(input)
+}
