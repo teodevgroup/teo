@@ -3,7 +3,7 @@ use syn::{Attribute, Ident, Path};
 
 #[derive(Clone, FromMeta)]
 pub(in crate::schema) struct SchemaEntityDef {
-    path: Path
+    pub(in crate::schema) path: Path
 }
 
 #[derive(FromDeriveInput, Clone)]
