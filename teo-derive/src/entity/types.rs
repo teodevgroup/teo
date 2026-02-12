@@ -1,5 +1,4 @@
 use darling::{Error, FromDeriveInput, FromField, FromMeta, Result, ast::Data, util::Ignored};
-#[cfg(feature = "mongo")]
 use proc_macro2::TokenStream;
 use syn::{Attribute, Expr, Ident, Lit, LitStr, Type, Visibility};
 
