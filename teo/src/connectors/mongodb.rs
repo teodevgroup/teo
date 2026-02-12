@@ -1,6 +1,5 @@
-use mongodb::{Collection, Database, bson::{Bson, doc}, error::Error};
-use serde::de::DeserializeOwned;
-use crate::{connection::AsyncConnection, migration::{AsyncMigration, ColumnDef, EnumDef, IndexColumnDef, IndexDef, TableDef}, types::Schema};
+use mongodb::{Collection, Database, IndexModel, bson::{Bson, doc, to_bson}, error::Error, options::IndexOptions};
+use crate::{connection::AsyncConnection, migration::{AsyncMigration, ColumnDef, EnumDef, IndexColumnDef, IndexDef, TableDef}, types::{Schema, SortOrder}};
 use teo_column_type::mongo;
 
 impl AsyncConnection for Database {
@@ -143,6 +142,9 @@ impl AsyncMigration for Database {
         self.create_collection(table_def.name.as_ref()).await?;
         let collections: Collection<TableDef<Self::ColumnType>> = self.collection("_Collections");
         collections.insert_one(table_def).await?;
+        for index in &table_def.indexes {
+            self.create_index(&table_def.name, index).await?;
+        }
         Ok(())
     }
 
@@ -151,7 +153,61 @@ impl AsyncMigration for Database {
         table.update_many(doc!{}, doc!{"$unset": {column_name: 1}}).await?;
         let collections: Collection<TableDef<Self::ColumnType>> = self.collection("_Collections");
         collections.update_one(doc!{"name": table_name}, doc!{
+            "$pull": {"columns": { "name": column_name }}
+        }).await?;
+        Ok(())
+    }
 
+    async fn add_table_column(&mut self, table_name: &str, column_def: &ColumnDef<Self::ColumnType>) -> Result<(), Self::Err> {
+        let collections: Collection<TableDef<Self::ColumnType>> = self.collection("_Collections");
+        let column_def_bson = to_bson(column_def)?;
+        collections.update_one(doc!{"name": table_name}, doc!{
+            "$push": {"columns": {"$each": [column_def_bson]}}
+        }).await?;
+        Ok(())
+    }
+
+    async fn alter_table_column_type(&mut self, table_name: &str, column_name: &str, column_ty: &Self::ColumnType) -> Result<(), Self::Err> {
+        Ok(())
+    }
+
+    async fn alter_table_column_nullable(&mut self, table_name: &str, column_name: &str, nullable: bool) -> Result<(), Self::Err> {
+        Ok(())
+    }
+
+    async fn alter_table_column_default(&mut self, table_name: &str, column_name: &str, default: Option<&str>) -> Result<(), Self::Err> {
+        Ok(())
+    }
+
+    async fn create_index(&mut self, table_name: &str, index_def: &IndexDef) -> Result<(), Self::Err> {
+        let index_def_bson = to_bson(index_def)?;
+        let mut keys = doc!{};
+        for column in &index_def.columns {
+            keys.insert(column.name.as_ref(), column.order.as_i32());
+        }
+        let options = IndexOptions::builder().name(index_def.name.to_string()).build();
+        let index_model = IndexModel::builder().keys(keys).options(options).build();
+        let collection: Collection<Bson> = self.collection(table_name);
+        collection.create_index(index_model).await?;
+        let collections: Collection<TableDef<Self::ColumnType>> = self.collection("_Collections");
+        collections.update_one(doc!{
+            "name": table_name,
+            "indexes": {"$not": {"$elemMatch":{"name":index_def.name.as_ref()}}}
+        }, doc!{
+            "$push": {"indexes": {"$each": [index_def_bson]}}
+        }).await?;
+        Ok(())
+    }
+
+    async fn drop_index(&mut self, table_name: &str, index_name: &str) -> Result<(), Self::Err> {
+        let collection: Collection<Bson> = self.collection(table_name);
+        collection.drop_index(index_name).await?;
+        let collections: Collection<TableDef<Self::ColumnType>> = self.collection("_Collections");
+        collections.update_one(doc!{
+            "name": table_name,
+            "indexes": {"$elemMatch":{"name":index_name}}
+        }, doc!{
+            "$pull": {"indexes": {"name": index_name}}
         }).await?;
         Ok(())
     }

@@ -338,7 +338,7 @@ pub(crate) trait AsyncMigration: Send + Sync {
             let exist_index_names: BTreeSet<&str> = exist_table_def.indexes.iter().map(|c| c.name.as_ref()).collect();
             let indexes_to_delete = exist_index_names.difference(&defined_index_names);
             for index_name in indexes_to_delete {
-                self.drop_index(index_name).await?;
+                self.drop_index(&defined_table_def.name, index_name).await?;
             }
             let indexes_to_create = defined_index_names.difference(&exist_index_names);
             for index_name in indexes_to_create {
@@ -351,7 +351,7 @@ pub(crate) trait AsyncMigration: Send + Sync {
                 if let Some(defined_index_def) = defined_table_def.indexes.iter().find(|def| def.name == *index_name) &&
                 let Some(exist_index_def) = exist_table_def.indexes.iter().find(|def| def.name == *index_name) {
                     if defined_index_def != exist_index_def {
-                        self.drop_index(&exist_index_def.name).await?;
+                        self.drop_index(&defined_table_def.name, &exist_index_def.name).await?;
                         self.create_index(&defined_table_def.name, defined_index_def).await?;
                     }
                 }
@@ -360,7 +360,7 @@ pub(crate) trait AsyncMigration: Send + Sync {
         }
     }
 
-    fn drop_index(&mut self, index_name: &str) -> impl Future<Output = Result<(), Self::Err>> + Send {
+    fn drop_index(&mut self, _table_name: &str, index_name: &str) -> impl Future<Output = Result<(), Self::Err>> + Send {
         async {
             let statement = self.drop_index_statement(index_name);
             self.execute_without_params(&statement).await

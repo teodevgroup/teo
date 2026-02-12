@@ -32,3 +32,14 @@ impl AsRef<str> for SortOrder {
         }
     }
 }
+
+impl SortOrder {
+
+    #[cfg(feature = "mongo")]
+    pub(crate) fn as_i32(&self) -> i32 {
+        match self {
+            SortOrder::Asc => 1,
+            SortOrder::Desc => -1,
+        }
+    }
+}
