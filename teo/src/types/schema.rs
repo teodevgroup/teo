@@ -11,7 +11,6 @@ use super::super::migration::{EnumDef, TableDef};
 
 pub trait Schema: Send {
 
-    #[cfg(any(feature = "mysql", feature = "postgres"))]
     fn enum_defs() -> Vec<EnumDef>;
 
     #[cfg(feature = "mongo")]
@@ -25,5 +24,4 @@ pub trait Schema: Send {
 
     #[cfg(feature = "sqlite")]
     fn sqlite_table_defs() -> Vec<TableDef<sqlite::ColumnType>>;
-
 }
