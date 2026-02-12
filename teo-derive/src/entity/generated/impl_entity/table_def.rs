@@ -32,7 +32,7 @@ macro_rules! make_table_def {
                     #( #columns )*
                     let mut indexes = Vec::new();
                     ::teo::migration::TableDef {
-                        name: #table_name,
+                        name: std::borrow::Cow::Borrowed(#table_name),
                         columns,
                         indexes
                     }
