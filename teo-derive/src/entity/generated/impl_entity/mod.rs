@@ -10,3 +10,5 @@ mod mysql_table_def;
 mod postgres_table_def;
 #[cfg(feature = "sqlite")]
 mod sqlite_table_def;
+
+pub(in crate::entity) use impl_entity::generate_impl_entity;

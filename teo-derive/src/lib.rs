@@ -1,5 +1,6 @@
 mod entity;
 mod enum_type;
+mod schema;
 pub(crate) mod utils;
 
 use proc_macro::TokenStream;
