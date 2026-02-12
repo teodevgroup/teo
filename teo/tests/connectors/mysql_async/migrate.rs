@@ -15,13 +15,12 @@ struct Schema;
 
 async fn connect(s: &str) -> Conn {
     let pool = Pool::new(s);
-    let mut conn = pool.get_conn().await.unwrap();
-    conn.exec_drop("abc", ()).await.unwrap();
+    let conn = pool.get_conn().await.unwrap();
     conn
 }
 
 #[tokio::test]
 async fn test_migrate() {
-    let mut client = connect("mysql://localhost:3306/databasename").await;
+    let mut client = connect("mysql://root@localhost:3306/databasename").await;
     migrate::<Conn, Schema>(&mut client).await.unwrap();
 }

@@ -30,7 +30,7 @@ impl AsyncMigration for Database {
     }
 
     async fn exist_enum_names(&mut self) -> Result<Vec<String>, Self::Err> {
-        unreachable!()
+        Ok(Vec::new())
     }
 
     fn enum_create_statement(&self, enum_def: &EnumDef) -> String {
@@ -54,7 +54,7 @@ impl AsyncMigration for Database {
     }
 
     async fn exist_table_names(&mut self) -> Result<Vec<String>, Self::Err> {
-        self.list_collection_names().await
+        Ok(self.list_collection_names().await?.into_iter().filter(|n| !n.starts_with("_")).collect())
     }
 
     fn drop_table_statement(&self, table_name: &str) -> String {
@@ -78,7 +78,7 @@ impl AsyncMigration for Database {
     }
 
     async fn exist_table_def(&mut self, table_name: &str) -> Result<TableDef<mongo::ColumnType>, Self::Err> {
-        let collections: Collection<TableDef<Self::ColumnType>> = self.collection("_Collections");
+        let collections: Collection<TableDef<Self::ColumnType>> = self.collection("_teo_collections");
         let table_def = collections.find_one(doc!{ "name": table_name }).await?.unwrap();
         Ok(table_def)
     }
@@ -133,14 +133,14 @@ impl AsyncMigration for Database {
 
     async fn delete_table(&mut self, table_name: &str) -> Result<(), Self::Err> {
         self.collection::<Bson>(table_name).drop().await?;
-        let collections: Collection<TableDef<Self::ColumnType>> = self.collection("_Collections");
+        let collections: Collection<TableDef<Self::ColumnType>> = self.collection("_teo_collections");
         collections.delete_one(doc!{ "name": table_name }).await?;
         Ok(())
     }
 
     async fn create_table(&mut self, table_def: &TableDef<Self::ColumnType>) -> Result<(), Self::Err> {
         self.create_collection(table_def.name.as_ref()).await?;
-        let collections: Collection<TableDef<Self::ColumnType>> = self.collection("_Collections");
+        let collections: Collection<TableDef<Self::ColumnType>> = self.collection("_teo_collections");
         collections.insert_one(table_def).await?;
         for index in &table_def.indexes {
             self.create_index(&table_def.name, index).await?;
@@ -151,7 +151,7 @@ impl AsyncMigration for Database {
     async fn drop_table_column(&mut self, table_name: &str, column_name: &str) -> Result<(), Self::Err> {
         let table: Collection<Bson> = self.collection(table_name);
         table.update_many(doc!{}, doc!{"$unset": {column_name: 1}}).await?;
-        let collections: Collection<TableDef<Self::ColumnType>> = self.collection("_Collections");
+        let collections: Collection<TableDef<Self::ColumnType>> = self.collection("_teo_collections");
         collections.update_one(doc!{"name": table_name}, doc!{
             "$pull": {"columns": { "name": column_name }}
         }).await?;
@@ -159,7 +159,7 @@ impl AsyncMigration for Database {
     }
 
     async fn add_table_column(&mut self, table_name: &str, column_def: &ColumnDef<Self::ColumnType>) -> Result<(), Self::Err> {
-        let collections: Collection<TableDef<Self::ColumnType>> = self.collection("_Collections");
+        let collections: Collection<TableDef<Self::ColumnType>> = self.collection("_teo_collections");
         let column_def_bson = to_bson(column_def)?;
         collections.update_one(doc!{"name": table_name}, doc!{
             "$push": {"columns": {"$each": [column_def_bson]}}
@@ -189,7 +189,7 @@ impl AsyncMigration for Database {
         let index_model = IndexModel::builder().keys(keys).options(options).build();
         let collection: Collection<Bson> = self.collection(table_name);
         collection.create_index(index_model).await?;
-        let collections: Collection<TableDef<Self::ColumnType>> = self.collection("_Collections");
+        let collections: Collection<TableDef<Self::ColumnType>> = self.collection("_teo_collections");
         collections.update_one(doc!{
             "name": table_name,
             "indexes": {"$not": {"$elemMatch":{"name":index_def.name.as_ref()}}}
@@ -202,7 +202,7 @@ impl AsyncMigration for Database {
     async fn drop_index(&mut self, table_name: &str, index_name: &str) -> Result<(), Self::Err> {
         let collection: Collection<Bson> = self.collection(table_name);
         collection.drop_index(index_name).await?;
-        let collections: Collection<TableDef<Self::ColumnType>> = self.collection("_Collections");
+        let collections: Collection<TableDef<Self::ColumnType>> = self.collection("_teo_collections");
         collections.update_one(doc!{
             "name": table_name,
             "indexes": {"$elemMatch":{"name":index_name}}

@@ -21,6 +21,6 @@ async fn connect(c: &str, d: &str) -> Database {
 
 #[tokio::test]
 async fn test_migrate() {
-    let mut client = connect("mongodb://127.0.0.1:27017", "mydb").await;
+    let mut client = connect("mongodb://127.0.0.1:27017", "mydb2").await;
     migrate::<Database, Schema>(&mut client).await.unwrap();
 }

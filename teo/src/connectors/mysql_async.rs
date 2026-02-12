@@ -1,5 +1,7 @@
+use std::{borrow::Cow, str::FromStr};
+
 use mysql_async::{Conn, Error, Row, prelude::Queryable};
-use crate::{connection::AsyncConnection, migration::{AsyncMigration, ColumnDef, EnumDef, TableDef}, types::Schema};
+use crate::{connection::AsyncConnection, migration::{AsyncMigration, ColumnDef, EnumDef, IndexColumnDef, IndexDef, TableDef}, types::{Schema, SortOrder}};
 use teo_column_type::mysql;
 
 impl AsyncConnection for Conn {
@@ -91,6 +93,45 @@ impl AsyncMigration for Conn {
     }
 
     async fn exist_table_def(&mut self, table_name: &str) -> Result<TableDef<Self::ColumnType>, Self::Err> {
-        todo!()
+        let columns_statement = format!("describe `{table_name}`");
+        let column_rows: Vec<Row> = self.query(&columns_statement).await?;
+        let mut columns = vec![];
+        for row in &column_rows {
+            let name: String = row.get_opt("Field").unwrap().unwrap();
+            let ty: String = row.get_opt("Type").unwrap().unwrap();
+            let nullable: String = row.get_opt("Null").unwrap().unwrap();
+            columns.push(ColumnDef {
+                name: Cow::Owned(name),
+                ty: mysql::ColumnType::from_str(&ty).unwrap(),
+                nullable: nullable == "YES",
+                default: None
+            });
+        }
+        let index_statement = format!("show indexes from `{table_name}`");
+        let index_rows: Vec<Row> = self.query(&index_statement).await?;
+        let mut indexes = vec![];
+        for row in &index_rows {
+            let index_name: String = row.get_opt("Key_name").unwrap().unwrap();
+            let column_name: String = row.get_opt("Column_name").unwrap().unwrap();
+            let order: String = row.get_opt("Collation").unwrap().unwrap();
+            let _non_unique: bool = row.get_opt("Non_unique").unwrap().unwrap();
+            let column = IndexColumnDef {
+                name: Cow::Owned(column_name),
+                order: if &order == "D" { SortOrder::Desc } else { SortOrder::Asc }
+            };
+            if let Some(position) = indexes.iter().position(|i: &IndexDef| &i.name == &index_name) {
+                indexes.get_mut(position).unwrap().columns.push(column);
+            } else {
+                indexes.push(IndexDef {
+                    name: Cow::Owned(index_name.clone()),
+                    columns: vec![column]
+                })
+            }
+        }
+        Ok(TableDef {
+            name: Cow::Owned(table_name.to_string()),
+            columns,
+            indexes,
+        })
     }
 }
