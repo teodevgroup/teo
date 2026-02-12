@@ -1,8 +1,13 @@
 use std::{convert::Infallible, str::FromStr};
+#[cfg(any(feature = "mongodb", feature = "serde"))]
+use serde::{Serialize, Deserialize};
 
 #[derive(Debug, PartialEq)]
+#[cfg_attr(feature = "mongodb", derive(Serialize, Deserialize))]
 pub enum SortOrder {
+    #[cfg_attr(any(feature = "mongodb", feature = "serde"), serde(rename = "asc"))]
     Asc,
+    #[cfg_attr(any(feature = "mongodb", feature = "serde"), serde(rename = "desc"))]
     Desc,
 }
 

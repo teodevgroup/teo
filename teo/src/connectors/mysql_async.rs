@@ -27,6 +27,7 @@ impl AsyncMigration for Conn {
         "`"
     }
 
+    #[inline]
     fn string_quote_char() -> &'static str {
         "'"
     }
