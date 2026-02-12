@@ -94,7 +94,7 @@ impl SyncMigration for Connection {
         S::sqlite_table_defs()
     }
 
-    fn exist_table_def(&mut self, table_name: &'static str) -> Result<TableDef<Self::ColumnType>, Self::Err> {
+    fn exist_table_def(&mut self, table_name: &str) -> Result<TableDef<Self::ColumnType>, Self::Err> {
         let column_sql = format!("pragma table_info({}{}{})",
             Self::ident_quote_char(),
             table_name,
@@ -140,7 +140,7 @@ impl SyncMigration for Connection {
             })
         }).collect();
         Ok(TableDef {
-            name: table_name,
+            name: Cow::Owned(table_name.to_string()),
             columns,
             indexes,
         })

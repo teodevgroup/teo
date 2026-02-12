@@ -1,4 +1,5 @@
-use mongodb::{Collection, Database, bson::{Bson, doc}, error::Error};
+use mongodb::{Collection, Database, bson::doc, error::Error};
+use serde::de::DeserializeOwned;
 use crate::{connection::AsyncConnection, migration::{AsyncMigration, ColumnDef, EnumDef, IndexColumnDef, IndexDef, TableDef}, types::Schema};
 use teo_column_type::mongo;
 
@@ -77,12 +78,9 @@ impl AsyncMigration for Database {
         unreachable!()
     }
 
-    async fn exist_table_def(&mut self, table_name: &'static str) -> Result<TableDef<Self::ColumnType>, Self::Err> {
+    async fn exist_table_def(&mut self, table_name: &str) -> Result<TableDef<mongo::ColumnType>, Self::Err> {
         let collections: Collection<TableDef<Self::ColumnType>> = self.collection("_Collections");
-        let cursor = collections.find(doc! {}).await?;
-        while let Some(doc) = cursor.try_next().await? {
-            println!("{:?}", doc);
-        }
+        let table_def = collections.find_one(doc!{ "name": table_name }).await?.unwrap();
+        Ok(table_def)
     }
-
 }

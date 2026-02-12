@@ -52,7 +52,7 @@ pub(crate) trait AsyncMigration: Send + Sync {
             columns_joined)
     }
 
-    fn exist_table_def(&mut self, table_name: &'static str) -> impl Future<Output = Result<TableDef<Self::ColumnType>, Self::Err>> + Send;
+    fn exist_table_def(&mut self, table_name: &str) -> impl Future<Output = Result<TableDef<Self::ColumnType>, Self::Err>> + Send;
 
     fn drop_table_column_statement(&self, table_name: &str, column_name: &str) -> String {
         format!(r#"alter table {}{}{} drop column {}{}{}"#,
@@ -208,7 +208,7 @@ pub(crate) trait AsyncMigration: Send + Sync {
             let tables_to_diff = exist_table_names.intersection(&defined_table_names);
             for table_name in tables_to_diff {
                 if let Some(defined_table_def) = defined_table_defs.iter().find(|def| def.name == *table_name) {
-                    let exist_table_def = self.exist_table_def(defined_table_def.name).await?;
+                    let exist_table_def = self.exist_table_def(&defined_table_def.name).await?;
                     self.diff_table(defined_table_def, &exist_table_def).await?;
                 }
             }
@@ -228,7 +228,7 @@ pub(crate) trait AsyncMigration: Send + Sync {
             let statement = self.create_table_statement(table_def);
             self.execute_without_params(&statement).await?;
             for index_def in &table_def.indexes {
-                self.create_index(table_def.name, index_def).await?;
+                self.create_index(&table_def.name, index_def).await?;
             }
             Ok(())
         }
@@ -248,19 +248,19 @@ pub(crate) trait AsyncMigration: Send + Sync {
             let exist_column_names: BTreeSet<&str> = exist_table_def.columns.iter().map(|c| c.name.as_ref()).collect();
             let columns_to_delete = exist_column_names.difference(&defined_column_names);
             for column_name in columns_to_delete {
-                self.drop_table_column(defined_table_def.name, *column_name).await?;
+                self.drop_table_column(&defined_table_def.name, *column_name).await?;
             }
             let columns_to_add = defined_column_names.difference(&exist_column_names);
             for column_name in columns_to_add {
                 if let Some(defined_column_def) = defined_table_def.columns.iter().find(|def| def.name == *column_name) {
-                    self.add_table_column(defined_table_def.name, defined_column_def).await?;
+                    self.add_table_column(&defined_table_def.name, defined_column_def).await?;
                 }
             }
             let columns_to_diff = exist_column_names.intersection(&defined_column_names);
             for column_name in columns_to_diff {
                 if let Some(defined_column_def) = defined_table_def.columns.iter().find(|def| def.name == *column_name) &&
                       let Some(exist_column_def) = exist_table_def.columns.iter().find(|def| def.name == *column_name) {
-                    self.diff_table_column(defined_table_def.name, defined_column_def, exist_column_def).await?;
+                    self.diff_table_column(&defined_table_def.name, defined_column_def, exist_column_def).await?;
                 }
             }
             Ok(())
@@ -343,7 +343,7 @@ pub(crate) trait AsyncMigration: Send + Sync {
             let indexes_to_create = defined_index_names.difference(&exist_index_names);
             for index_name in indexes_to_create {
                 if let Some(defined_index_def) = defined_table_def.indexes.iter().find(|def| def.name == *index_name) {
-                    self.create_index(defined_table_def.name, defined_index_def).await?;
+                    self.create_index(&defined_table_def.name, defined_index_def).await?;
                 }
             }
             let indexes_to_diff = exist_index_names.intersection(&defined_index_names);
@@ -352,7 +352,7 @@ pub(crate) trait AsyncMigration: Send + Sync {
                 let Some(exist_index_def) = exist_table_def.indexes.iter().find(|def| def.name == *index_name) {
                     if defined_index_def != exist_index_def {
                         self.drop_index(&exist_index_def.name).await?;
-                        self.create_index(defined_table_def.name, defined_index_def).await?;
+                        self.create_index(&defined_table_def.name, defined_index_def).await?;
                     }
                 }
             }

@@ -124,7 +124,7 @@ impl AsyncMigration for Client {
         S::postgres_table_defs()
     }
 
-    async fn exist_table_def(&mut self, table_name: &'static str) -> Result<TableDef<Self::ColumnType>, Self::Err> {
+    async fn exist_table_def(&mut self, table_name: &str) -> Result<TableDef<Self::ColumnType>, Self::Err> {
         let columns_statement = format!("select * from information_schema.columns where table_name = '{table_name}'");
         let column_rows = self.query(
             &columns_statement,
@@ -189,7 +189,7 @@ impl AsyncMigration for Client {
             });
         }
         Ok(TableDef {
-            name: table_name,
+            name: Cow::Owned(table_name.to_string()),
             columns,
             indexes,
         })

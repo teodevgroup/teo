@@ -36,7 +36,7 @@ pub struct IndexDef {
 #[derive(Debug)]
 #[cfg_attr(feature = "mongodb", derive(Serialize, Deserialize))]
 pub struct TableDef<T> {
-    pub name: &'static str,
+    pub name: Cow<'static, str>,
     pub columns: Vec<ColumnDef<T>>,
     pub indexes: Vec<IndexDef>,
 }

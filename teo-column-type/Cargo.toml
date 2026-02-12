@@ -10,10 +10,11 @@ documentation = "https://docs.teodev.io"
 repository = "https://github.com/teodevgroup/teo"
 
 [features]
-mongo = []
+mongo = ["dep:serde"]
 mysql = []
 postgres = []
 sqlite = []
 default = ["mongo", "mysql", "postgres", "sqlite"]
 
 [dependencies]
+serde = { version = "1.0", features = ["derive"], optional = true }

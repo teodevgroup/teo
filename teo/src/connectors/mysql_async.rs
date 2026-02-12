@@ -90,7 +90,7 @@ impl AsyncMigration for Conn {
         S::mysql_table_defs()
     }
 
-    async fn exist_table_def(&mut self, table_name: &'static str) -> Result<TableDef<Self::ColumnType>, Self::Err> {
+    async fn exist_table_def(&mut self, table_name: &str) -> Result<TableDef<Self::ColumnType>, Self::Err> {
         todo!()
     }
 }

@@ -1,7 +1,9 @@
 use std::str::FromStr;
+use serde::{Deserialize, Serialize};
+
 use crate::error::Error;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub enum ColumnType {
     Bool,
     String,
