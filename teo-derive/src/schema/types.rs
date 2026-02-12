@@ -7,7 +7,7 @@ pub(in crate::schema) struct SchemaEntityDef {
 }
 
 #[derive(FromDeriveInput, Clone)]
-#[darling(attributes(teo), forward_attrs(allow, doc, cfg), supports(struct_named))]
+#[darling(attributes(teo), forward_attrs(allow, doc, cfg), supports(struct_unit))]
 pub(in crate::schema) struct SchemaDef {
     pub(in crate::schema) ident: Ident,
     pub(in crate::schema) attrs: Vec<Attribute>,

@@ -1,4 +1,4 @@
-use teo_derive::Entity;
+use teo_derive::{Entity, Schema};
 
 #[derive(Entity)]
 struct User {
@@ -7,3 +7,6 @@ struct User {
     name: String,
     age: i32,
 }
+
+#[derive(Schema)]
+struct Schema;
