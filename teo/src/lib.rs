@@ -1,5 +1,5 @@
 pub extern crate teo_column_type;
-pub extern crate teo_derive;
+pub(crate) extern crate teo_derive;
 
 pub mod types;
 pub mod connection;

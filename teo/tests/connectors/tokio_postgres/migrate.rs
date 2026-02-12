@@ -1,4 +1,5 @@
-use teo::teo_derive::{Entity, Schema};
+use teo::{Entity, Schema, migration::r#async::migrate};
+use tokio_postgres::{self, Client, NoTls};
 
 #[derive(Entity)]
 struct User {
@@ -12,7 +13,14 @@ struct User {
 #[teo(entity(path = User))]
 struct Schema;
 
-#[test]
-fn a() {
-    println!("good");
+async fn connect(s: &str) -> Client {
+    let (client, connection) = tokio_postgres::connect(s, NoTls).await.unwrap();
+    tokio::spawn(connection);
+    client
+}
+
+#[tokio::test]
+async fn test_migrate() {
+    let client = connect("host=localhost port=5432 user=postgres").await;
+    migrate::<Client, Schema>(&client).await.unwrap();
 }
