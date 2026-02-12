@@ -1,11 +1,13 @@
 [workspace]
 resolver = "3"
 members = [
-  "teo",
-  "teo-derive",
-  "teo-column-type",
-  "examples/mysql",
-  "examples/postgres",
-  "examples/sqlite",
-  "examples/mongo"
+    "teo",
+    "teo-derive",
+    "teo-column-type",
+    "examples/axum-integration/mongodb",
+    "examples/axum-integration/mysql",
+    "examples/axum-integration/mysql_async",
+    "examples/axum-integration/postgres",
+    "examples/axum-integration/rusqlite",
+    "examples/axum-integration/tokio-postgres"
 ]
