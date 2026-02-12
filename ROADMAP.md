@@ -1015,3 +1015,12 @@
 
 ### 0.4.0
 - Redesigned as a Rust ORM **[IN PROGRESS]**
+- Auto migration **[IN PROGRESS]**
+- Create
+- Delete
+- Query Unique
+- Query Many
+- Update
+
+### 0.5.0
+- Relationships
