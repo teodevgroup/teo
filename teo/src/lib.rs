@@ -1,12 +1,10 @@
 pub extern crate teo_column_type;
+pub extern crate teo_derive;
 
 pub mod types;
 pub mod connection;
 pub mod migration;
 
 pub mod connectors;
-// pub mod model;
-// pub mod user;
-// pub mod row;
-// pub mod filter;
-// pub mod partial;
+
+pub use teo_derive::{Entity, Schema};

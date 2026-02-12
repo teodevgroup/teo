@@ -1,4 +1,4 @@
-use teo_derive::{Entity, Schema};
+use teo::teo_derive::{Entity, Schema};
 
 #[derive(Entity)]
 struct User {
@@ -9,4 +9,10 @@ struct User {
 }
 
 #[derive(Schema)]
+#[teo(entity(path = User))]
 struct Schema;
+
+#[test]
+fn a() {
+    println!("good");
+}
