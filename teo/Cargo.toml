@@ -2,7 +2,7 @@
 name = "teo"
 version = "0.4.0-alpha.1"
 edition = "2024"
-rust-version = "1.92"
+rust-version = "1.93"
 description = "High performance Rust ORM."
 license = "MIT"
 homepage = "https://teodev.io"
@@ -18,25 +18,40 @@ chrono = ["dep:chrono"]
 bigdecimal = ["dep:bigdecimal"]
 rust_decimal = ["dep:rust_decimal"]
 
-mysql = ["dep:mysql_async", "teo-derive/mysql", "teo-column-type/mysql"]
-postgres = ["dep:tokio-postgres", "teo-derive/postgres", "teo-column-type/postgres"]
-sqlite = ["dep:rusqlite", "teo-derive/sqlite", "teo-column-type/sqlite"]
-mongo = ["dep:mongodb", "teo-derive/mongo", "teo-column-type/mongo"]
-default = ["derive", "uuid", "chrono", "bigdecimal", "mysql", "postgres", "sqlite", "mongo"]
+mongodb = ["mongo", "dep:mongodb"]
+mysql_sync = ["mysql", "dep:mysql"]
+mysql_async = ["mysql", "dep:mysql_async"]
+postgres_sync = ["postgres", "dep:postgres"]
+tokio-postgres = ["postgres", "dep:tokio-postgres"]
+rusqlite = ["sqlite", "dep:rusqlite"]
+
+mysql = ["teo-derive/mysql", "teo-column-type/mysql"]
+postgres = ["teo-derive/postgres", "teo-column-type/postgres"]
+sqlite = ["teo-derive/sqlite", "teo-column-type/sqlite"]
+mongo = ["teo-derive/mongo", "teo-column-type/mongo"]
+
+default = [
+    "derive", "serde",
+    "uuid", "chrono", "bigdecimal",
+    "mysql", "postgres", "sqlite", "mongo",
+    "mongodb", "mysql_sync", "mysql_async", "postgres_sync", "tokio-postgres", "rusqlite"
+]
 
 [dependencies]
-teo-derive = { path = "../teo-derive", version = "0.4.0-alpha.1", optional = true }
 teo-column-type = { path = "../teo-column-type", version = "0.4.0-alpha.1" }
+teo-derive = { path = "../teo-derive", version = "0.4.0-alpha.1", optional = true }
 serde = { version = "1.0", features = ["derive"], optional = true }
+
 uuid = { version = "1.17.0", features = ["v4", "serde"], optional = true }
 chrono = { version = "0.4.38", features = ["serde"], optional = true }
 bigdecimal = { version = "0.4.8", optional = true }
 rust_decimal = { version = "1.37.2", optional = true }
-tokio-postgres = { version = "0.7.13", features = ["runtime", "with-uuid-1", "with-chrono-0_4"], optional = true }
+mongodb = { version = "3.5.1", optional = true }
 mysql_async = { version = "0.36.1", optional = true }
+mysql = { version = "27.0.0", optional = true }
+tokio-postgres = { version = "0.7.13", features = ["runtime", "with-uuid-1", "with-chrono-0_4"], optional = true }
+postgres = { version = "0.19.2", optional = true }
 rusqlite = { version = "0.37.0", optional = true }
-mongodb = { version = "3.2.4", optional = true }
-async-trait = { version = "0.1.88" }
 
 [dev-dependencies]
 tokio = { version = "1.49", features = ["full"] }

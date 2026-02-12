@@ -1,14 +1,15 @@
 [package]
-name = "teo-example-mongo"
-version = "0.4.0-alpha.0"
+name = "teo-example-rusqlite-axum"
+version = "0.4.0-alpha.1"
 edition = "2024"
-rust-version = "1.88"
-description = "TEO MongoDB example."
+rust-version = "1.93"
+description = "Teo Rusqlite Axum example."
 license = "MIT"
 homepage = "https://teodev.io"
 documentation = "https://docs.teodev.io"
 repository = "https://github.com/teodevgroup/teo"
+publish = false
 
 [dependencies]
-teo = { path = "../../teo", features = ["derive", "mongo"] }
+teo = { path = "../../../teo", features = ["derive", "rusqlite"] }
 tokio = { version = "1.46.1", features = ["full"] }

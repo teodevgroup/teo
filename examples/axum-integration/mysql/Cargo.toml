@@ -1,19 +1,15 @@
 [package]
-name = "teo-column-type"
+name = "teo-example-mysql-axum"
 version = "0.4.0-alpha.1"
 edition = "2024"
 rust-version = "1.93"
-description = "Column type definitions for Teo."
+description = "Teo MySQL Axum example."
 license = "MIT"
 homepage = "https://teodev.io"
 documentation = "https://docs.teodev.io"
 repository = "https://github.com/teodevgroup/teo"
-
-[features]
-mongo = []
-mysql = []
-postgres = []
-sqlite = []
-default = ["mongo", "mysql", "postgres", "sqlite"]
+publish = false
 
 [dependencies]
+teo = { path = "../../../teo", features = ["derive", "mysql_sync"] }
+tokio = { version = "1.46.1", features = ["full"] }

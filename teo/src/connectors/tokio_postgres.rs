@@ -1,5 +1,4 @@
 use std::{borrow::Cow, str::FromStr};
-
 use teo_column_type::postgres;
 use tokio_postgres::{Client, Error};
 use crate::{connection::AsyncConnection, migration::{AsyncMigration, ColumnDef, EnumDef, IndexColumnDef, IndexDef, TableDef}, types::{Schema, SortOrder}};
