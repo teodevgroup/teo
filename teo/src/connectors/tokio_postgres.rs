@@ -7,7 +7,7 @@ impl AsyncConnection for Client {
 
     type Err = Error;
 
-    async fn migrate<S>(&self) -> Result<(), Self::Err> where S: Schema {
+    async fn migrate<S>(&mut self) -> Result<(), Self::Err> where S: Schema {
         AsyncMigration::migrate::<S>(self).await
     }
 }
@@ -19,7 +19,7 @@ impl AsyncMigration for Client {
     type ColumnType = postgres::ColumnType;
 
     #[inline]
-    async fn execute_without_params(&self, q: &str) -> Result<(), Self::Err> {
+    async fn execute_without_params(&mut self, q: &str) -> Result<(), Self::Err> {
         self.execute(q, &[]).await.map(|_| ())
     }
 
@@ -33,7 +33,7 @@ impl AsyncMigration for Client {
         "'"
     }
 
-    async fn exist_enum_names(&self) -> Result<Vec<String>, Self::Err> {
+    async fn exist_enum_names(&mut self) -> Result<Vec<String>, Self::Err> {
         let statement = r#"select distinct pg_type.typname as enum_type from pg_type join pg_enum on pg_enum.enumtypid = pg_type.oid"#;
         let rows = self.query(statement, &[]).await?;
         let mut enum_names = vec![];
@@ -69,7 +69,7 @@ impl AsyncMigration for Client {
             Self::string_quote_char())
     }
 
-    async fn exist_enum_def(&self, enum_name: &'static str) -> Result<EnumDef, Self::Err> {
+    async fn exist_enum_def(&mut self, enum_name: &'static str) -> Result<EnumDef, Self::Err> {
         let statement = format!("select pg_enum.enumlabel as variant from pg_type join pg_enum on pg_enum.enumtypid = pg_type.oid where pg_type.typname = '{}'", enum_name);
         let rows = self.query(&statement, &[]).await?;
         let mut variants = vec![];
@@ -83,7 +83,7 @@ impl AsyncMigration for Client {
         })
     }
 
-    async fn exist_table_names(&self) -> Result<Vec<String>, Self::Err> {
+    async fn exist_table_names(&mut self) -> Result<Vec<String>, Self::Err> {
         let statement = "select tablename from pg_catalog.pg_tables where schemaname != 'pg_catalog' and schemaname != 'information_schema'";
         let rows = self.query(
             statement,
@@ -124,7 +124,7 @@ impl AsyncMigration for Client {
         S::postgres_table_defs()
     }
 
-    async fn exist_table_def(&self, table_name: &'static str) -> Result<TableDef<Self::ColumnType>, Self::Err> {
+    async fn exist_table_def(&mut self, table_name: &'static str) -> Result<TableDef<Self::ColumnType>, Self::Err> {
         let columns_statement = format!("select * from information_schema.columns where table_name = '{table_name}'");
         let column_rows = self.query(
             &columns_statement,

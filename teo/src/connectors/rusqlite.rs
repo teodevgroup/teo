@@ -8,7 +8,7 @@ impl SyncConnection for Connection {
 
     type Err = Error;
 
-    fn migrate<S>(&self) -> Result<(), Self::Err> where S: Schema {
+    fn migrate<S>(&mut self) -> Result<(), Self::Err> where S: Schema {
         SyncMigration::migrate::<S>(self)
     }
 }
@@ -19,7 +19,7 @@ impl SyncMigration for Connection {
 
     type ColumnType = sqlite::ColumnType;
 
-    fn execute_without_params(&self, q: &str) -> Result<(), Self::Err> {
+    fn execute_without_params(&mut self, q: &str) -> Result<(), Self::Err> {
         self.execute(q, ()).map(|_| ())
     }
 
@@ -31,7 +31,7 @@ impl SyncMigration for Connection {
         "'"
     }
 
-    fn exist_enum_names(&self) -> Result<Vec<String>, Self::Err> {
+    fn exist_enum_names(&mut self) -> Result<Vec<String>, Self::Err> {
         Ok(Vec::new())
     }
 
@@ -47,11 +47,11 @@ impl SyncMigration for Connection {
         unreachable!()
     }
 
-    fn exist_enum_def(&self, _enum_name: &'static str) -> Result<crate::migration::EnumDef, Self::Err> {
+    fn exist_enum_def(&mut self, _enum_name: &'static str) -> Result<crate::migration::EnumDef, Self::Err> {
         unreachable!()
     }
 
-    fn exist_table_names(&self) -> Result<Vec<String>, Self::Err> {
+    fn exist_table_names(&mut self) -> Result<Vec<String>, Self::Err> {
         let mut statement = self.prepare("select name from sqlite_master where type='table'")?;
         let rows = statement.query_map((), |row| {
             let name: String = row.get(0)?;
@@ -94,7 +94,7 @@ impl SyncMigration for Connection {
         S::sqlite_table_defs()
     }
 
-    fn exist_table_def(&self, table_name: &'static str) -> Result<TableDef<Self::ColumnType>, Self::Err> {
+    fn exist_table_def(&mut self, table_name: &'static str) -> Result<TableDef<Self::ColumnType>, Self::Err> {
         let column_sql = format!("pragma table_info({}{}{})",
             Self::ident_quote_char(),
             table_name,

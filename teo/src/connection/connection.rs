@@ -4,12 +4,12 @@ pub trait SyncConnection {
 
     type Err;
 
-    fn migrate<S>(&self) -> Result<(), Self::Err> where S: Schema;
+    fn migrate<S>(&mut self) -> Result<(), Self::Err> where S: Schema;
 }
 
 pub trait AsyncConnection {
 
     type Err;
 
-    fn migrate<S>(&self) -> impl Future<Output = Result<(), Self::Err>> + Send where S: Schema;
+    fn migrate<S>(&mut self) -> impl Future<Output = Result<(), Self::Err>> + Send where S: Schema;
 }

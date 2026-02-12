@@ -21,6 +21,6 @@ async fn connect(s: &str) -> Client {
 
 #[tokio::test]
 async fn test_migrate() {
-    let client = connect("host=localhost port=5432 user=postgres").await;
-    migrate::<Client, Schema>(&client).await.unwrap();
+    let mut client = connect("host=localhost port=5432 user=postgres").await;
+    migrate::<Client, Schema>(&mut client).await.unwrap();
 }
